@@ -1,6 +1,7 @@
 import { useFetcher } from "react-router";
 import { Mail, Check, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 
 export function NewsletterForm({ variant = "card" }: { variant?: "card" | "minimal" }) {
   const fetcher = useFetcher();
@@ -10,8 +11,11 @@ export function NewsletterForm({ variant = "card" }: { variant?: "card" | "minim
   const isLoading = fetcher.state === "submitting";
 
   useEffect(() => {
-    if (isSuccess) setEmail("");
-  }, [isSuccess]);
+    if (isSuccess) {
+        setEmail("");
+        posthog.capture('newsletter_subscribed', { variant });
+    }
+  }, [isSuccess, variant]);
 
   if (variant === "minimal") {
     return (

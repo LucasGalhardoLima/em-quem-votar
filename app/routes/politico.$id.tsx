@@ -1,5 +1,6 @@
 import { useLoaderData, Link, useNavigation, Await } from "react-router";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import posthog from "posthog-js";
 import { db } from "~/utils/db.server";
 import type { Route } from "./+types/politico.$id";
 import { ArrowLeft, Check, X, Minus, MapPin, Building2, TrendingDown, TrendingUp, DollarSign, Calendar } from "lucide-react";
@@ -91,6 +92,16 @@ export default function PoliticianProfile() {
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const { politician } = data;
+ 
+   useEffect(() => {
+     if (politician) {
+       posthog.capture('politician_viewed', { 
+         id: politician.id, 
+         name: politician.name,
+         party: politician.party 
+       });
+     }
+   }, [politician]);
 
   if (!politician) {
       return (

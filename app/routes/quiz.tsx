@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import posthog from "posthog-js";
 import { Link, useNavigate } from "react-router";
 import { Header } from "~/components/Header";
 import { QUIZ_QUESTIONS } from "~/data/quiz-questions";
@@ -13,6 +14,10 @@ export default function Quiz() {
     const [scores, setScores] = useState<Record<string, number>>({});
     const navigate = useNavigate();
 
+    useEffect(() => {
+        posthog.capture('quiz_started');
+    }, []);
+
     const currentQuestion = QUIZ_QUESTIONS[currentQuestionIndex];
     const progress = ((currentQuestionIndex) / QUIZ_QUESTIONS.length) * 100;
 
@@ -24,6 +29,11 @@ export default function Quiz() {
             newScores[effect.tagSlug] = (newScores[effect.tagSlug] || 0) + effect.weight;
         });
         setScores(newScores);
+
+        posthog.capture('quiz_question_answered', {
+            question_index: currentQuestionIndex,
+            answer
+        });
 
         if (currentQuestionIndex < QUIZ_QUESTIONS.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
@@ -38,6 +48,10 @@ export default function Quiz() {
             .sort(([, a], [, b]) => b - a)
             .map(([tag]) => tag)
             .slice(0, 2); // Get top 2
+        
+        posthog.capture('quiz_completed', {
+            top_tags: sortedTags
+        });
         
         const queryParams = new URLSearchParams();
         if (sortedTags.length > 0) {

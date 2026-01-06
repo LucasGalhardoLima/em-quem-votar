@@ -33,23 +33,9 @@ export const links: Route.LinksFunction = () => [
 ];
 
 import { Footer } from "~/components/Footer";
-
-import { useEffect } from "react";
-import posthog from "posthog-js";
+import { PHProvider } from "./posthog-provider";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    // Initialize PostHog (replace with real key in production)
-    // configured to respect privacy designed for "anonymous" usage initially
-    posthog.init('phc_PLACEHOLDER_KEY', {
-        api_host: 'https://us.i.posthog.com',
-        person_profiles: 'identified_only', // Privacy friendly
-        loaded: (posthog) => {
-            if (import.meta.env.DEV) posthog.opt_out_capturing(); // Disable in DEV
-        }
-    })
-  }, []);
-
   return (
     <html lang="en">
       <head>
@@ -59,12 +45,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body className="flex flex-col min-h-screen">
-        <div className="flex-grow">
-            {children}
-        </div>
-        <Footer />
-        <ScrollRestoration />
-        <Scripts />
+        <PHProvider>
+            <div className="flex-grow">
+                {children}
+            </div>
+            <Footer />
+            <ScrollRestoration />
+            <Scripts />
+        </PHProvider>
       </body>
     </html>
   );

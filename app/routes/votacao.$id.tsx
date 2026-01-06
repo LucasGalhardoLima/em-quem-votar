@@ -2,7 +2,8 @@ import type { Route } from "./+types/votacao.$id";
 import { useLoaderData, Link, Await } from "react-router";
 import { db } from "~/utils/db.server";
 import { ArrowLeft, CheckCircle2, XCircle, Search } from "lucide-react";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
+import posthog from "posthog-js";
 import { VoteDetailsSkeleton } from "~/components/SkeletonLoader";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -77,6 +78,15 @@ export default function VotacaoRoute() {
 
 function VoteDetailsContent({ bill }: { bill: any }) {
   const [filter, setFilter] = useState("");
+
+  useEffect(() => {
+    if (bill) {
+        posthog.capture('vote_viewed', { 
+            id: bill.id, 
+            title: bill.title 
+        });
+    }
+  }, [bill]);
 
   const votesSim = bill.voteLogs.filter((v: any) => v.voteType === "SIM");
   const votesNao = bill.voteLogs.filter((v: any) => v.voteType === "NÃO");

@@ -7,4 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [mdx({ remarkPlugins: [remarkFrontmatter] }), tailwindcss(), reactRouter(), tsconfigPaths()],
+  ssr: {
+    noExternal: ["posthog-js", "posthog-js/react"],
+  },
 });
