@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Politician {
+  id        String   @id @default(uuid())
+  name      String
+  party     String   // Sigla do partido
+  state     String   // UF
+  photoUrl  String?
+  
+  // Métricas do "Produto"
+  attendanceRate Float?   // Assiduidade (0-100)
+  spending       Decimal? // Gasto total
+  
+  // Relacionamentos
+  votes     VoteLog[]
+  tags      PoliticianTag[] // Tags atribuídas (ex: "Liberal", "Conservador")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([party])
+  @@index([state])
+}
+
+// As "Categorias" do seu e-commerce
+model Tag {
+  id          String   @id @default(uuid())
+  name        String   // Ex: "A favor do Aborto"
+  category    String   // Ex: "Costumes", "Economia"
+  slug        String   @unique // Para usar na URL
+  
+  politicians PoliticianTag[]
+}
+
+// Tabela Pivô (Many-to-Many explícito para poder adicionar metadados se precisar)
+model PoliticianTag {
+  politicianId String
+  tagId        String
+  
+  politician   Politician @relation(fields: [politicianId], references: [id])
+  tag          Tag        @relation(fields: [tagId], references: [id])
+
+  @@id([politicianId, tagId])
+  @@index([tagId])
+  @@index([politicianId])
+}
+
+// Histórico de Votações (A fonte da verdade)
+model Bill {
+  id          String   @id // ID da API da Camara
+  title       String
+  description String?
+  voteSimDetails String?
+  voteNaoDetails String?
+  voteDate    DateTime
+  
+  voteLogs    VoteLog[]
+
+  @@index([voteDate])
+}
+
+model VoteLog {
+  id           String @id @default(uuid())
+  politicianId String
+  billId       String
+  voteType     String // "Sim", "Não", "Obstrução", "Abstenção"
+
+  politician   Politician @relation(fields: [politicianId], references: [id])
+  bill         Bill       @relation(fields: [billId], references: [id])
+
+  @@index([politicianId])
+  @@index([billId])
+}
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
