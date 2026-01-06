@@ -1,0 +1,137 @@
+---
+title: "Sobre o Projeto | Em Quem Votar"
+description: "Nossa missão é democratizar o acesso à informação política com dados reais e apartidários."
+---
+
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { Info, Target, Cpu, BarChart3, Shield, AlertTriangle, Github, Mail } from "lucide-react";
+
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+  <Header />
+
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-16">
+    {/* Page Header */}
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-blue-100 rounded-2xl mb-2 text-blue-600">
+        <Info size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
+        Sobre o Em Quem <span className="text-blue-600">Votar?</span>
+      </h1>
+      <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        Uma iniciativa cívica para trazer luz e clareza ao labirinto legislativo brasileiro através de dados.
+      </p>
+    </header>
+
+    <article className="prose prose-lg prose-blue mx-auto prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-p:leading-relaxed prose-li:text-gray-600 prose-li:leading-relaxed">
+      
+      <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 mb-12">
+        <div className="flex items-center gap-4 mb-6">
+          <Target className="text-blue-600 w-8 h-8" />
+          <h2 className="m-0">Nossa Missão</h2>
+        </div>
+        <p>
+          Democratizar o acesso à informação política, permitindo que qualquer brasileiro 
+          possa tomar decisões eleitorais informadas baseadas em dados reais e objetivos. 
+          Acreditamos que a transparência é o melhor antídoto contra a polarização e as notícias falsas.
+        </p>
+      </section>
+
+      <section className="space-y-12 mb-16">
+        <h2 className="text-3xl font-bold text-center mb-8">Como Funciona o Coração do Projeto</h2>
+        
+        <div className="grid md:grid-cols-2 gap-8 not-prose">
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+            <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+              <Cpu className="text-green-600 w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold m-0">1. Coleta Automatizada</h3>
+            <p className="text-gray-600 text-sm m-0">
+              Todos os dados vêm de fontes oficiais:
+            </p>
+            <ul className="space-y-2 text-sm text-gray-500 list-none p-0 m-0">
+              <li className="flex items-center gap-2 m-0 p-0 before:hidden">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                <strong>Dados Biográficos:</strong> API da Câmara.
+              </li>
+              <li className="flex items-center gap-2 m-0 p-0 before:hidden">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                <strong>Votações:</strong> Portal de Dados Abertos.
+              </li>
+              <li className="flex items-center gap-2 m-0 p-0 before:hidden">
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                <strong>Gastos:</strong> Portal da Transparência (CEAP).
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
+            <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
+              <BarChart3 className="text-purple-600 w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-bold m-0">2. Mapeamento de Tags</h3>
+            <p className="text-gray-600 text-sm m-0 leading-relaxed">
+              O algoritmo analisa votos em projetos decisivos (Reforma Tributária, Marco Temporal, etc.). 
+              As tags refletem posicionamentos públicos, não opiniões editoriais.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gray-900 text-white p-8 md:p-12 rounded-3xl shadow-xl not-prose space-y-8 mb-16">
+        <div className="flex items-center gap-4">
+          <Shield className="text-blue-400 w-8 h-8" />
+          <h2 className="text-3xl font-bold m-0">O Que NÃO Fazemos</h2>
+        </div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="space-y-2">
+             <div className="text-red-400 font-bold mb-1">❌ Sem Dinheiro Político</div>
+             <p className="text-gray-400 text-sm">Não recebemos financiamento de partidos ou parlamentares.</p>
+          </div>
+          <div className="space-y-2">
+             <div className="text-red-400 font-bold mb-1">❌ Sem Juízo de Valor</div>
+             <p className="text-gray-400 text-sm">Não dizemos se um voto é "certo" ou "errado". Mostramos o fato.</p>
+          </div>
+          <div className="space-y-2">
+             <div className="text-red-400 font-bold mb-1">❌ Sem Manipulação</div>
+             <p className="text-gray-400 text-sm">Os algoritmos são públicos e auditáveis. Não há interferência manual.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-orange-50 p-8 rounded-3xl border border-orange-100 text-orange-900 not-prose mb-16">
+        <div className="flex items-center gap-3 mb-4">
+           <AlertTriangle className="text-orange-600 w-6 h-6" />
+           <h3 className="font-bold text-lg m-0 text-orange-950">Limitações Importantes</h3>
+        </div>
+        <ul className="space-y-2 text-sm leading-relaxed text-orange-800">
+           <li>• Os dados refletem votos registrados de 2023 a 2025.</li>
+           <li>• Tags são simplificações para facilitar a busca e podem não captar todas as nuances.</li>
+           <li>• Cobertura atual: 513 deputados federais (Câmara dos Deputados).</li>
+        </ul>
+      </section>
+
+      <section className="text-center pt-8 not-prose border-t border-gray-100">
+        <h2 className="text-2xl font-bold mb-4">Quem Somos</h2>
+        <p className="text-gray-600 mb-8 max-w-xl mx-auto">
+          Desenvolvido por Lucas Galhardo e entusiastas da transparência pública. 
+          Este é um projeto de código aberto dedicado à cidadania digital.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-2xl hover:bg-gray-800 transition-colors">
+            <Github size={20} />
+            Ver no GitHub
+          </a>
+          <a href="mailto:contato@emquemvotar.app" className="inline-flex items-center gap-2 bg-white text-gray-900 border border-gray-200 px-6 py-3 rounded-2xl hover:bg-gray-50 transition-colors">
+            <Mail size={20} />
+            Falar com a equipe
+          </a>
+        </div>
+      </section>
+
+    </article>
+  </main>
+
+  <Footer />
+</div>

@@ -15,10 +15,11 @@ export const meta = () => {
 };
 
 import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
 
-<div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
   <Header />
-  <div className="prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl">
+  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
 
 # Esquerda, Direita ou Centro?
 
@@ -51,5 +52,6 @@ O fiel da balança. O centro evita os extremos e busca o **equilíbrio** (ou pra
 ## Onde você está?
 Ninguém é 100% uma coisa só. Você pode ser liberal na economia (direita) e conservador nos costumes (direita), ou liberal na economia e progressista nos costumes (libertário/centro). O importante é analisar as *propostas*, não apenas os rótulos.
 
-</div>
+  </main>
+  <Footer />
 </div>

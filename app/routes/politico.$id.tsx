@@ -12,7 +12,14 @@ export async function loader({ params }: Route.LoaderArgs) {
   // Ensure we await the data for SEO (meta tags need it)
   const politician = await db.politician.findUnique({
     where: { id: params.id },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      party: true,
+      state: true,
+      photoUrl: true,
+      spending: true,
+      attendanceRate: true,
       tags: {
         include: {
           tag: true,
@@ -20,8 +27,10 @@ export async function loader({ params }: Route.LoaderArgs) {
       },
       votes: {
         take: 20,
-        include: {
-          bill: true,
+        select: {
+           voteType: true,
+           billId: true,
+           bill: true // keep including bill for now as it's complex to select subfields and map them all
         },
         orderBy: {
           bill: {

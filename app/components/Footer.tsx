@@ -2,42 +2,71 @@ import { Link } from "react-router";
 
 export function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-100 py-12 mt-auto">
+    <footer className="bg-gray-900 text-gray-300 py-12 mt-20 font-sans border-t border-gray-800">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          {/* Brand & Mission */}
           <div>
-            <div className="text-xl font-bold text-gray-900 mb-4">
-              Em Quem <span className="text-blue-600">Votar?</span>
+            <div className="text-xl font-bold text-white mb-4">
+              Em Quem <span className="text-blue-500">Votar?</span>
             </div>
-            <p className="text-gray-500 leading-relaxed max-w-md">
-              Uma iniciativa independente para trazer transparência e clareza ao processo eleitoral. 
-              Ajudamos você a conectar seus valores aos votos dos seus representantes.
+            <p className="text-sm text-gray-400 mb-4 leading-relaxed">
+              Plataforma independente para decisões eleitorais informadas, baseada em dados reais e auditáveis.
             </p>
+            <div className="text-xs text-gray-500 font-medium tracking-wide uppercase">
+              Apartidário • Open Data
+            </div>
           </div>
           
-          <div className="flex flex-col md:items-end justify-center space-y-2 text-sm text-gray-500">
-             <Link to="/educacao/importancia-do-voto" className="hover:text-blue-600 transition-colors">A Importância do Voto</Link>
-             <Link to="/educacao/como-escolher" className="hover:text-blue-600 transition-colors">Como Escolher Candidatos</Link>
-             <Link to="/educacao/mito-voto-nulo" className="hover:text-blue-600 transition-colors">Mito do Voto Nulo</Link>
-             <Link to="/metodologia" className="hover:text-blue-600 transition-colors font-semibold pt-2">Metodologia e Transparência</Link>
+          {/* Navigation */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Navegação</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link to="/" className="hover:text-blue-400 transition-colors">Início</Link></li>
+              <li><Link to="/busca" className="hover:text-blue-400 transition-colors">Buscar Políticos</Link></li>
+              <li><Link to="/comparar" className="hover:text-blue-400 transition-colors">Comparar</Link></li>
+              <li><Link to="/quiz" className="hover:text-blue-400 transition-colors">Quiz Político</Link></li>
+            </ul>
+          </div>
+          
+          {/* Transparency */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Transparência</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link to="/sobre" className="hover:text-blue-400 transition-colors">Sobre o Projeto</Link></li>
+              <li><Link to="/faq" className="hover:text-blue-400 transition-colors">Perguntas Frequentes</Link></li>
+              <li><Link to="/metodologia" className="hover:text-blue-400 transition-colors">Metodologia</Link></li>
+              <li><a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Código Aberto (GitHub)</a></li>
+            </ul>
+          </div>
+          
+          {/* Data Sources */}
+          <div>
+            <h4 className="font-semibold text-white mb-4">Fontes de Dados</h4>
+            <ul className="space-y-2 text-xs text-gray-500">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                API Câmara dos Deputados
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                Portal Dados Abertos
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                CEAP (Portal da Transparência)
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-8 text-xs text-gray-400 leading-relaxed text-justify md:text-center">
-            <p className="mb-2">
-                <strong>Aviso Legal:</strong> Este site é uma iniciativa cívica independente e <strong>não possui vínculo com nenhum partido político, candidato ou órgão governamental</strong>.
-            </p>
-            <p className="mb-2">
-                Todos os dados brutos sobre votações, presença e despesas são obtidos automaticamente através da <a href="https://dadosabertos.camara.leg.br/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-600">API de Dados Abertos da Câmara dos Deputados</a>.
-            </p>
-            <p>
-                As classificações (tags) atribuídas aos parlamentares são geradas <strong>algoritmicamente</strong> com base puramente no histórico de votos públicos em projetos de lei selecionados. 
-                Elas representam padrões comportamentais objetivos e <strong>não constituem opinião editorial</strong> ou juízo de valor pessoal dos criadores da plataforma.
-            </p>
-        </div>
-        
-        <div className="text-center mt-8 text-gray-300 text-xs">
-           &copy; {new Date().getFullYear()} Em Quem Votar. Código aberto e auditável.
+        <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
+          <p>
+            &copy; {new Date().getFullYear()} Em Quem Votar? Todos os direitos reservados.
+          </p>
+          <div className="flex gap-4 mt-4 md:mt-0">
+             <span>Feito com ❤️ por Lucas Galhardo e contribuidores</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -24,7 +24,7 @@ async function fetchWithRetry(url: string, retries = 3, delay = 2000): Promise<R
         continue;
       }
       throw new Error(`HTTP ${response.status}`);
-    } catch (error) {
+    } catch (error: any) {
       console.warn(`⚠️ Attempt ${i + 1} failed for ${url}: ${error.message}`);
       if (i === retries - 1) throw error;
       await new Promise(r => setTimeout(r, delay * Math.pow(2, i))); // Exponential backoff

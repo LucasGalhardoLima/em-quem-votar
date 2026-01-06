@@ -58,11 +58,26 @@ export async function loader({ request }: Route.LoaderArgs) {
     where,
     skip: offset,
     take: limit + 1,
-    include: {
+    select: {
+      id: true,
+      name: true,
+      party: true,
+      state: true,
+      photoUrl: true,
+      spending: true,
+      attendanceRate: true,
       tags: {
         take: 3,
-        include: { tag: true },
-      },
+        select: {
+          tag: {
+            select: {
+              name: true,
+              slug: true,
+              category: true
+            }
+          }
+        }
+      }
     },
     orderBy: { name: 'asc' }
   }).then(results => {

@@ -7,10 +7,11 @@ category: "Cidadania"
 ---
 
 import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
 
-<div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
   <Header />
-  <div className="prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl">
+  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
 
 # A Importância do Seu Voto
 
@@ -46,5 +47,7 @@ Um voto consciente impede a eleição de maus políticos e fortalece as institui
 *   [Politize! - História do voto no Brasil](https://www.politize.com.br)
 *   [Constituição Federal de 1988](https://www.planalto.gov.br)
 
+  </main>
+  <Footer />
 </div>
-</div>
+```

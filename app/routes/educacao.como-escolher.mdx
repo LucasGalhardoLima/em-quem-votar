@@ -7,10 +7,11 @@ category: "Guia Prático"
 ---
 
 import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
 
-<div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
   <Header />
-  <div className="prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl">
+  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
 
 # Como Escolher um Candidato
 
@@ -42,5 +43,6 @@ Cuidado com promessas genéricas como "vou melhorar a saúde". Procure saber **c
 *   [TSE - DivulgaCandContas](https://divulgacandcontas.tse.jus.br)
 *   [Politize! - Como escolher um candidato](https://www.politize.com.br)
 
-</div>
+  </main>
+  <Footer />
 </div>

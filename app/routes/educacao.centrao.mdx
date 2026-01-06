@@ -15,10 +15,11 @@ export const meta = () => {
 };
 
 import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
 
-<div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
   <Header />
-  <div className="prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl">
+  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
 
 # O Que é o "Centrão"?
 
@@ -47,5 +48,6 @@ Há um debate.
 
 Saber quem faz parte do Centrão ajuda você a entender se o seu candidato vai votar por convicção ou por conveniência.
 
-</div>
+  </main>
+  <Footer />
 </div>

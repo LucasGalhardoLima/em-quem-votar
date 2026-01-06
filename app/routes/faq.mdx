@@ -1,0 +1,114 @@
+---
+title: "Perguntas Frequentes | Em Quem Votar"
+description: "Tire suas dúvidas sobre a origem dos dados, classificações e transparência da plataforma."
+---
+
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { HelpCircle, Database, Tag, MousePointer2, Lock, MessageSquare } from "lucide-react";
+
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+  <Header />
+
+  <main className="flex-grow max-w-3xl mx-auto px-4 py-16 space-y-16">
+    {/* Page Header */}
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-2xl mb-2 text-indigo-600">
+        <HelpCircle size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
+        Perguntas <span className="text-indigo-600">Frequentes</span>
+      </h1>
+      <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+        Tire suas dúvidas sobre o funcionamento da plataforma e a origem das informações.
+      </p>
+    </header>
+
+    <div className="space-y-12 pb-16">
+      
+      {/* Category: Dados */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
+           <Database size={20} />
+           <h2 className="text-xl m-0">Dados e Fontes</h2>
+        </div>
+        <div className="space-y-8">
+           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2">De onde vêm os dados?</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                 Todas as informações vêm de fontes oficiais públicas: API da Câmara dos Deputados, Portal de Dados Abertos e registros oficiais de gastos (CEAP). O projeto é apenas uma camada de visualização em cima do que é público.
+              </p>
+           </div>
+           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-2">Com que frequência os dados são atualizados?</h3>
+              <p className="text-gray-600 leading-relaxed text-sm">
+                 Temos um robô (script automatizado) que roda diariamente às 03:00 da manhã para sincronizar votações recentes e despesas processadas no dia anterior.
+              </p>
+           </div>
+        </div>
+      </section>
+
+      {/* Category: Classificações */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
+           <Tag size={20} />
+           <h2 className="text-xl m-0">Classificações e Tags</h2>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Como as tags são geradas?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              Analisamos automaticamente votos em projetos decisivos. Por exemplo, um deputado que votou SIM na Reforma Tributária e no Arcabouço Fiscal recebe a tag "Reformista Econômico". O critério é puramente matemático baseado no voto nominal.
+           </p>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Por que o deputado X tem/não tem a tag Y?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              As tags são baseadas em votos específicos. Se o deputado se ausentou ou obstruiu a pauta que define a tag, ele pode não recebê-la. Você pode visualizar o detalhamento de cada tag clicando nela na página do parlamentar.
+           </p>
+        </div>
+      </section>
+
+      {/* Category: Uso */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
+           <MousePointer2 size={20} />
+           <h2 className="text-xl m-0">Uso da Plataforma</h2>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Posso salvar meus políticos favoritos?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              Ainda não temos contas de usuário. No entanto, você pode usar a ferramenta de "Comparação" para manter temporariamente uma lista de políticos em destaque enquanto navega.
+           </p>
+        </div>
+      </section>
+
+      {/* Category: Privacidade */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
+           <Lock size={20} />
+           <h2 className="text-xl m-0">Privacidade</h2>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Vocês rastreiam meus dados?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              Não. Usamos o PostHog configurado apenas para capturar tendências agregadas (ex: quais filtros são mais populares). Não coletamos nomes, CPFs ou qualquer dado identificável do cidadão.
+           </p>
+        </div>
+      </section>
+
+      {/* Final Message */}
+      <section className="text-center pt-8">
+        <div className="inline-flex items-center gap-2 text-indigo-600 bg-indigo-50 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+           <MessageSquare size={16} />
+           Ainda tem alguma dúvida?
+        </div>
+        <p className="text-gray-500 text-sm">
+           Mande um e-mail para <a href="mailto:contato@emquemvotar.app" className="font-bold hover:underline">contato@emquemvotar.app</a>
+        </p>
+      </section>
+
+    </div>
+  </main>
+
+  <Footer />
+</div>

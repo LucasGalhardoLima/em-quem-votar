@@ -17,5 +17,7 @@ export default [
   route("api/newsletter", "routes/api.newsletter.ts"),
   route("metodologia", "routes/metodologia.tsx"),
   route("sitemap.xml", "routes/sitemap.xml.ts"),
+  route("sobre", "routes/sobre.mdx"),
+  route("faq", "routes/faq.mdx"),
   route("resources/og/:id", "routes/resources.og.$id.tsx")
 ] satisfies RouteConfig;

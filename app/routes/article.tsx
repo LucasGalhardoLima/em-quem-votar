@@ -43,6 +43,10 @@ export function loader({ params }: Route.LoaderArgs) {
   return article;
 }
 
+import { Footer } from "~/components/Footer";
+
+// ... existing meta ...
+
 export default function ArticlePage() {
   const article = useLoaderData();
 
@@ -71,7 +75,7 @@ export default function ArticlePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col font-sans">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -93,7 +97,7 @@ export default function ArticlePage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 py-12 md:py-20">
+      <main className="flex-grow max-w-3xl mx-auto px-4 py-12 md:py-20 w-full">
         
         {/* Article Header */}
         <div className="mb-12 space-y-6 text-center">
@@ -136,9 +140,7 @@ export default function ArticlePage() {
 
       </main>
 
-      <footer className="py-8 bg-gray-50 border-t border-gray-100 text-center text-sm text-gray-400">
-        &copy; 2026 Em Quem Votar. Informação é poder.
-      </footer>
+      <Footer />
     </div>
   );
 }
