@@ -7,6 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -54,6 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <ScrollRestoration />
             <Scripts />
             <Analytics />
+            <SpeedInsights />
         </PHProvider>
       </body>
     </html>
