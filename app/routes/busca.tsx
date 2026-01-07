@@ -4,6 +4,7 @@ import { Form, Link, useLoaderData, useNavigation, useSubmit, useFetcher, Await 
 import { Suspense, useEffect, useRef, useState } from "react";
 import { db } from "~/utils/db.server";
 import { Search, Loader2, User, SlidersHorizontal, Check } from "lucide-react";
+import { toast } from "sonner";
 import { PoliticianCardSkeleton } from "~/components/SkeletonLoader";
 import { useFilterStore } from "~/stores/filterStore";
 import { Prisma } from "@prisma/client";
@@ -237,7 +238,20 @@ export default function Busca() {
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
+                                      const newState = !isSelected(politician.id);
                                       toggleId(politician.id);
+
+                                      if (newState) {
+                                        toast.success(`${politician.name} adicionado à comparação`, {
+                                          duration: 2000,
+                                          position: "bottom-center"
+                                        });
+                                      } else {
+                                        toast.info(`${politician.name} removido`, { // Using .info for removal or .dismiss to be quieter
+                                          duration: 1500,
+                                          position: "bottom-center"
+                                        });
+                                      }
                                     }}
                                     className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-gray-50 transition-colors group/btn"
                                     title="Comparar"
@@ -281,16 +295,18 @@ export default function Busca() {
                                   </div>
                                 </Link>
                               ))}
-                            </div>
+                            </div >
 
                             {/* Infinite scroll trigger */}
-                            <div ref={observerTarget} className="h-20 flex items-center justify-center">
-                              {fetcher.state === "loading" && (
-                                <div className="flex items-center gap-2 text-gray-400">
-                                  <Loader2 className="w-5 h-5 animate-spin" />
-                                  <span>Carregando mais...</span>
-                                </div>
-                              )}
+                            < div ref={observerTarget} className="h-20 flex items-center justify-center" >
+                              {
+                                fetcher.state === "loading" && (
+                                  <div className="flex items-center gap-2 text-gray-400">
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <span>Carregando mais...</span>
+                                  </div>
+                                )
+                              }
                             </div>
                           </>
                         ) : (
@@ -317,10 +333,10 @@ export default function Busca() {
               </Suspense>
             </div>
 
-          </div>
-        </div>
-      </main>
+          </div >
+        </div >
+      </main >
       <ComparisonFloatingBar />
-    </div>
+    </div >
   );
 }

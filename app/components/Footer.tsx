@@ -17,7 +17,7 @@ export function Footer() {
               Apartidário • Open Data
             </div>
           </div>
-          
+
           {/* Navigation */}
           <div>
             <h4 className="font-semibold text-white mb-4">Navegação</h4>
@@ -28,7 +28,7 @@ export function Footer() {
               <li><Link to="/quiz" className="hover:text-blue-400 transition-colors">Quiz Político</Link></li>
             </ul>
           </div>
-          
+
           {/* Transparency */}
           <div>
             <h4 className="font-semibold text-white mb-4">Transparência</h4>
@@ -39,10 +39,16 @@ export function Footer() {
               <li><a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Código Aberto (GitHub)</a></li>
             </ul>
           </div>
-          
+
           {/* Data Sources */}
           <div>
-            <h4 className="font-semibold text-white mb-4">Fontes de Dados</h4>
+            <h4 className="font-semibold text-white mb-4">Legal</h4>
+            <ul className="space-y-2 text-sm text-gray-400">
+              <li><Link to="/privacidade" className="hover:text-blue-400 transition-colors">Política de Privacidade</Link></li>
+              <li><Link to="/termos" className="hover:text-blue-400 transition-colors">Termos de Uso</Link></li>
+            </ul>
+
+            <h4 className="font-semibold text-white mt-8 mb-4">Fontes de Dados</h4>
             <ul className="space-y-2 text-xs text-gray-500">
               <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
@@ -65,7 +71,7 @@ export function Footer() {
             &copy; {new Date().getFullYear()} Em Quem Votar? Todos os direitos reservados.
           </p>
           <div className="flex gap-4 mt-4 md:mt-0">
-             <span>Feito com ❤️ por Lucas Galhardo e contribuidores</span>
+            <span>Feito com ❤️ por Lucas Galhardo e contribuidores</span>
           </div>
         </div>
       </div>

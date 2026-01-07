@@ -75,6 +75,8 @@ export default function VotacaoRoute() {
   );
 }
 
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+
 function VoteDetailsContent({ bill }: { bill: any }) {
   const [filter, setFilter] = useState("");
 
@@ -95,19 +97,25 @@ function VoteDetailsContent({ bill }: { bill: any }) {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-20">
-      {/* Header */}
+      {/* Header with Breadcrumbs */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-4">
           <Link
             to="/"
             prefetch="intent"
-            className="p-2 -ml-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            className="p-2 -ml-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors md:hidden"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold truncate leading-tight">{bill.title}</h1>
-            <p className="text-xs text-gray-500">{new Date(bill.voteDate).toLocaleDateString('pt-BR')}</p>
+
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="hidden md:block mb-1">
+              <Breadcrumbs items={[{ label: "Votações", href: "/" }, { label: "Detalhes" }]} />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-sm md:text-lg font-bold truncate leading-tight">{bill.title}</h1>
+              <span className="text-xs text-gray-500 hidden md:inline">• {new Date(bill.voteDate).toLocaleDateString('pt-BR')}</span>
+            </div>
           </div>
         </div>
       </header>
@@ -175,7 +183,6 @@ function VoteDetailsContent({ bill }: { bill: any }) {
 
         {/* Lists Columns */}
         <div className="grid md:grid-cols-2 gap-8">
-
           {/* Sim List */}
           <div className="space-y-4">
             <h3 className="flex items-center gap-2 font-bold text-green-700 pb-2 border-b border-green-100">
@@ -227,9 +234,7 @@ function VoteDetailsContent({ bill }: { bill: any }) {
               {filteredNao.length === 0 && <div className="text-gray-400 italic text-sm">Nenhum voto encontrado.</div>}
             </div>
           </div>
-
         </div>
-
       </main>
     </div>
   );

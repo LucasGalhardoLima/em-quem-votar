@@ -1,0 +1,65 @@
+---
+title: "Termos de Uso | Em Quem Votar"
+description: "Regras e condições para uso da plataforma"
+---
+
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { FileText, AlertCircle, Scale } from "lucide-react";
+
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+  <Header />
+
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-gray-100 rounded-2xl mb-2 text-gray-600">
+        <FileText size={32} />
+      </div>
+      <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
+        Termos de Uso
+      </h1>
+      <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        Ao usar o <strong>Em Quem Votar?</strong>, você concorda com as seguintes condições.
+      </p>
+    </header>
+
+    <article className="prose prose-lg prose-blue mx-auto prose-headings:font-bold prose-headings:text-gray-900 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100">
+      
+      <h3>1. Objetivo da Plataforma</h3>
+      <p>
+        O <strong>Em Quem Votar?</strong> é uma ferramenta de consulta e visualização de dados públicos. Nosso objetivo é facilitar o acesso a informações sobre o legislativo brasileiro. Não representamos nenhuma entidade governamental.
+      </p>
+
+      <h3>2. Uso dos Dados</h3>
+      <p>
+        As informações apresentadas (votações, gastos, presenças) são extraídas automaticamente de fontes oficiais. Embora nos esforcemos para garantir a precisão, <strong>não garantimos que os dados estejam livres de erros pontuais</strong> provenientes da fonte ou do processamento.
+      </p>
+      <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-yellow-900 text-sm not-prose flex gap-3 font-medium">
+        <AlertCircle className="flex-shrink-0" />
+        Recomendamos sempre conferir informações críticas diretamente nos portais oficiais da Câmara dos Deputados.
+      </div>
+
+      <h3>3. Isenção de Responsabilidade</h3>
+      <p>
+        A equipe do projeto não se responsabiliza por decisões tomadas com base nas informações aqui apresentadas. As classificações (tags) são geradas por algoritmos baseados em padrões de votação e não refletem opinião pessoal dos desenvolvedores.
+      </p>
+
+      <h3>4. Propriedade Intelectual</h3>
+      <p>
+        O código-fonte desta plataforma é aberto (Open Source) e está disponível no GitHub. Você é livre para auditar, copiar e contribuir, respeitando a licença MIT especificada no repositório. Os dados dos parlamentares são públicos.
+      </p>
+
+      <h3>5. Alterações nos Termos</h3>
+      <p>
+        Podemos atualizar estes termos a qualquer momento para refletir mudanças na legislação ou na plataforma. O uso contínuo do site implica na aceitação dos novos termos.
+      </p>
+      
+      <p className="text-sm text-gray-500 mt-8">
+        Última atualização: {new Date().toLocaleDateString('pt-BR')}
+      </p>
+
+    </article>
+  </main>
+
+  <Footer />
+</div>

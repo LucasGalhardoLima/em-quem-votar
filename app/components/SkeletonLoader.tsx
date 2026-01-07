@@ -1,6 +1,6 @@
 export function PoliticianCardSkeleton() {
   return (
-    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-start gap-4 animate-pulse min-h-[148px]">
+    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-start gap-4 animate-pulse min-h-[160px]">
       <div className="w-14 h-14 rounded-full bg-gray-200 flex-shrink-0" />
       <div className="flex-1 space-y-3 min-w-0">
         <div className="space-y-2">

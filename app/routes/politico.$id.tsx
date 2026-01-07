@@ -2,10 +2,12 @@ import { useLoaderData, Link, useNavigation, Await } from "react-router";
 import { Suspense, useEffect } from "react";
 import { db } from "~/utils/db.server";
 import type { Route } from "./+types/politico.$id";
-import { ArrowLeft, Check, X, Minus, MapPin, Building2, TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { ArrowLeft, Check, X, Minus, MapPin, Building2, TrendingUp, DollarSign, Calendar, Share2, Mail } from "lucide-react";
 import { ProfileHeaderSkeleton, VoteHistorySkeleton } from "~/components/SkeletonLoader";
 import { TagWithTooltip } from "~/components/TagWithTooltip";
 import { Header } from "~/components/Header";
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { toast } from "sonner";
 
 export async function loader({ params }: Route.LoaderArgs) {
   // Fetch basic politician info as fast as possible
@@ -78,7 +80,7 @@ export function meta({ data }: Route.MetaArgs) {
   return [
     { title: `Perfil de ${data.politician.name} | Em Quem Votar` },
     { name: "description", content: `Confira o histórico de votações e posicionamentos de ${data.politician.name}.` },
-    { property: "og:image", content: `/resources/og/${data.politician.id}` },
+    { property: "og:image", content: `/ resources / og / ${data.politician.id} ` },
     { name: "twitter:card", content: "summary_large_image" },
   ];
 }
@@ -89,8 +91,12 @@ export function meta({ data }: Route.MetaArgs) {
 export default function PoliticianProfile() {
   const data = useLoaderData<typeof loader>();
   const navigation = useNavigation();
-  const isLoading = navigation.state === "loading";
   const { politician } = data;
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("Link copiado para a área de transferência!");
+  };
 
   if (!politician) {
     return (
@@ -106,6 +112,22 @@ export default function PoliticianProfile() {
       <Header />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+        {/* Breadcrumbs */}
+        <div className="flex justify-between items-center">
+          <Breadcrumbs items={[
+            { label: "Políticos", href: "/busca" },
+            { label: politician.name }
+          ]} />
+
+          <button
+            onClick={handleShare}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            title="Compartilhar Perfil"
+          >
+            <Share2 size={20} />
+          </button>
+        </div>
+
         <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8">
           <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner flex-shrink-0 bg-gray-200">
             {politician.photoUrl ? (
@@ -158,7 +180,7 @@ export default function PoliticianProfile() {
                   <DollarSign className="w-5 h-5 text-gray-400" />
                   Gasto Mensal (Cota)
                 </h3>
-                <span className={`font-bold ${Number(politician.spending || 0) > 20000 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`font - bold ${Number(politician.spending || 0) > 20000 ? 'text-red-600' : 'text-green-600'} `}>
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(politician.spending || 0))}
                 </span>
               </div>
@@ -174,8 +196,8 @@ export default function PoliticianProfile() {
 
                   {/* Actual Spending Bar */}
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${Number(politician.spending || 0) > 20000 ? 'bg-red-500' : 'bg-green-500'}`}
-                    style={{ width: `${Math.min((Number(politician.spending || 0) / 60000) * 100, 100)}%` }}
+                    className={`h - full rounded - full transition - all duration - 500 ${Number(politician.spending || 0) > 20000 ? 'bg-red-500' : 'bg-green-500'} `}
+                    style={{ width: `${Math.min((Number(politician.spending || 0) / 60000) * 100, 100)}% ` }}
                   ></div>
                 </div>
 
@@ -201,7 +223,7 @@ export default function PoliticianProfile() {
                   <Calendar className="w-5 h-5 text-gray-400" />
                   Presença em Plenário
                 </h3>
-                <span className={`font-bold ${Number(politician.attendanceRate || 0) < 80 ? 'text-red-600' : 'text-green-600'}`}>
+                <span className={`font - bold ${Number(politician.attendanceRate || 0) < 80 ? 'text-red-600' : 'text-green-600'} `}>
                   {Number(politician.attendanceRate || 0)}%
                 </span>
               </div>
@@ -209,8 +231,8 @@ export default function PoliticianProfile() {
               <div className="relative pt-2 pb-2">
                 <div className="h-4 bg-gray-100 rounded-full overflow-hidden w-full">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${Number(politician.attendanceRate || 0) < 80 ? 'bg-red-500' : 'bg-green-500'}`}
-                    style={{ width: `${Number(politician.attendanceRate || 0)}%` }}
+                    className={`h - full rounded - full transition - all duration - 500 ${Number(politician.attendanceRate || 0) < 80 ? 'bg-red-500' : 'bg-green-500'} `}
+                    style={{ width: `${Number(politician.attendanceRate || 0)}% ` }}
                   ></div>
                 </div>
 
@@ -254,12 +276,12 @@ export default function PoliticianProfile() {
                   </div>
 
                   <div className="flex-shrink-0 flex items-center gap-3">
-                    <div className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm ${vote.voteType.toUpperCase() === "SIM"
+                    <div className={`flex items - center gap - 2 px - 4 py - 2 rounded - xl font - bold text - sm ${vote.voteType.toUpperCase() === "SIM"
                       ? "bg-green-100 text-green-700"
                       : vote.voteType.toUpperCase() === "NÃO"
                         ? "bg-red-100 text-red-700"
                         : "bg-gray-100 text-gray-600"
-                      }`}>
+                      } `}>
                       {vote.voteType.toUpperCase() === "SIM" && <Check size={18} />}
                       {vote.voteType.toUpperCase() === "NÃO" && <X size={18} />}
                       {vote.voteType.toUpperCase() !== "SIM" && vote.voteType.toUpperCase() !== "NÃO" && <Minus size={18} />}

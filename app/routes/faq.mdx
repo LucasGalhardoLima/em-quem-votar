@@ -94,6 +94,38 @@ import { HelpCircle, Database, Tag, MousePointer2, Lock, MessageSquare } from "l
               Não. Usamos o PostHog configurado apenas para capturar tendências agregadas (ex: quais filtros são mais populares). Não coletamos nomes, CPFs ou qualquer dado identificável do cidadão.
            </p>
         </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Preciso criar conta para usar?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              Não. O acesso é totalmente livre e gratuito, sem necessidade de login ou cadastro. Acreditamos que a informação pública deve ser livre de barreiras.
+           </p>
+        </div>
+      </section>
+
+      {/* Category: Metodologia e Erros */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
+           <Database size={20} />
+           <h2 className="text-xl m-0">Metodologia e Erros</h2>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Encontrei um erro. O que fazer?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              No final de cada perfile de político, há um link para reportar erros. Você também pode nos contatar pelo e-mail oficial. Verificaremos a fonte oficial e corrigiremos o mais rápido possível.
+           </p>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Por que faltam alguns deputados?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              No momento, cobrimos os 513 deputados federais em exercício. Suplentes que assumiram por curtos períodos podem não aparecer se não tiverem participado das votações chave que monitoramos.
+           </p>
+        </div>
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+           <h3 className="font-bold text-gray-900 mb-2">Como é calculado o gasto mensal?</h3>
+           <p className="text-gray-600 leading-relaxed text-sm">
+              Somamos todas as despesas reembolsadas da Cota Parlamentar no mês vigente e calculamos a média. O valor de referência é aprox. R$ 45.000,00, mas varia por estado devido ao valor das passagens aéreas. Simplificamos para uma régua de R$ 20k-60k para facilitar a visualização.
+           </p>
+        </div>
       </section>
 
       {/* Final Message */}
