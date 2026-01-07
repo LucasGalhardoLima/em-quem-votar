@@ -263,7 +263,7 @@ export default function Home() {
                         key={vote.id}
                         to={`/votacao/${vote.id}`}
                         prefetch="intent"
-                        className="group bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 cursor-pointer flex flex-col"
+                        className="group bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 cursor-pointer flex flex-col min-h-[260px] h-full"
                       >
                         <div className="flex-grow">
                           <div className="flex items-center gap-2 mb-4">

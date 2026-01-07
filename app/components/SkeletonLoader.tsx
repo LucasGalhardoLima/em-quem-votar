@@ -21,7 +21,7 @@ export function PoliticianCardSkeleton() {
 
 export function FeaturedVoteSkeleton() {
   return (
-    <div className="bg-gray-50 rounded-2xl p-8 border border-transparent animate-pulse h-[250px] flex flex-col">
+    <div className="bg-gray-50 rounded-2xl p-8 border border-transparent animate-pulse min-h-[260px] h-full flex flex-col">
       <div className="flex items-center gap-2 mb-4">
         <div className="h-6 w-24 bg-gray-200 rounded-lg" />
         <div className="h-3 w-16 bg-gray-200 rounded" />
