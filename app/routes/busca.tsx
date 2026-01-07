@@ -201,7 +201,7 @@ export default function Busca() {
               <Suspense
                 fallback={
                   <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 w-full">
-                    {Array.from({ length: 6 }).map((_, i) => (
+                    {Array.from({ length: 12 }).map((_, i) => (
                       <PoliticianCardSkeleton key={i} />
                     ))}
                   </div>
@@ -214,7 +214,7 @@ export default function Busca() {
                     if (isLoading) {
                       return (
                         <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-4 w-full">
-                          {Array.from({ length: 6 }).map((_, i) => (
+                          {Array.from({ length: 12 }).map((_, i) => (
                             <PoliticianCardSkeleton key={i} />
                           ))}
                         </div>
@@ -317,9 +317,6 @@ export default function Busca() {
               </Suspense>
             </div>
 
-            <div className="mt-12">
-              <NewsletterForm />
-            </div>
           </div>
         </div>
       </main>
@@ -327,4 +324,3 @@ export default function Busca() {
     </div>
   );
 }
-
