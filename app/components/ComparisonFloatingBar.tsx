@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import { useComparisonStore } from "~/stores/comparisonStore";
 import { X, ArrowRight } from "lucide-react";
 
-import posthog from "posthog-js";
 
 export function ComparisonFloatingBar() {
   const { selectedIds, clear } = useComparisonStore();
@@ -25,29 +24,23 @@ export function ComparisonFloatingBar() {
         <div className="h-4 w-px bg-gray-700"></div>
 
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={clear}
             className="text-xs text-gray-400 hover:text-white transition-colors"
           >
             Limpar
           </button>
-          
+
           <Link
             to={`/comparar?ids=${selectedIds.join(",")}`}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all ${
-              selectedIds.length >= 2 
-                ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50" 
-                : "bg-gray-800 text-gray-400 cursor-not-allowed"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all ${selectedIds.length >= 2
+              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50"
+              : "bg-gray-800 text-gray-400 cursor-not-allowed"
+              }`}
             onClick={(e) => {
               if (selectedIds.length < 2) {
                 e.preventDefault();
                 alert("Selecione pelo menos 2 políticos para comparar.");
-              } else {
-                posthog.capture('comparison_started', { 
-                    quantity: selectedIds.length,
-                    ids: selectedIds
-                });
               }
             }}
           >

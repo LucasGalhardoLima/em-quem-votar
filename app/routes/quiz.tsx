@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import posthog from "posthog-js";
 import { Link, useNavigate } from "react-router";
 import { Header } from "~/components/Header";
 import { QUIZ_QUESTIONS } from "~/data/quiz-questions";
@@ -14,26 +13,17 @@ export default function Quiz() {
     const [scores, setScores] = useState<Record<string, number>>({});
     const navigate = useNavigate();
 
-    useEffect(() => {
-        posthog.capture('quiz_started');
-    }, []);
-
     const currentQuestion = QUIZ_QUESTIONS[currentQuestionIndex];
     const progress = ((currentQuestionIndex) / QUIZ_QUESTIONS.length) * 100;
 
     const handleAnswer = (answer: "YES" | "NO") => {
         const effects = answer === "YES" ? currentQuestion.yesAffects : currentQuestion.noAffects;
-        
+
         const newScores = { ...scores };
         effects.forEach(effect => {
             newScores[effect.tagSlug] = (newScores[effect.tagSlug] || 0) + effect.weight;
         });
         setScores(newScores);
-
-        posthog.capture('quiz_question_answered', {
-            question_index: currentQuestionIndex,
-            answer
-        });
 
         if (currentQuestionIndex < QUIZ_QUESTIONS.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
@@ -48,16 +38,12 @@ export default function Quiz() {
             .sort(([, a], [, b]) => b - a)
             .map(([tag]) => tag)
             .slice(0, 2); // Get top 2
-        
-        posthog.capture('quiz_completed', {
-            top_tags: sortedTags
-        });
-        
+
         const queryParams = new URLSearchParams();
         if (sortedTags.length > 0) {
             queryParams.set("tags", sortedTags.join(","));
         }
-        
+
         navigate(`/busca?${queryParams.toString()}`);
     };
 
@@ -73,7 +59,7 @@ export default function Quiz() {
 
                 <div className="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 w-full text-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-                    
+
                     <span className="inline-block px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs font-bold tracking-wider mb-6">
                         PERGUNTA {currentQuestionIndex + 1} DE {QUIZ_QUESTIONS.length}
                     </span>
@@ -83,7 +69,7 @@ export default function Quiz() {
                     </h2>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <button 
+                        <button
                             onClick={() => handleAnswer("NO")}
                             className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-red-100 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-200 transition-all active:scale-95"
                         >
@@ -93,7 +79,7 @@ export default function Quiz() {
                             <span className="font-bold text-lg">Não</span>
                         </button>
 
-                        <button 
+                        <button
                             onClick={() => handleAnswer("YES")}
                             className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-green-100 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all active:scale-95"
                         >
@@ -105,7 +91,7 @@ export default function Quiz() {
                     </div>
 
                     {currentQuestionIndex > 0 && (
-                        <button 
+                        <button
                             onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
                             className="mt-8 text-gray-400 hover:text-gray-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
                         >

@@ -35,7 +35,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 import { Footer } from "~/components/Footer";
-import { PHProvider } from "./posthog-provider";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -43,20 +42,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="color-scheme" content="light dark" />
         <Meta />
         <Links />
       </head>
       <body className="flex flex-col min-h-screen">
-        <PHProvider>
-            <div className="flex-grow">
-                {children}
-            </div>
-            <Footer />
-            <ScrollRestoration />
-            <Scripts />
-            <Analytics />
-            <SpeedInsights />
-        </PHProvider>
+        <div className="flex-grow">
+          {children}
+        </div>
+        <Footer />
+        <ScrollRestoration />
+        <Scripts />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

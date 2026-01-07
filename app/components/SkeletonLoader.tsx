@@ -1,6 +1,6 @@
 export function PoliticianCardSkeleton() {
   return (
-    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 animate-pulse">
+    <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex items-center gap-4 animate-pulse h-[82px]">
       <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
       <div className="flex-1 space-y-2">
         <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -14,11 +14,29 @@ export function PoliticianCardSkeleton() {
   );
 }
 
+export function FeaturedVoteSkeleton() {
+  return (
+    <div className="bg-gray-50 rounded-2xl p-8 border border-transparent animate-pulse h-[250px] flex flex-col">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="h-6 w-24 bg-gray-200 rounded-lg" />
+        <div className="h-3 w-16 bg-gray-200 rounded" />
+      </div>
+      <div className="space-y-3 flex-grow">
+        <div className="h-6 bg-gray-200 rounded w-full" />
+        <div className="h-6 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-full pt-4" />
+        <div className="h-4 bg-gray-200 rounded w-5/6" />
+      </div>
+      <div className="mt-6 h-5 w-20 bg-gray-200 rounded" />
+    </div>
+  );
+}
+
 export function ProfileHeaderSkeleton() {
   return (
     <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8 animate-pulse">
       <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-200 flex-shrink-0" />
-      
+
       <div className="flex-1 text-center md:text-left space-y-4 w-full">
         <div className="space-y-3">
           <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto md:mx-0" />
@@ -43,13 +61,13 @@ export function ProfileHeaderSkeleton() {
 
 export function VoteHistorySkeleton() {
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-start md:items-center animate-pulse">
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row gap-6 items-start md:items-center animate-pulse min-h-[140px]">
       <div className="flex-1 space-y-3 w-full">
         <div className="h-3 bg-gray-200 rounded w-24" />
         <div className="h-5 bg-gray-200 rounded w-full" />
         <div className="h-4 bg-gray-200 rounded w-5/6" />
       </div>
-      
+
       <div className="flex-shrink-0">
         <div className="h-10 w-20 bg-gray-200 rounded-xl" />
       </div>
