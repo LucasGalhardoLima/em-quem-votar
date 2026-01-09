@@ -73,7 +73,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col justify-center items-center px-4 relative pt-20 pb-10">
         <div className="w-full max-w-7xl flex flex-col items-center text-center space-y-8 animate-fade-in-up">
@@ -123,9 +123,9 @@ export default function Home() {
             </div>
 
             <div className="flex items-center justify-center gap-2 text-sm text-gray-500 py-2">
-              <div className="h-px bg-gray-200 w-full"></div>
+              <div className="h-px bg-gray-200 flex-1"></div>
               <span className="shrink-0 px-2">ou se preferir</span>
-              <div className="h-px bg-gray-200 w-full"></div>
+              <div className="h-px bg-gray-200 flex-1"></div>
             </div>
 
             <Link
