@@ -30,6 +30,42 @@ const KEY_VOTES = [
     tagNameNao: 'Oposição/Rigoroso',
     tagSlugNao: 'oposicao-rigoroso',
     category: 'Economia'
+  },
+  {
+    id: '2423268-40', // Verified: Manutenção da Prisão Chiquinho Brazão (Sim: 277, Não: 129)
+    name: 'Prisão Chiquinho Brazão',
+    tagNameSim: 'Rigoroso',
+    tagSlugSim: 'rigoroso',
+    tagNameNao: 'Garantista',
+    tagSlugNao: 'garantista',
+    category: 'Segurança Pública'
+  },
+  {
+    id: '2194899-103', // Verified: PEC da Transição (Sim: 331, Não: 168)
+    name: 'PEC da Transição',
+    tagNameSim: 'Base do Governo',
+    tagSlugSim: 'base-governo',
+    tagNameNao: 'Oposição',
+    tagSlugNao: 'oposicao-governo',
+    category: 'Economia'
+  },
+  {
+    id: '2310837-8', // Verified: PL das Fake News - Urgência (Sim: 238, Não: 192)
+    name: 'PL das Fake News',
+    tagNameSim: 'Regulação Digital',
+    tagSlugSim: 'regulacao-digital',
+    tagNameNao: 'Liberdade Digital',
+    tagSlugNao: 'liberdade-digital',
+    category: 'Tecnologia & Comunicação'
+  },
+  {
+    id: '2270789-73', // Verified: Privatização Eletrobras (Sim: 313, Não: 166)
+    name: 'Privatização Eletrobras',
+    tagNameSim: 'Liberal',
+    tagSlugSim: 'liberal',
+    tagNameNao: 'Estatista',
+    tagSlugNao: 'estatista',
+    category: 'Economia'
   }
 ];
 
@@ -152,8 +188,57 @@ async function seedVotes() {
       });
     }
 
+// ... (previous API votes) ...
+
     console.log(`  - Batch Inserted: ${voteLogsToCreate.length} logs and ${politicianTagsToCreate.length} tags.`);
   }
+}
+
+async function seedSystemTags() {
+    console.log("🏷️ Seeding System Tags (Empty but queryable)...");
+    
+    // List from app/data/filters.ts
+    const SYSTEM_TAGS = [
+        // Economia
+        { slug: "reformista-economico", name: "Reformista Econômico", category: "Economia" },
+        { slug: "conservador-economico", name: "Conservador Econômico", category: "Economia" },
+        { slug: "governista-flexivel", name: "Governista", category: "Economia" },
+        { slug: "oposicao-rigoroso", name: "Oposição", category: "Economia" },
+        { slug: "base-governo", name: "Base do Governo", category: "Economia" },
+        { slug: "oposicao-governo", name: "Oposição ao Governo", category: "Economia" },
+        { slug: "liberal", name: "Liberal", category: "Economia" },
+        { slug: "estatista", name: "Estatista", category: "Economia" },
+        // Tecnologia
+        { slug: "regulacao-digital", name: "Regulação Digital", category: "Tecnologia & Comunicação" },
+        { slug: "liberdade-digital", name: "Liberdade Digital", category: "Tecnologia & Comunicação" },
+        // Pauta Verde
+        { slug: "ruralista", name: "Ruralista", category: "Agro & Meio Ambiente" },
+        { slug: "ambientalista", name: "Ambientalista", category: "Agro & Meio Ambiente" },
+        // Segurança
+        { slug: "rigoroso", name: "Rigoroso", category: "Segurança Pública" },
+        { slug: "garantista", name: "Garantista", category: "Segurança Pública" },
+        // Costumes
+        { slug: "conservador-costumes", name: "Conservador", category: "Costumes" },
+        { slug: "progressista-costumes", name: "Progressista", category: "Costumes" },
+        // Uso de Verba
+        { slug: "baixo-custo", name: "Baixo Custo", category: "Uso de Verba" },
+        { slug: "gastao", name: "Alto Custo", category: "Uso de Verba" },
+        // Assiduidade
+        { slug: "assiduo", name: "Assíduo", category: "Assiduidade" },
+        { slug: "ausente", name: "Ausente", category: "Assiduidade" },
+        // Perfil
+        { slug: "novato", name: "Novato", category: "Perfil" },
+        { slug: "veterano", name: "Veterano", category: "Perfil" }
+    ];
+
+    for (const tag of SYSTEM_TAGS) {
+        await prisma.tag.upsert({
+            where: { slug: tag.slug },
+            update: { name: tag.name, category: tag.category },
+            create: { name: tag.name, slug: tag.slug, category: tag.category }
+        });
+    }
+    console.log(`✅ Ensured ${SYSTEM_TAGS.length} system tags exist.`);
 }
 
 async function main() {
@@ -161,6 +246,7 @@ async function main() {
         console.time("Total Seed Time");
         // await seedPoliticians(); // Already seeded 513 politicians
         await seedVotes();
+        await seedSystemTags();
         console.timeEnd("Total Seed Time");
     } catch(e) {
         console.error(e);

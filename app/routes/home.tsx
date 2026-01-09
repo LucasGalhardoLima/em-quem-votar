@@ -12,6 +12,7 @@ import { PoliticianCardSkeleton, FeaturedVoteSkeleton } from "~/components/Skele
 import { useFilterStore } from "~/stores/filterStore";
 
 import { Prisma } from "@prisma/client";
+import { PoliticianService } from "~/services/politician.server";
 
 import { NewsletterForm } from "~/components/NewsletterForm";
 
@@ -47,7 +48,17 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Only fetch them on the first load (to keep it fast)
   const featuredVotesPromise = (!query && !tagsParam) ? db.bill.findMany({
     where: {
-      id: { in: ["2196833-326", "345311-270", "2357053-47", "pl-2253-2022", "pec-9-2023", "pl-4173-2023"] } // + Saidinhas, Anistia, Offshores
+      id: {
+        in: [
+          "2196833-326", // Reforma Tributária
+          "345311-270",  // Marco Temporal
+          "2357053-47",  // Arcabouço Fiscal
+          "2423268-40",  // Prisão Chiquinho Brazão
+          "2194899-103", // PEC da Transição
+          "2310837-8",   // PL Fake News
+          "2270789-73"   // Eletrobras
+        ]
+      }
     },
     select: { id: true, title: true, voteDate: true, description: true }
   }).then(votes => votes.map(v => ({ ...v, voteDate: v.voteDate.toISOString() }))) : Promise.resolve([]);
@@ -81,78 +92,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 
 export default function Home() {
-  const { results: deferredResults, query, featuredVotes: deferredVotes, tagsParam } = useLoaderData<typeof loader>();
-  const navigation = useNavigation();
-
-  const fetcher = useFetcher<typeof loader>();
-  const [allResults, setAllResults] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
-  const observerTarget = useRef<HTMLDivElement>(null);
-
-  const { selectedTags, setTags } = useFilterStore();
-
-  // Hydrate store from URL on mount/loader change
-  useEffect(() => {
-    if (tagsParam) {
-      setTags(tagsParam.split(","));
-    } else {
-      setTags([]);
-    }
-  }, [tagsParam, setTags]);
-
-
-
-  // Reset results when new deferred results arrive
-  useEffect(() => {
-    deferredResults.then(res => {
-      setAllResults(res.items);
-      setHasMore(res.hasMore);
-    });
-  }, [deferredResults]);
-
-
-  // Update results when fetcher loads more
-  useEffect(() => {
-    if (fetcher.data?.results && fetcher.state === "idle") {
-      const results = fetcher.data.results;
-      if (results instanceof Promise) {
-        results.then(res => {
-          setAllResults(prev => [...prev, ...res.items]);
-          setHasMore(res.hasMore);
-        });
-      } else {
-        setAllResults(prev => [...prev, ...(results as any).items]);
-        setHasMore((results as any).hasMore);
-      }
-    }
-  }, [fetcher.data, fetcher.state]);
-
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && fetcher.state === "idle") {
-          const url = new URL(window.location.href);
-          url.searchParams.set("offset", String(allResults.length));
-          fetcher.load(url.pathname + url.search);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
-
-    return () => observer.disconnect();
-  }, [hasMore, allResults.length, fetcher]);
-
-  // Auto-scroll to results if we have them
-  useEffect(() => {
-    if (allResults.length > 0) {
-      document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [query]);
+  const { featuredVotes: deferredVotes } = useLoaderData<typeof loader>();
+  const { selectedTags } = useFilterStore();
 
   const handleScrollToContent = () => {
     document.getElementById("content")?.scrollIntoView({ behavior: "smooth" });

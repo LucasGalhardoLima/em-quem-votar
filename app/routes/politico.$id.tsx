@@ -8,40 +8,20 @@ import { TagWithTooltip } from "~/components/TagWithTooltip";
 import { Header } from "~/components/Header";
 import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { toast } from "sonner";
+import { PoliticianPerformance } from "~/components/PoliticianPerformance";
+import { PoliticianVoteHistory } from "~/components/PoliticianVoteHistory";
+
+// ... imports
+import { PoliticianService } from "~/services/politician.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
   // Fetch basic politician info as fast as possible
   // Ensure we await the data for SEO (meta tags need it)
-  const politician = await db.politician.findUnique({
-    where: { id: params.id },
-    select: {
-      id: true,
-      name: true,
-      party: true,
-      state: true,
-      photoUrl: true,
-      spending: true,
-      attendanceRate: true,
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
-      votes: {
-        take: 20,
-        select: {
-          voteType: true,
-          billId: true,
-          bill: true // keep including bill for now as it's complex to select subfields and map them all
-        },
-        orderBy: {
-          bill: {
-            voteDate: "desc",
-          },
-        },
-      },
-    },
-  });
+  if (!params.id) {
+    throw new Response("ID inválido", { status: 400 });
+  }
+
+  const politician = await PoliticianService.getById(params.id);
 
   if (!politician) {
     return { politician: null };
@@ -166,133 +146,9 @@ export default function PoliticianProfile() {
         </section>
 
         {/* Performance Section */}
-        <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
-            Desempenho & Métricas
-          </h2>
+        <PoliticianPerformance politician={politician} />
 
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Spending Metrics */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-gray-400" />
-                  Gasto Mensal (Cota)
-                </h3>
-                <span className={`font - bold ${Number(politician.spending || 0) > 20000 ? 'text-red-600' : 'text-green-600'} `}>
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(politician.spending || 0))}
-                </span>
-              </div>
-
-              <div className="relative pt-2 pb-2">
-                {/* Bar Container */}
-                <div className="h-4 bg-gray-100 rounded-full overflow-hidden w-full relative">
-                  {/* Simulated Average Marker (20k) */}
-                  <div
-                    className="absolute top-0 bottom-0 border-r-2 border-dashed border-gray-400 z-10 w-[33%]" // 20k/60k = 33%
-                    title="Média Parlamentar (R$ 20k)"
-                  ></div>
-
-                  {/* Actual Spending Bar */}
-                  <div
-                    className={`h - full rounded - full transition - all duration - 500 ${Number(politician.spending || 0) > 20000 ? 'bg-red-500' : 'bg-green-500'} `}
-                    style={{ width: `${Math.min((Number(politician.spending || 0) / 60000) * 100, 100)}% ` }}
-                  ></div>
-                </div>
-
-                {/* Legend */}
-                <div className="flex justify-between text-xs text-gray-400 mt-2 font-medium">
-                  <span>R$ 0</span>
-                  <span className="text-gray-500 relative -left-8">Média: R$ 20k</span>
-                  <span>R$ 60k+</span>
-                </div>
-              </div>
-
-              <p className="text-sm text-gray-500">
-                {Number(politician.spending || 0) > 20000
-                  ? "Este parlamentar gasta acima da média mensal da câmara."
-                  : "Este parlamentar mantém seus gastos abaixo da média."}
-              </p>
-            </div>
-
-            {/* Attendance Metrics */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-gray-400" />
-                  Presença em Plenário
-                </h3>
-                <span className={`font - bold ${Number(politician.attendanceRate || 0) < 80 ? 'text-red-600' : 'text-green-600'} `}>
-                  {Number(politician.attendanceRate || 0)}%
-                </span>
-              </div>
-
-              <div className="relative pt-2 pb-2">
-                <div className="h-4 bg-gray-100 rounded-full overflow-hidden w-full">
-                  <div
-                    className={`h - full rounded - full transition - all duration - 500 ${Number(politician.attendanceRate || 0) < 80 ? 'bg-red-500' : 'bg-green-500'} `}
-                    style={{ width: `${Number(politician.attendanceRate || 0)}% ` }}
-                  ></div>
-                </div>
-
-                <div className="flex justify-between text-xs text-gray-400 mt-2 font-medium">
-                  <span>0%</span>
-                  <span className="text-gray-500">Meta: 100%</span>
-                </div>
-              </div>
-
-              <p className="text-sm text-gray-500">
-                {Number(politician.attendanceRate || 0) < 80
-                  ? "Frequência baixa. O parlamentar tem faltado a sessões importantes."
-                  : "Ótima assiduidade. O parlamentar está presente na maioria das sessões."}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            Histórico de Votações
-            <span className="text-sm font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{politician.votes?.length || 0}</span>
-          </h2>
-
-          <div className="grid gap-4">
-            {!politician.votes || politician.votes.length === 0 ? (
-              <p className="text-gray-500 italic">Nenhuma votação registrada para este parlamentar.</p>
-            ) : (
-              politician.votes.map((vote: any) => (
-                <div key={vote.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col md:flex-row gap-6 items-start md:items-center">
-                  <div className="flex-1">
-                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 block">
-                      {new Date(vote.bill.voteDate).toLocaleDateString("pt-BR", { year: 'numeric', month: 'long', day: 'numeric' })}
-                    </span>
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight mb-2">
-                      {vote.bill.title}
-                    </h3>
-                    {vote.bill.description && (
-                      <p className="text-gray-600 text-sm line-clamp-2">{vote.bill.description}</p>
-                    )}
-                  </div>
-
-                  <div className="flex-shrink-0 flex items-center gap-3">
-                    <div className={`flex items - center gap - 2 px - 4 py - 2 rounded - xl font - bold text - sm ${vote.voteType.toUpperCase() === "SIM"
-                      ? "bg-green-100 text-green-700"
-                      : vote.voteType.toUpperCase() === "NÃO"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-600"
-                      } `}>
-                      {vote.voteType.toUpperCase() === "SIM" && <Check size={18} />}
-                      {vote.voteType.toUpperCase() === "NÃO" && <X size={18} />}
-                      {vote.voteType.toUpperCase() !== "SIM" && vote.voteType.toUpperCase() !== "NÃO" && <Minus size={18} />}
-                      {vote.voteType}
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        <PoliticianVoteHistory votes={politician.votes} />
         <div className="text-center pt-8 border-t border-gray-100 mt-12">
           <a
             href={`mailto:suporte@emquemvotar.app?subject=Correção Perfil: ${politician.name}`}

@@ -57,19 +57,65 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
   },
 
   // Segurança Pública
-  "linha-dura": {
-    slug: "linha-dura",
-    sourceBillId: "pl-2253-2022",
+  "rigoroso": {
+    slug: "rigoroso",
+    sourceBillId: "2423268-40",
     triggerVote: "SIM",
-    billTitle: "Fim da 'Saidinha'",
-    reasonText: "Votou para DERRUBAR o veto e manter o fim das saídas temporárias de presos."
+    billTitle: "Prisão Chiquinho Brazão",
+    reasonText: "Votou A FAVOR da manutenção da prisão preventiva do deputado Chiquinho Brazão."
   },
   "garantista": {
     slug: "garantista",
-    sourceBillId: "pl-2253-2022",
+    sourceBillId: "2423268-40",
     triggerVote: "NÃO",
-    billTitle: "Fim da 'Saidinha'",
-    reasonText: "Votou para MANTER o veto, defendendo a ressocialização através das saídas temporárias."
+    billTitle: "Prisão Chiquinho Brazão",
+    reasonText: "Votou CONTRA a manutenção da prisão, defendendo o mandato ou o devido processo legal."
+  },
+
+  // Economia & Governo
+  "base-governo": {
+    slug: "base-governo",
+    sourceBillId: "2194899-103",
+    triggerVote: "SIM",
+    billTitle: "PEC da Transição",
+    reasonText: "Votou A FAVOR da PEC da Transição, viabilizando o orçamento do governo Lula."
+  },
+  "oposicao-governo": {
+    slug: "oposicao-governo",
+    sourceBillId: "2194899-103",
+    triggerVote: "NÃO",
+    billTitle: "PEC da Transição",
+    reasonText: "Votou CONTRA a PEC da Transição, marcando posição de oposição ao aumento de gastos."
+  },
+  "liberal": {
+    slug: "liberal",
+    sourceBillId: "2270789-73",
+    triggerVote: "SIM",
+    billTitle: "Privatização Eletrobras",
+    reasonText: "Votou A FAVOR da privatização da Eletrobras, apoiando a redução do estado na economia."
+  },
+  "estatista": {
+    slug: "estatista",
+    sourceBillId: "2270789-73",
+    triggerVote: "NÃO",
+    billTitle: "Privatização Eletrobras",
+    reasonText: "Votou CONTRA a privatização da Eletrobras, defendendo o controle estatal de setores estratégicos."
+  },
+
+  // Tecnologia
+  "regulacao-digital": {
+    slug: "regulacao-digital",
+    sourceBillId: "2310837-8",
+    triggerVote: "SIM",
+    billTitle: "PL das Fake News",
+    reasonText: "Votou A FAVOR da urgência do PL das Fake News, apoiando maior regulação das redes sociais."
+  },
+  "liberdade-digital": {
+    slug: "liberdade-digital",
+    sourceBillId: "2310837-8",
+    triggerVote: "NÃO",
+    billTitle: "PL das Fake News",
+    reasonText: "Votou CONTRA a urgência do PL das Fake News, alegando defesa da liberdade de expressão."
   },
 
   // Costumes
@@ -103,8 +149,8 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
     billTitle: "Análise de Gastos (CEAP)",
     reasonText: "Gastou acima de 120% da média de gastos parlamentares nos últimos 12 meses."
   },
-  "gazeteiro": {
-    slug: "gazeteiro",
+  "ausente": {
+    slug: "ausente",
     sourceBillId: "metrics",
     triggerVote: "SIM", // Virtual
     billTitle: "Assiduidade em Plenário",
@@ -119,19 +165,12 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
   },
 
   // Perfil
-  "jovem": {
-    slug: "jovem",
-    sourceBillId: "demographics",
-    triggerVote: "SIM", // Virtual
-    billTitle: "Perfil Demográfico",
-    reasonText: "Parlamentar com menos de 35 anos."
-  },
   "novato": {
     slug: "novato",
     sourceBillId: "demographics",
     triggerVote: "SIM", // Virtual
     billTitle: "Histórico Eleitoral",
-    reasonText: "Exercendo seu primeiro mandato na Câmara Federal."
+    reasonText: "Exercendo seu primeiro mandato na Câmara Federal. (Anteriormente 'Jovem')"
   },
   "veterano": {
     slug: "veterano",
