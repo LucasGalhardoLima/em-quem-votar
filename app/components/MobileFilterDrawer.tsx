@@ -74,7 +74,7 @@ export function MobileFilterDrawer({ isOpen, onClose, query }: MobileFilterDrawe
                         {/* Content - reuses FilterSidebar content but we need to ensure FilterSidebar fits nicely */}
                         {/* We might need to adjust FilterSidebar to be more flexible, but likely it works as it's just a list */}
                         <div className="overflow-y-auto px-6 py-6 flex-1 overscroll-contain pb-safe-area">
-                            <FilterSidebar query={query} />
+                            <FilterSidebar query={query} showHeader={false} />
                         </div>
 
                         {/* Footer with Apply button if needed, but results are live so maybe just a Close button? 

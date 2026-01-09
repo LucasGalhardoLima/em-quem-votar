@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { Header } from "~/components/Header";
-import { QUIZ_QUESTIONS } from "~/data/quiz-questions";
-import { ArrowRight, Check, X, Undo2 } from "lucide-react";
+import { QUIZ_QUESTIONS, type QuizOption } from "~/data/quiz-questions";
+import { ArrowRight, Check, X, Undo2, ThumbsUp, ThumbsDown, Scale, Shield, DollarSign, Lock, Unlock, Zap, TreePine, Tractor, Sparkles, Award, Heart, Briefcase } from "lucide-react";
 
 export function meta() {
     return [{ title: "Quiz Político: Descubra seu perfil | Em Quem Votar" }];
@@ -16,8 +16,8 @@ export default function Quiz() {
     const currentQuestion = QUIZ_QUESTIONS[currentQuestionIndex];
     const progress = ((currentQuestionIndex) / QUIZ_QUESTIONS.length) * 100;
 
-    const handleAnswer = (answer: "YES" | "NO") => {
-        const effects = answer === "YES" ? currentQuestion.yesAffects : currentQuestion.noAffects;
+    const handleAnswer = (option: QuizOption) => {
+        const effects = option.affects;
 
         const newScores = { ...scores };
         effects.forEach(effect => {
@@ -47,6 +47,27 @@ export default function Quiz() {
         navigate(`/busca?${queryParams.toString()}`);
     };
 
+    const renderIcon = (iconName?: string) => {
+        switch (iconName) {
+            case "check": return <Check size={24} strokeWidth={3} />;
+            case "x": return <X size={24} strokeWidth={3} />;
+            case "thumbs-up": return <ThumbsUp size={24} />;
+            case "thumbs-down": return <ThumbsDown size={24} />;
+            case "scale": return <Scale size={24} />;
+            case "shield": return <Shield size={24} />;
+            case "dollar": return <DollarSign size={24} />;
+            case "lock": return <Lock size={24} />;
+            case "unlock": return <Unlock size={24} />;
+            case "tree": return <TreePine size={24} />;
+            case "tractor": return <Tractor size={24} />;
+            case "sparkles": return <Sparkles size={24} />;
+            case "award": return <Award size={24} />;
+            case "heart": return <Heart size={24} />;
+            case "briefcase": return <Briefcase size={24} />;
+            default: return <Check size={24} />;
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex flex-col">
             <Header />
@@ -68,26 +89,38 @@ export default function Quiz() {
                         {currentQuestion.text}
                     </h2>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <button
-                            onClick={() => handleAnswer("NO")}
-                            className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-red-100 bg-red-50 text-red-700 hover:bg-red-100 hover:border-red-200 transition-all active:scale-95"
-                        >
-                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm text-red-500 mb-2">
-                                <X size={24} strokeWidth={3} />
-                            </div>
-                            <span className="font-bold text-lg">Não</span>
-                        </button>
-
-                        <button
-                            onClick={() => handleAnswer("YES")}
-                            className="flex flex-col items-center justify-center gap-2 p-6 rounded-2xl border-2 border-green-100 bg-green-50 text-green-700 hover:bg-green-100 hover:border-green-200 transition-all active:scale-95"
-                        >
-                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm text-green-500 mb-2">
-                                <Check size={24} strokeWidth={3} />
-                            </div>
-                            <span className="font-bold text-lg">Sim</span>
-                        </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {currentQuestion.options.map((option, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => handleAnswer(option)}
+                                className={`flex flex-col items-center justify-center gap-3 p-6 rounded-2xl border-2 transition-all active:scale-95 group
+                                    ${option.color === 'green' ? 'border-green-100 bg-green-50 text-green-800 hover:bg-green-100 hover:border-green-200' :
+                                        option.color === 'red' ? 'border-red-100 bg-red-50 text-red-800 hover:bg-red-100 hover:border-red-200' :
+                                            option.color === 'blue' ? 'border-blue-100 bg-blue-50 text-blue-800 hover:bg-blue-100 hover:border-blue-200' :
+                                                'border-gray-100 bg-gray-50 text-gray-800 hover:bg-gray-100 hover:border-gray-200'
+                                    }`}
+                            >
+                                <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm mb-1 transition-transform group-hover:scale-110
+                                    ${option.color === 'green' ? 'text-green-600' :
+                                        option.color === 'red' ? 'text-red-500' :
+                                            option.color === 'blue' ? 'text-blue-600' :
+                                                'text-gray-500'
+                                    }`}>
+                                    {renderIcon(option.icon)}
+                                </div>
+                                <div>
+                                    <span className="font-bold text-lg block mb-1">{option.label}</span>
+                                    {option.description && (
+                                        <span className={`text-sm opacity-80 font-medium ${option.color === 'green' ? 'text-green-700' :
+                                                option.color === 'red' ? 'text-red-700' :
+                                                    option.color === 'blue' ? 'text-blue-700' :
+                                                        'text-gray-600'
+                                            }`}>{option.description}</span>
+                                    )}
+                                </div>
+                            </button>
+                        ))}
                     </div>
 
                     {currentQuestionIndex > 0 && (

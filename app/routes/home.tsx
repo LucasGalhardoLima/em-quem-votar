@@ -62,7 +62,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function Home() {
   const { featuredVotes: deferredVotes } = useLoaderData<typeof loader>();
-  const { selectedTags } = useFilterStore();
+  const { selectedTags, setTags } = useFilterStore();
+
+  useEffect(() => {
+    setTags([]);
+  }, [setTags]);
 
   const handleScrollToContent = () => {
     document.getElementById("content")?.scrollIntoView({ behavior: "smooth" });
