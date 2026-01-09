@@ -8,46 +8,100 @@ category: "Cidadania"
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Megaphone, History, Vote, Lightbulb, BookOpen } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
   <Header />
-  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    {/* Header */}
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-brand-primary">
+        <Megaphone size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+        A Importância do <span className="text-brand-primary">Seu Voto</span>
+      </h1>
+      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        Entenda como o seu voto impacta diretamente o futuro da sua cidade e do país. A democracia precisa de você.
+      </p>
+    </header>
 
-# A Importância do Seu Voto
+    {/* Intro Subtitle */}
+    <div className="max-w-3xl mx-auto text-center mb-12">
+      <p className="text-lg text-slate-600 leading-relaxed">
+        O **voto no Brasil** é um pilar fundamental da democracia e um instrumento crucial para a participação cidadã. Ele não é apenas um direito; é a ferramenta mais poderosa que temos para transformar a nossa realidade social.
+      </p>
+    </div>
 
-O **voto no Brasil** é um pilar fundamental da democracia e um instrumento crucial para a participação cidadã. Ele não é apenas um direito; é a ferramenta mais poderosa que temos para transformar a nossa realidade social.
+    {/* History Card */}
+    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
+      <div className="flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+          <History className="text-brand-primary w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 m-0">História e Evolução</h2>
+      </div>
+      <div className="prose prose-lg prose-slate text-slate-600">
+        <p>O direito de escolher nossos representantes não foi dado de graça; foi conquistado. A história do voto no Brasil passou por diversas transformações:</p>
+        <ul>
+          <li><strong>Voto de Cabresto:</strong> Períodos onde o voto era controlado pelos "coronéis".</li>
+          <li><strong>Voto Feminino (1932):</strong> Um marco histórico na luta pela igualdade.</li>
+          <li><strong>Constituição de 1988:</strong> Consolidou o sufrágio universal, direto e secreto.</li>
+        </ul>
+      </div>
+    </section>
 
-## História e Evolução
+    {/* Power of Choice Card */}
+    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
+       <div className="flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0">
+          <Vote className="text-indigo-600 w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-bold text-slate-900 m-0">O Poder da Escolha</h2>
+      </div>
+      <div className="prose prose-lg prose-slate text-slate-600">
+        <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900 mb-6">
+          "O voto é a arma do cidadão para mudar o destino de uma nação sem derramar uma gota de sangue."
+        </div>
+        <p className="mt-4">
+          Numa democracia representativa, você delega o poder de decisão. Ao votar, você está dizendo: "Eu confio que essa pessoa vai gerenciar o meu dinheiro (impostos) e cuidar da minha cidade melhor do que qualquer outra."
+        </p>
+      </div>
+    </section>
 
-O direito de escolher nossos representantes não foi dado de graça; foi conquistado. A história do voto no Brasil passou por diversas transformações:
+    {/* Conscious Vote Card */}
+    <section className="bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl">
+       <div className="flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
+          <Lightbulb className="text-amber-400 w-6 h-6" />
+        </div>
+        <h2 className="text-2xl font-bold text-white m-0">O Que é o Voto Consciente?</h2>
+      </div>
+      <div className="prose prose-lg prose-invert text-slate-300">
+        <p>Votar com consciência vai além de escolher um número. Significa:</p>
+        <ol>
+          <li><strong>Analisar o passado</strong> do candidato.</li>
+          <li><strong>Ler as propostas</strong> e ver se são viáveis.</li>
+          <li><strong>Entender as consequências</strong> que o voto tem por 4 anos.</li>
+        </ol>
+        <p className="font-medium text-white">
+          Um voto consciente impede a eleição de maus políticos e fortalece as instituições democráticas.
+        </p>
+      </div>
+    </section>
 
-*   **Voto de Cabresto:** Períodos onde o voto era controlado pelos "coronéis".
-*   **Voto Feminino (1932):** Um marco histórico na luta pela igualdade.
-*   **Constituição de 1988:** Consolidou o sufrágio universal, direto e secreto.
-
-## O Poder da Escolha
-
-> "O voto é a arma do cidadão para mudar o destino de uma nação sem derramar uma gota de sangue."
-
-Numa democracia representativa, você delega o poder de decisão. Ao votar, você está dizendo: "Eu confio que essa pessoa vai gerenciar o meu dinheiro (impostos) e cuidar da minha cidade melhor do que qualquer outra."
-
-## O Que é o Voto Consciente?
-
-Votar com consciência vai além de escolher um número. Significa:
-
-1.  Analisar o passado do candidato.
-2.  Ler as propostas e ver se são viáveis.
-3.  Entender que o voto tem consequências por 4 anos.
-
-Um voto consciente impede a eleição de maus políticos e fortalece as instituições democráticas.
-
----
-**Referências:**
-*   [TSE - A importância do voto](https://www.tse.jus.br)
-*   [Politize! - História do voto no Brasil](https://www.politize.com.br)
-*   [Constituição Federal de 1988](https://www.planalto.gov.br)
+    {/* References */}
+    <section className="text-center pt-8 border-t border-slate-200">
+       <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center justify-center gap-2">
+         <BookOpen size={16} /> Referências
+       </h3>
+       <div className="flex flex-wrap justify-center gap-4 text-sm">
+          <a href="https://www.tse.jus.br" target="_blank" className="text-brand-primary hover:underline">TSE - A importância do voto</a>
+          <span className="text-slate-300">•</span>
+          <a href="https://www.politize.com.br" target="_blank" className="text-brand-primary hover:underline">Politize! - História do voto</a>
+       </div>
+    </section>
 
   </main>
   <Footer />
 </div>
-```

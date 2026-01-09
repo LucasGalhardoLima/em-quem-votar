@@ -40,10 +40,10 @@ export function ActiveFilters({ query }: ActiveFiltersProps) {
                 <button
                     key={slug}
                     onClick={() => handleRemove(slug)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-100"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-tertiary text-brand-text-alt rounded-full text-sm font-medium hover:bg-brand-tertiary/80 transition-colors border border-brand-primary/20"
                 >
                     {getLabel(slug)}
-                    <X size={14} className="text-blue-500" />
+                    <X size={14} className="text-brand-primary" />
                 </button>
             ))}
         </div>

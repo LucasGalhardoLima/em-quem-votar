@@ -1,6 +1,7 @@
 import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
 import { Check, X, Minus, ArrowLeft, DollarSign, Calendar } from "lucide-react";
 import { Header } from "~/components/Header";
+import { Footer } from "~/components/Footer";
 import { TAG_DEFINITIONS } from "~/data/tag-definitions";
 import { PoliticianService } from "~/services/politician.server";
 import { BillService } from "~/services/bill.server";
@@ -40,14 +41,14 @@ export default function Comparar() {
                 <Header />
                 <div className="p-8 text-center mt-8">
                     <p className="text-gray-500 mb-4">Nenhum político selecionado.</p>
-                    <Link to="/busca" className="text-blue-600 hover:underline">Voltar para busca</Link>
+                    <Link to="/busca" className="text-brand-primary hover:underline">Voltar para busca</Link>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
             <Header />
 
             <main className="max-w-7xl mx-auto px-4 py-8">
@@ -59,27 +60,27 @@ export default function Comparar() {
                 </div>
 
                 <div className="overflow-x-auto pb-6">
-                    <div className="min-w-[800px] bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="min-w-[800px] bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gray-50 border-b border-gray-100">
-                                    <th className="p-6 w-48 text-gray-400 font-medium uppercase text-xs tracking-wider"></th>
+                                <tr className="bg-slate-50 border-b border-slate-100">
+                                    <th className="p-6 w-48 text-slate-400 font-medium uppercase text-xs tracking-wider"></th>
                                     {politicians.map(p => (
                                         <th key={p.id} className="p-6 min-w-[200px] align-top">
                                             <div className="flex flex-col items-center text-center gap-3">
-                                                <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden border-2 border-white shadow-sm">
+                                                <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
                                                     {p.photoUrl && <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-gray-900 text-lg leading-tight">{p.name}</h3>
-                                                    <p className="text-sm text-gray-500">{p.party} • {p.state}</p>
+                                                    <h3 className="font-bold text-slate-900 text-lg leading-tight">{p.name}</h3>
+                                                    <p className="text-sm text-slate-500">{p.party} • {p.state}</p>
                                                 </div>
                                             </div>
                                         </th>
                                     ))}
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-slate-100">
                                 {/* Spending Row */}
                                 <tr>
                                     <th className="p-6 bg-gray-50/50 align-top">
@@ -95,7 +96,7 @@ export default function Comparar() {
                                         return (
                                             <td key={p.id} className="p-6 align-top">
                                                 <div className="text-center">
-                                                    <span className={`font-bold text-lg block mb-2 ${isHigh ? 'text-red-600' : 'text-green-600'}`}>
+                                                    <span className={`font-bold text-lg block mb-2 ${isHigh ? 'text-brand-alert' : 'text-brand-success'}`}>
                                                         {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(spending)}
                                                     </span>
 
@@ -103,7 +104,7 @@ export default function Comparar() {
                                                     <div className="h-2 bg-gray-100 rounded-full w-full max-w-[120px] mx-auto overflow-hidden relative">
                                                         <div className="absolute top-0 bottom-0 left-[33%] w-px bg-gray-300 z-10" title="Média (20k)"></div>
                                                         <div
-                                                            className={`h-full rounded-full ${isHigh ? 'bg-red-500' : 'bg-green-500'}`}
+                                                            className={`h-full rounded-full ${isHigh ? 'bg-brand-alert' : 'bg-brand-success'}`}
                                                             style={{ width: `${Math.min((spending / 60000) * 100, 100)}%` }}
                                                         ></div>
                                                     </div>
@@ -128,7 +129,7 @@ export default function Comparar() {
                                         return (
                                             <td key={p.id} className="p-6 align-top">
                                                 <div className="text-center">
-                                                    <span className={`font-bold text-lg block mb-2 ${isLow ? 'text-red-600' : 'text-green-600'}`}>
+                                                    <span className={`font-bold text-lg block mb-2 ${isLow ? 'text-brand-alert' : 'text-brand-success'}`}>
                                                         {attendance}%
                                                     </span>
                                                 </div>
@@ -138,7 +139,7 @@ export default function Comparar() {
                                 </tr>
 
                                 {/* Votes Header */}
-                                <tr className="bg-gray-50 border-t-2 border-gray-100">
+                                <tr className="bg-slate-50 border-t-2 border-slate-100">
                                     <th colSpan={politicians.length + 1} className="p-4 text-center text-xs font-bold text-gray-400 uppercase tracking-widest">
                                         Como votaram
                                     </th>
@@ -146,7 +147,7 @@ export default function Comparar() {
 
                                 {/* Vote Rows */}
                                 {featuredBills && featuredBills.length > 0 && featuredBills.map(bill => (
-                                    <tr key={bill.id} className="hover:bg-gray-50/30 transition-colors">
+                                    <tr key={bill.id} className="hover:bg-slate-50/50 transition-colors">
                                         <th className="p-6 align-middle text-sm font-medium text-gray-700 max-w-[200px]">
                                             {bill.title.split("(")[0]}
                                             <span className="block text-xs text-gray-400 font-normal mt-0.5">
@@ -161,10 +162,10 @@ export default function Comparar() {
                                             let Icon = Minus;
 
                                             if (voteType === "SIM") {
-                                                badgeColor = "bg-green-100 text-green-700";
+                                                badgeColor = "bg-brand-success/10 text-brand-success";
                                                 Icon = Check;
                                             } else if (voteType === "NÃO") {
-                                                badgeColor = "bg-red-100 text-red-700";
+                                                badgeColor = "bg-brand-alert/10 text-brand-alert";
                                                 Icon = X;
                                             }
 
@@ -185,6 +186,7 @@ export default function Comparar() {
                     </div>
                 </div>
             </main>
+            <Footer />
         </div>
     );
 }

@@ -16,42 +16,107 @@ export const meta = () => {
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
   <Header />
-  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-brand-primary">
+        <Scale size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+        Esquerda, Direita ou <span className="text-brand-primary">Centro?</span>
+      </h1>
+      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        Você sabe onde se encaixa no espectro político? Um guia simples para entender as ideologias sem 'politiquês'.
+      </p>
+    </header>
 
-# Esquerda, Direita ou Centro?
+    {/* Origin Card */}
+    <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8 items-center">
+        <div className="flex-1 space-y-4">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="bg-slate-100 p-2 rounded-lg"><History size={20} /></div>
+                <h2 className="text-xl font-bold text-slate-900 m-0">A Origem (1789)</h2>
+             </div>
+             <p className="text-slate-600 leading-relaxed">
+                Tudo começou na Revolução Francesa. Na Assembleia Nacional, os <strong>revolucionários</strong> (mudança) sentavam à esquerda, e os <strong>conservadores</strong> (tradição) sentavam à direita.
+             </p>
+        </div>
+    </section>
 
-A política muitas vezes parece uma sopa de letrinhas, mas entender o espectro político é fundamental para saber quem realmente representa suas ideias.
+    <div className="grid md:grid-cols-2 gap-6">
+        {/* Left Wing */}
+        <section className="bg-white p-8 rounded-3xl shadow-sm border-t-4 border-red-500 space-y-6">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+                    <Users size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Esquerda</h2>
+            </div>
+            
+            <div className="space-y-4">
+                <p className="text-slate-600 font-medium">Prioridade: <span className="text-red-600">Igualdade Social</span></p>
+                <ul className="space-y-3 pl-0 list-none">
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Economia:</strong> Estado forte, programas sociais, impostos progressivos.
+                    </li>
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Social:</strong> Defesa de minorias, liberal nos costumes.
+                    </li>
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Foco:</strong> O Coletivo.
+                    </li>
+                </ul>
+            </div>
+        </section>
 
-## A Origem dos Termos
-Tudo começou na Revolução Francesa (1789). Na Assembleia Nacional:
-- **À Direita** sentavam-se os conservadores, que apoiavam o rei e a tradição.
-- **À Esquerda** sentavam-se os revolucionários, que queriam mudanças radicais e igualdade.
+        {/* Right Wing */}
+        <section className="bg-white p-8 rounded-3xl shadow-sm border-t-4 border-blue-500 space-y-6">
+            <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                    <TrendingUp size={24} />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-900">Direita</h2>
+            </div>
+            
+            <div className="space-y-4">
+                <p className="text-slate-600 font-medium">Prioridade: <span className="text-blue-600">Liberdade Individual</span></p>
+                <ul className="space-y-3 pl-0 list-none">
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Economia:</strong> Livre mercado, estado mínimo, privatizações.
+                    </li>
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Social:</strong> Valorização da família, ordem e tradição.
+                    </li>
+                    <li className="bg-slate-50 p-3 rounded-lg text-sm text-slate-700">
+                        <strong>Foco:</strong> O Indivíduo (Mérito).
+                    </li>
+                </ul>
+            </div>
+        </section>
+    </div>
 
-Hoje, os termos evoluíram, mas a essência permanece ligada a como cada grupo vê a sociedade e a economia.
+    {/* Center */}
+    <section className="bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl text-center space-y-6">
+        <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Scale size={32} className="text-brand-primary" />
+        </div>
+        <h2 className="text-3xl font-bold">O Centro</h2>
+        <p className="text-slate-300 max-w-2xl mx-auto text-lg leading-relaxed">
+            O fiel da balança. Busca o <strong>equilíbrio</strong> e o pragmatismo, evitando extremos. 
+            Pode apoiar a economia de direita e o social de esquerda. No Brasil, é frequentemente associado à governabilidade.
+        </p>
+    </section>
 
-## Esquerda (Progressistas)
-Geralmente prioriza a **igualdade social**.
-- **Economia:** Defende maior intervenção do Estado para reduzir desigualdades (programas sociais, impostos maiores para ricos).
-- **Social:** Tende a ser liberal nos costumes e defender direitos de minorias.
-- **Foco:** O coletivo.
-
-## Direita (Conservadores/Liberais)
-Geralmente prioriza a **liberdade individual**.
-- **Economia:** Defende o livre mercado, menos impostos e Estado menor (privatizações, desburocratização).
-- **Social:** Tende a valorizar tradições, família e ordem.
-- **Foco:** O indivíduo e o mérito.
-
-## O Centro
-O fiel da balança. O centro evita os extremos e busca o **equilíbrio** (ou pragmatismo).
-- Pode apoiar políticas econômicas de direita (responsabilidade fiscal) e sociais de esquerda (bolsa família).
-- No Brasil, é frequentemente associado ao "Centrão", um grupo de partidos que busca estar perto do poder, independente da ideologia do presidente.
-
-## Onde você está?
-Ninguém é 100% uma coisa só. Você pode ser liberal na economia (direita) e conservador nos costumes (direita), ou liberal na economia e progressista nos costumes (libertário/centro). O importante é analisar as *propostas*, não apenas os rótulos.
+    <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900">
+        <strong>Nota:</strong> Ninguém é 100% uma coisa só. Você pode ser liberal na economia e conservador nos costumes. 
+        Analise as <em>propostas</em>, não apenas os rótulos.
+    </div>
 
   </main>
   <Footer />
 </div>
+
+

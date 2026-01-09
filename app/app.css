@@ -4,11 +4,38 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* TECH NEUTRALITY PALETTE */
+  /* Brand: Royal Indigo */
+  --color-brand-primary: #4f46e5;
+  /* indigo-600 - Buttons, links, highlights */
+  --color-brand-primary-hover: #4338ca;
+  /* indigo-700 - Hover states */
+  --color-brand-primary-light: #eef2ff;
+  /* indigo-50 - Light backgrounds */
+
+  /* Accent: Amber (for warnings and secondary actions) */
+  --color-brand-secondary: #f59e0b;
+  /* amber-500 - Warnings, neutral states */
+
+  /* Structure: Slate (Cool gray) */
+  --color-brand-tertiary: #f1f5f9;
+  /* slate-100 - Card backgrounds, subtle fills */
+  --color-brand-text: #0f172a;
+  /* slate-900 - Primary text */
+  --color-brand-text-alt: #475569;
+  /* slate-600 - Secondary text, captions */
+
+  /* Semantic: Emerald & Rose */
+  --color-brand-success: #059669;
+  /* emerald-600 - Positive votes, high matches */
+  --color-brand-alert: #e11d48;
+  /* rose-600 - Negative votes, alerts */
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  @apply bg-slate-50 dark:bg-gray-950;
 
   @media (prefers-color-scheme: dark) {
     color-scheme: dark;

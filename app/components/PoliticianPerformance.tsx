@@ -13,7 +13,7 @@ export function PoliticianPerformance({ politician }: PoliticianPerformanceProps
     return (
         <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
             <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
+                <TrendingUp className="w-6 h-6 text-brand-primary" />
                 Desempenho & Métricas
             </h2>
 
@@ -25,7 +25,7 @@ export function PoliticianPerformance({ politician }: PoliticianPerformanceProps
                             <DollarSign className="w-5 h-5 text-gray-400" />
                             Gasto Mensal (Cota)
                         </h3>
-                        <span className={`font-bold ${Number(politician.spending || 0) > 20000 ? 'text-red-600' : 'text-green-600'}`}>
+                        <span className={`font-bold ${Number(politician.spending || 0) > 20000 ? 'text-brand-alert' : 'text-brand-success'}`}>
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(politician.spending || 0))}
                         </span>
                     </div>
@@ -41,7 +41,7 @@ export function PoliticianPerformance({ politician }: PoliticianPerformanceProps
 
                             {/* Actual Spending Bar */}
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${Number(politician.spending || 0) > 20000 ? 'bg-red-500' : 'bg-green-500'}`}
+                                className={`h-full rounded-full transition-all duration-500 ${Number(politician.spending || 0) > 20000 ? 'bg-brand-alert' : 'bg-brand-success'}`}
                                 style={{ width: `${Math.min((Number(politician.spending || 0) / 60000) * 100, 100)}%` }}
                             ></div>
                         </div>
@@ -68,7 +68,7 @@ export function PoliticianPerformance({ politician }: PoliticianPerformanceProps
                             <Calendar className="w-5 h-5 text-gray-400" />
                             Presença em Plenário
                         </h3>
-                        <span className={`font-bold ${Number(politician.attendanceRate || 0) < 80 ? 'text-red-600' : 'text-green-600'}`}>
+                        <span className={`font-bold ${Number(politician.attendanceRate || 0) < 80 ? 'text-brand-alert' : 'text-brand-success'}`}>
                             {Number(politician.attendanceRate || 0)}%
                         </span>
                     </div>
@@ -76,7 +76,7 @@ export function PoliticianPerformance({ politician }: PoliticianPerformanceProps
                     <div className="relative pt-2 pb-2">
                         <div className="h-4 bg-gray-100 rounded-full overflow-hidden w-full">
                             <div
-                                className={`h-full rounded-full transition-all duration-500 ${Number(politician.attendanceRate || 0) < 80 ? 'bg-red-500' : 'bg-green-500'}`}
+                                className={`h-full rounded-full transition-all duration-500 ${Number(politician.attendanceRate || 0) < 80 ? 'bg-brand-alert' : 'bg-brand-success'}`}
                                 style={{ width: `${Number(politician.attendanceRate || 0)}%` }}
                             ></div>
                         </div>

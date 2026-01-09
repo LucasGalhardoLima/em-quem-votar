@@ -162,7 +162,7 @@ export default function Busca() {
             {/* Search Bar */}
             <Form method="get" action="/busca" className="w-full relative group" onChange={(e) => submit(e.currentTarget, { replace: true })}>
               <input type="hidden" name="tags" value={tagsParam || ""} />
-              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-blue-600 transition-colors">
+              <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-primary transition-colors">
                 <Search className="w-5 h-5" />
               </div>
               <input
@@ -170,7 +170,7 @@ export default function Busca() {
                 name="q"
                 defaultValue={query || ""}
                 placeholder="Busque por nome, partido..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
               />
             </Form>
 
@@ -239,8 +239,8 @@ export default function Busca() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-sm mx-auto max-w-lg mt-8"
                           >
-                            <div className="bg-blue-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                              <User className="w-10 h-10 text-blue-300" />
+                            <div className="bg-brand-tertiary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                              <User className="w-10 h-10 text-brand-primary/30" />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-3">Nenhum político encontrado</h3>
                             <p className="text-gray-500 mb-6 leading-relaxed">
@@ -249,7 +249,7 @@ export default function Busca() {
                             <div className="bg-yellow-50 text-yellow-800 text-sm p-4 rounded-xl text-left mb-6">
                               <strong>Dica:</strong> Tente remover alguns filtros. Por exemplo, é raro encontrar alguém que seja "Comunista" e "Ruralista" ao mesmo tempo.
                             </div>
-                            <button onClick={() => { setTags([]); submit(null, { action: "/busca" }); }} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors">
+                            <button onClick={() => { setTags([]); submit(null, { action: "/busca" }); }} className="w-full py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold transition-colors">
                               Limpar todos os filtros
                             </button>
                           </motion.div>

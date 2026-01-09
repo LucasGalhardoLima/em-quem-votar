@@ -1,10 +1,9 @@
 ---
 title: "Voto Nulo Anula a Eleição? O Maior Mito da Política"
 excerpt: "Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado."
-date: "2025-10-05"
-author: "Equipe Em Quem Votar"
-category: "Mitos Eleitorais"
 image: "/images/voto-nulo.jpg"
+date: "2025-10-05"
+category: "Mitos Eleitorais"
 ---
 
 export const meta = () => {
@@ -16,39 +15,86 @@ export const meta = () => {
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { AlertTriangle, CheckCircle2, XCircle, Calculator, Info, Ban } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
   <Header />
-  <main className="flex-grow prose prose-lg prose-blue mx-auto py-12 px-4 max-w-3xl w-full">
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-brand-primary">
+        <AlertTriangle size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
+        O Mito do <span className="text-brand-primary">Voto Nulo</span>
+      </h1>
+      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+        Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado.
+      </p>
+    </header>
 
-# O Mito do Voto Nulo
+    {/* The Myth Card */}
+    <section className="bg-red-50 p-8 rounded-3xl border border-red-100 text-center space-y-4">
+        <h2 className="text-red-900 font-bold text-xl uppercase tracking-widest flex items-center justify-center gap-2">
+            <Ban className="w-6 h-6" /> O Mito
+        </h2>
+        <p className="text-red-800 text-lg font-medium italic">
+            "Se mais de 50% dos eleitores votarem nulo, a eleição é anulada e convocam-se novas eleições com novos candidatos!"
+        </p>
+        <div className="font-black text-4xl text-red-600 uppercase">Isso é Mentira</div>
+    </section>
 
-Em toda eleição, circula a mesma corrente de WhatsApp: *"Se mais de 50% dos eleitores votarem nulo, a eleição é anulada e convocam-se novas eleições com novos candidatos!"*
+     {/* The Truth Card */}
+    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
+        <div className="flex items-center gap-4 mb-8">
+            <div className="bg-green-100 p-3 rounded-xl text-green-700">
+                <CheckCircle2 size={32} />
+            </div>
+            <div>
+                <h2 className="text-2xl font-bold text-slate-900 m-0">A Realidade</h2>
+                <div className="text-slate-500">Como funciona a contagem</div>
+            </div>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+                <p className="text-slate-700">A Constituição é clara: apenas os <strong>votos válidos</strong> contam.</p>
+                <ul className="space-y-3 pl-0 list-none">
+                    <li className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <CheckCircle2 className="text-green-500 w-5 h-5" />
+                        <span><strong>Votos Válidos:</strong> Para candidatos ou partidos.</span>
+                    </li>
+                    <li className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <XCircle className="text-red-500 w-5 h-5" />
+                        <span><strong>Nulos e Brancos:</strong> São descartados.</span>
+                    </li>
+                </ul>
+            </div>
+            <div className="bg-slate-100 p-6 rounded-2xl border border-slate-200 text-sm">
+                <h3 className="font-bold mb-2 flex items-center gap-2"><Calculator size={16}/> Exemplo Prático</h3>
+                <p className="mb-2">Cidade com 10 eleitores:</p>
+                <ul className="list-disc pl-4 mb-2 space-y-1">
+                    <li>6 votam Nulo</li>
+                    <li>3 votam no Candidato A</li>
+                    <li>1 vota no Candidato B</li>
+                </ul>
+                <p className="font-bold text-brand-primary">Resultado: Candidato A vence com 75% dos votos válidos.</p>
+            </div>
+        </div>
+    </section>
 
-**Isso é MENTIRA.**
-
-## Como Funciona a Contagem
-A Constituição Brasileira e o Código Eleitoral são claros: **apenas os votos VÁLIDOS contam para o resultado**.
-- **Votos Válidos:** Votos dados a candidatos ou partidos.
-- **Votos Nulos e Brancos:** São descartados. Eles *não* entram na conta matemática para definir o vencedor.
-
-## Exemplo Prático
-Imagine uma cidade com 10 eleitores:
-- 6 votam Nulo.
-- 3 votam no Candidato A.
-- 1 vota no Candidato B.
-
-Quem ganha?
-O **Candidato A** ganha com **75% dos votos válidos** (3 de 4 votos válidos), mesmo que a maioria da cidade tenha votado nulo.
-
-## O Perigo da Desinformação
-Acreditar nesse mito leva à inércia. Ao votar nulo como forma de protesto achando que vai "cancelar tudo", você está, na prática, **lavando as mãos** e deixando que outras pessoas decidam por você.
-
-> "Votar nulo não é um ato de rebeldia eficaz contra o sistema. É apenas uma forma de se omitir da decisão."
-
-Se você está insatisfeito com os candidatos, a solução não é anular, mas sim buscar novas opções, votar no "menos pior" ou, melhor ainda, engajar-se para renovar os quadros políticos nas próximas eleições.
+    {/* Warning Card */}
+    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
+        <h2 className="text-xl font-bold text-slate-900 mb-4">O Perigo da Desinformação</h2>
+        <div className="prose prose-lg prose-slate text-slate-600">
+            <p>
+                Acreditar nesse mito leva à inércia. Ao votar nulo como forma de protesto achando que vai "cancelar tudo", você está, na prática, <strong>lavando as mãos</strong> e deixando que outras pessoas decidam por você.
+            </p>
+    <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900">
+        <strong>Nota:</strong> "Votar nulo não é um ato de rebeldia eficaz contra o sistema. É apenas uma forma de se omitir da decisão."
+    </div>
+        </div>
+    </section>
 
   </main>
   <Footer />
 </div>
-```

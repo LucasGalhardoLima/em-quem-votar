@@ -83,7 +83,7 @@ export default function PoliticianProfile() {
 
           <button
             onClick={handleShare}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:text-brand-primary hover:bg-brand-tertiary rounded-full transition-colors"
             title="Compartilhar Perfil"
           >
             <Share2 size={20} />
@@ -103,7 +103,7 @@ export default function PoliticianProfile() {
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{politician.name}</h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2 text-gray-600">
-                <span className="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold">
+                <span className="flex items-center gap-1.5 bg-brand-tertiary text-brand-text-alt px-3 py-1 rounded-full text-sm font-semibold">
                   <Building2 size={14} />
                   {politician.party}
                 </span>

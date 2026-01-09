@@ -2,6 +2,7 @@
 import type { Route } from "./+types/home";
 import { Search, ChevronDown, BookOpen, User, Gavel, Loader2, Sparkles, Mail } from "lucide-react";
 import { Form, Link, useLoaderData, useNavigation, useFetcher, Await } from "react-router";
+import { Footer } from "~/components/Footer";
 import { Suspense } from "react";
 import { clsx } from "clsx";
 import { ARTICLES } from "~/data/articles";
@@ -73,7 +74,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-blue-100 selection:text-blue-900 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-brand-primary/20 selection:text-brand-primary overflow-x-hidden">
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col justify-center items-center px-4 relative pt-20 pb-10">
         <div className="w-full max-w-7xl flex flex-col items-center text-center space-y-8 animate-fade-in-up">
@@ -82,7 +83,7 @@ export default function Home() {
 
           <div className="space-y-6 max-w-3xl">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900 leading-tight">
-              Em quem <span className="text-blue-600">votar?</span>
+              Em quem <span className="text-brand-primary">votar?</span>
             </h1>
             <p className="text-xl text-gray-600 font-medium leading-relaxed">
               Não vote no escuro. Descubra quais políticos realmente representam os seus valores com base em <span className="font-bold text-gray-900">fatos</span>, não discurso.
@@ -98,7 +99,7 @@ export default function Home() {
                 type="text"
                 name="q"
                 placeholder="Busque por nome, partido ou estado..."
-                className="w-full pl-14 pr-6 py-5 bg-white border border-gray-200 rounded-2xl shadow-lg shadow-blue-900/5 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all hover:shadow-xl hover:-translate-y-0.5"
+                className="w-full pl-14 pr-6 py-5 bg-white border border-gray-200 rounded-2xl shadow-lg shadow-brand-primary/5 text-lg placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-brand-primary/10 focus:border-brand-primary transition-all hover:shadow-xl hover:-translate-y-0.5"
               />
             </Form>
 
@@ -112,8 +113,8 @@ export default function Home() {
                     className={clsx(
                       "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border",
                       isSelected
-                        ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                        : "bg-white text-gray-600 border-gray-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700"
+                        ? "bg-brand-primary text-white border-brand-primary hover:bg-brand-primary/90"
+                        : "bg-white text-brand-text border-gray-200 hover:bg-brand-tertiary hover:border-brand-primary/30 hover:text-brand-primary"
                     )}
                   >
                     {filter.label}
@@ -131,9 +132,9 @@ export default function Home() {
             <Link
               to="/quiz"
               prefetch="intent"
-              className="group w-full flex items-center justify-center gap-3 bg-gray-900 text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all text-center"
+              className="group w-full flex items-center justify-center gap-3 bg-brand-text text-white py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all text-center"
             >
-              <Sparkles className="text-yellow-400 group-hover:rotate-12 transition-transform" />
+              <Sparkles className="text-brand-secondary group-hover:rotate-12 transition-transform" />
               Fazer Quiz de Afinidade
             </Link>
           </div>
@@ -152,8 +153,8 @@ export default function Home() {
       <section className="py-24 px-4 bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3">
-              <Gavel className="w-8 h-8 text-blue-600" />
+            <h2 className="text-3xl font-bold text-brand-text flex items-center justify-center gap-3">
+              <Gavel className="w-8 h-8 text-brand-primary" />
               Votações Decisivas
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -188,7 +189,7 @@ export default function Home() {
                               {new Date(vote.voteDate).toLocaleDateString('pt-BR')}
                             </span>
                           </div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                          <h3 className="text-xl font-bold text-brand-text mb-3 group-hover:text-brand-primary transition-colors">
                             {vote.title}
                           </h3>
                           {vote.description && (
@@ -197,7 +198,7 @@ export default function Home() {
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center text-blue-600 font-medium group/link mt-4">
+                        <div className="flex items-center text-brand-primary font-medium group/link mt-4">
                           Ver votos
                           <svg className="w-4 h-4 ml-2 transform group-hover/link:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -217,8 +218,8 @@ export default function Home() {
       <section className="py-24 px-4 bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-4 mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3">
-              <Mail className="w-8 h-8 text-blue-600" />
+            <h2 className="text-3xl font-bold text-brand-text flex items-center justify-center gap-3">
+              <Mail className="w-8 h-8 text-brand-primary" />
               Mantenha-se Informado
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -233,8 +234,8 @@ export default function Home() {
       <section id="content" className="py-24 px-4 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-3">
-              <BookOpen className="w-8 h-8 text-blue-600" />
+            <h2 className="text-3xl font-bold text-brand-text flex items-center justify-center gap-3">
+              <BookOpen className="w-8 h-8 text-brand-primary" />
               Conteúdo Educacional
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
@@ -251,17 +252,17 @@ export default function Home() {
                 className="group bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 cursor-pointer flex flex-col"
               >
                 <div className="flex-grow">
-                  <span className="inline-block px-3 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-semibold tracking-wide uppercase mb-4">
+                  <span className="inline-block px-3 py-1 rounded-lg bg-brand-tertiary text-brand-text-alt text-xs font-semibold tracking-wide uppercase mb-4">
                     {article.category}
                   </span>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                  <h3 className="text-xl font-bold text-brand-text mb-3 group-hover:text-brand-primary transition-colors">
                     {article.title}
                   </h3>
                   <p className="text-gray-600 leading-relaxed mb-6 line-clamp-3">
                     {article.excerpt}
                   </p>
                 </div>
-                <div className="flex items-center text-blue-600 font-medium group/link">
+                <div className="flex items-center text-brand-primary font-medium group/link">
                   Ler artigo
                   <svg className="w-4 h-4 ml-2 transform group-hover/link:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -272,10 +273,8 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="text-center mt-24 text-gray-400 text-sm">
-          &copy; 2026 Em Quem Votar. MVP Project.
-        </div>
       </section>
+      <Footer />
     </div>
   );
 }

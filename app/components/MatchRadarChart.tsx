@@ -10,30 +10,40 @@ interface MatchRadarChartProps {
 }
 
 export function MatchRadarChart({ data }: MatchRadarChartProps) {
+    if (!data || data.length === 0) return null;
+
     return (
-        <div className="w-full h-[300px]">
+        <div className="w-full h-[300px] min-w-0">
             <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-                    <PolarGrid stroke="#e5e7eb" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <RadarChart cx="50%" cy="50%" outerRadius="65%" data={data}>
+                    {/* Light grid for dark background */}
+                    <PolarGrid stroke="rgba(255,255,255,0.2)" />
+
+                    {/* Readable Axis Labels */}
+                    <PolarAngleAxis
+                        dataKey="subject"
+                        tick={{ fill: 'var(--color-brand-tertiary)', fontSize: 11, fontWeight: 600 }}
+                        tickSize={10}
+                    />
+
                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
 
-                    {/* User Radar */}
+                    {/* User Radar - Bright Cyan */}
                     <Radar
                         name="Você"
                         dataKey="user"
-                        stroke="#2563eb"
-                        fill="#3b82f6"
-                        fillOpacity={0.6}
+                        stroke="var(--color-brand-secondary)"
+                        fill="var(--color-brand-secondary)"
+                        fillOpacity={0.4}
                     />
 
-                    {/* Politician Radar */}
+                    {/* Politician Radar - Bright Yellow */}
                     <Radar
                         name="Político"
                         dataKey="politician"
-                        stroke="#9ca3af"
-                        fill="#9ca3af"
-                        fillOpacity={0.3}
+                        stroke="var(--color-brand-primary)"
+                        fill="var(--color-brand-primary)"
+                        fillOpacity={0.6}
                     />
                 </RadarChart>
             </ResponsiveContainer>

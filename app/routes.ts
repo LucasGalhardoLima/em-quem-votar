@@ -12,6 +12,7 @@ export default [
   route("educacao/mito-voto-nulo", "routes/educacao.mito-voto-nulo.mdx"),
   route("educacao/centrao", "routes/educacao.centrao.mdx"),
   route("busca", "routes/busca.tsx"),
+  route("resultado", "routes/resultado.tsx"),
   route("comparar", "routes/comparar.tsx"),
   route("quiz", "routes/quiz.tsx"),
   route("api/newsletter", "routes/api.newsletter.ts"),

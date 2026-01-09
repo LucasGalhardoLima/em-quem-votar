@@ -70,7 +70,7 @@ function VoteDetailsContent({ bill }: { bill: any }) {
           <Link
             to="/"
             prefetch="intent"
-            className="p-2 -ml-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors md:hidden"
+            className="p-2 -ml-2 text-gray-400 hover:text-brand-primary hover:bg-brand-tertiary rounded-full transition-colors md:hidden"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>
@@ -144,7 +144,7 @@ function VoteDetailsContent({ bill }: { bill: any }) {
             placeholder="Filtrar deputado ou partido..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
           />
         </div>
 
@@ -161,13 +161,13 @@ function VoteDetailsContent({ bill }: { bill: any }) {
                 <Link
                   key={vote.id}
                   to={`/politico/${vote.politician.id}`}
-                  className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-100 transition-all flex items-center gap-3 group"
+                  className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm hover:shadow-md hover:border-brand-primary/20 transition-all flex items-center gap-3 group"
                 >
                   <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
                     {vote.politician.photoUrl && <img src={vote.politician.photoUrl} alt={vote.politician.name} className="w-full h-full object-cover" />}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 group-hover:text-blue-600">{vote.politician.name}</div>
+                    <div className="font-semibold text-gray-900 group-hover:text-brand-primary">{vote.politician.name}</div>
                     <div className="text-xs text-gray-500">{vote.politician.party} • {vote.politician.state}</div>
                   </div>
                 </Link>

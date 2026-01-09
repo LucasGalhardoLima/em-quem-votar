@@ -8,7 +8,7 @@ export function Footer() {
           {/* Brand & Mission */}
           <div>
             <div className="text-xl font-bold text-white mb-4">
-              Em Quem <span className="text-blue-500">Votar?</span>
+              Em Quem <span className="text-brand-secondary">Votar?</span>
             </div>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               Plataforma independente para decisões eleitorais informadas, baseada em dados reais e auditáveis.
@@ -22,10 +22,10 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Navegação</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/" className="hover:text-blue-400 transition-colors">Início</Link></li>
-              <li><Link to="/busca" className="hover:text-blue-400 transition-colors">Buscar Políticos</Link></li>
-              <li><Link to="/comparar" className="hover:text-blue-400 transition-colors">Comparar</Link></li>
-              <li><Link to="/quiz" className="hover:text-blue-400 transition-colors">Quiz Político</Link></li>
+              <li><Link to="/" className="hover:text-brand-secondary transition-colors">Início</Link></li>
+              <li><Link to="/busca" className="hover:text-brand-secondary transition-colors">Buscar Políticos</Link></li>
+              <li><Link to="/comparar" className="hover:text-brand-secondary transition-colors">Comparar</Link></li>
+              <li><Link to="/quiz" className="hover:text-brand-secondary transition-colors">Quiz Político</Link></li>
             </ul>
           </div>
 
@@ -33,10 +33,10 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Transparência</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/sobre" className="hover:text-blue-400 transition-colors">Sobre o Projeto</Link></li>
-              <li><Link to="/faq" className="hover:text-blue-400 transition-colors">Perguntas Frequentes</Link></li>
-              <li><Link to="/metodologia" className="hover:text-blue-400 transition-colors">Metodologia</Link></li>
-              <li><a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">Código Aberto (GitHub)</a></li>
+              <li><Link to="/sobre" className="hover:text-brand-secondary transition-colors">Sobre o Projeto</Link></li>
+              <li><Link to="/faq" className="hover:text-brand-secondary transition-colors">Perguntas Frequentes</Link></li>
+              <li><Link to="/metodologia" className="hover:text-brand-secondary transition-colors">Metodologia</Link></li>
+              <li><a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" rel="noopener noreferrer" className="hover:text-brand-secondary transition-colors">Código Aberto (GitHub)</a></li>
             </ul>
           </div>
 
@@ -44,8 +44,8 @@ export function Footer() {
           <div>
             <h4 className="font-semibold text-white mb-4">Legal</h4>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/privacidade" className="hover:text-blue-400 transition-colors">Política de Privacidade</Link></li>
-              <li><Link to="/termos" className="hover:text-blue-400 transition-colors">Termos de Uso</Link></li>
+              <li><Link to="/privacidade" className="hover:text-brand-secondary transition-colors">Política de Privacidade</Link></li>
+              <li><Link to="/termos" className="hover:text-brand-secondary transition-colors">Termos de Uso</Link></li>
             </ul>
 
             <h4 className="font-semibold text-white mt-8 mb-4">Fontes de Dados</h4>

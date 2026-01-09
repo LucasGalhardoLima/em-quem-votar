@@ -58,8 +58,8 @@ export function PoliticianCard({ politician, variants }: PoliticianCardProps) {
                     title="Comparar"
                 >
                     <div className={`w-5 h-5 rounded flex items-center justify-center transition-all ${isSelected(politician.id)
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-white border-2 border-gray-200 group-hover:border-blue-400"
+                        ? "bg-brand-primary text-white shadow-sm"
+                        : "bg-white border-2 border-gray-200 group-hover:border-brand-primary"
                         }`}>
                         {isSelected(politician.id) && <Check size={14} strokeWidth={3} />}
                     </div>
@@ -73,7 +73,7 @@ export function PoliticianCard({ politician, variants }: PoliticianCardProps) {
                     )}
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate text-lg">{politician.name}</h3>
+                    <h3 className="font-bold text-gray-900 group-hover:text-brand-primary transition-colors truncate text-lg">{politician.name}</h3>
                     <p className="text-sm text-gray-500 truncate mb-2">{politician.party} • {politician.state}</p>
 
                     {politician.tags && politician.tags.length > 0 && (

@@ -183,7 +183,7 @@ export default function Resultado() {
             <main className="flex-grow pb-12">
                 {/* Winner Hero Section */}
                 {winner ? (
-                    <section className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 text-white py-12 lg:py-20 relative overflow-hidden">
+                    <section className="bg-gradient-to-br from-brand-text-alt via-brand-text to-brand-text-alt text-white py-12 lg:py-20 relative overflow-hidden">
                         {/* Background Pattern */}
                         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
 
@@ -192,7 +192,7 @@ export default function Resultado() {
 
                                 {/* Winner Profile */}
                                 <div className="flex-1 text-center lg:text-right space-y-4 animate-fade-in-up">
-                                    <div className="inline-block px-4 py-1 bg-yellow-400 text-blue-900 rounded-full text-sm font-bold tracking-wide uppercase mb-2">
+                                    <div className="inline-block px-4 py-1 bg-brand-secondary text-brand-text-alt rounded-full text-sm font-bold tracking-wide uppercase mb-2">
                                         Seu Match #1
                                     </div>
                                     <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
@@ -203,14 +203,14 @@ export default function Resultado() {
                                     </p>
                                     <div className="flex items-center justify-center lg:justify-end gap-3 mt-4">
                                         <div className="text-6xl font-bold text-white">{winner.percentage}%</div>
-                                        <div className="text-sm text-blue-200 leading-tight text-left">
+                                        <div className="text-sm text-brand-primary leading-tight text-left">
                                             de<br />compatibilidade
                                         </div>
                                     </div>
                                     <div className="pt-6 flex justify-center lg:justify-end">
                                         <Link
                                             to={`/politico/${winner.politician.id}`}
-                                            className="bg-white text-blue-900 hover:bg-blue-50 font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center gap-2"
+                                            className="bg-white text-brand-text-alt hover:bg-brand-tertiary font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center gap-2"
                                         >
                                             Ver Perfil Completo <ArrowRight size={20} />
                                         </Link>
@@ -227,12 +227,12 @@ export default function Resultado() {
                                         )}
                                     </div>
                                     {/* Decorative circles */}
-                                    <div className="absolute inset-0 bg-blue-500 rounded-full blur-3xl opacity-30 -z-10 transform scale-110"></div>
+                                    <div className="absolute inset-0 bg-brand-primary rounded-full blur-3xl opacity-30 -z-10 transform scale-110"></div>
                                 </div>
 
                                 {/* Radar Chart */}
                                 <div className="flex-1 w-full max-w-sm bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                                    <h3 className="text-center text-sm font-bold text-blue-100 mb-2 uppercase tracking-wide">Áreas de Afinidade</h3>
+                                    <h3 className="text-center text-sm font-bold text-brand-tertiary mb-2 uppercase tracking-wide">Áreas de Afinidade</h3>
                                     <MatchRadarChart data={winner.categoryScores} />
                                 </div>
 
@@ -261,7 +261,7 @@ export default function Resultado() {
                                         to={`/politico/${match.politician.id}`}
                                         className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group relative overflow-hidden flex flex-col"
                                     >
-                                        <div className="absolute top-0 right-0 bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-bl-xl z-10 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                        <div className="absolute top-0 right-0 bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-bl-xl z-10 group-hover:bg-brand-primary group-hover:text-white transition-colors">
                                             {match.percentage}% Match
                                         </div>
 
@@ -272,7 +272,7 @@ export default function Resultado() {
                                                 )}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-lg text-gray-900 leading-tight group-hover:text-blue-600 transition-colors">
+                                                <h3 className="font-bold text-lg text-gray-900 leading-tight group-hover:text-brand-primary transition-colors">
                                                     {match.politician.name}
                                                 </h3>
                                                 <p className="text-sm text-gray-500 font-medium">
@@ -287,12 +287,12 @@ export default function Resultado() {
                                                 <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Por que deu match?</p>
                                                 <div className="text-sm text-gray-600 leading-relaxed">
                                                     <div className="flex items-start gap-2">
-                                                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                                        <CheckCircle className="w-4 h-4 text-brand-success mt-0.5 shrink-0" />
                                                         <span>{match.matchedTags[0].reasonText}</span>
                                                     </div>
                                                     {match.matchedTags.length > 1 && (
                                                         <div className="flex items-start gap-2 mt-1">
-                                                            <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                                            <CheckCircle className="w-4 h-4 text-brand-success mt-0.5 shrink-0" />
                                                             <span>{match.matchedTags[1].reasonText}</span>
                                                         </div>
                                                     )}
@@ -324,7 +324,7 @@ export default function Resultado() {
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-3">
                                             <div
-                                                className="bg-blue-600 h-3 rounded-full transition-all duration-1000 ease-out"
+                                                className="bg-brand-primary h-3 rounded-full transition-all duration-1000 ease-out"
                                                 style={{ width: `${party.percentage}%` }}
                                             />
                                         </div>
@@ -338,7 +338,7 @@ export default function Resultado() {
                     <div className="text-center pt-8">
                         <Link
                             to="/busca"
-                            className="inline-flex items-center gap-2 text-blue-600 font-bold hover:text-blue-800 transition-colors"
+                            className="inline-flex items-center gap-2 text-brand-primary font-bold hover:text-brand-text-alt transition-colors"
                         >
                             Ver todos os resultados na Busca
                             <ArrowRight size={20} />

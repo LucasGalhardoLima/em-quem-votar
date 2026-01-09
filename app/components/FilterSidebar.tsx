@@ -47,7 +47,7 @@ export function FilterSidebar({ query, showHeader = true }: FilterSidebarProps) 
             {selectedTags.length > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 bg-red-50 px-2 py-1 rounded-md transition-colors"
+                className="text-xs text-brand-alert hover:text-brand-alert/80 font-medium flex items-center gap-1 bg-brand-alert/10 px-2 py-1 rounded-md transition-colors"
               >
                 <X size={12} /> Limpar
               </button>
@@ -71,7 +71,7 @@ export function FilterSidebar({ query, showHeader = true }: FilterSidebarProps) 
                       className={clsx(
                         "flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all duration-200 w-full text-left group",
                         isSelected
-                          ? "bg-blue-50 text-blue-700 font-medium shadow-sm ring-1 ring-blue-100"
+                          ? "bg-brand-tertiary text-brand-text-alt font-medium shadow-sm ring-1 ring-brand-primary/20"
                           : "text-gray-600 hover:bg-gray-100"
                       )}
                     >
@@ -79,7 +79,7 @@ export function FilterSidebar({ query, showHeader = true }: FilterSidebarProps) 
                         {/* Optional: Checkbox icon simulator */}
                         <div className={clsx(
                           "w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
-                          isSelected ? "bg-blue-600 border-blue-600" : "border-gray-300 group-hover:border-gray-400 bg-white"
+                          isSelected ? "bg-brand-primary border-brand-primary" : "border-gray-300 group-hover:border-gray-400 bg-white"
                         )}>
                           {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-sm" />}
                         </div>

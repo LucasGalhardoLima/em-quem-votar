@@ -8,7 +8,7 @@ export function meta({ data }: Route.MetaArgs) {
   if (!data) {
     return [{ title: "Artigo não encontrado" }];
   }
-  
+
   const siteUrl = "https://emquemvotar.app"; // Mock URL for MVP
   const imageUrl = `${siteUrl}${data.image}`;
   const articleUrl = `${siteUrl}/artigos/${data.slug}`;
@@ -17,7 +17,7 @@ export function meta({ data }: Route.MetaArgs) {
     { title: `${data.title} | Em Quem Votar` },
     { name: "description", content: data.excerpt },
     { name: "keywords", content: data.keywords.join(", ") },
-    
+
     // Open Graph / Facebook
     { property: "og:type", content: "article" },
     { property: "og:url", content: articleUrl },
@@ -81,16 +81,16 @@ export default function ArticlePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       {/* Header / Nav */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link 
-            to="/" 
-            className="flex items-center text-gray-600 hover:text-blue-600 transition-colors font-medium group"
+          <Link
+            to="/"
+            className="flex items-center text-slate-600 hover:text-brand-primary transition-colors font-medium group"
           >
             <ArrowLeft className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" />
             Voltar
           </Link>
-          <div className="flex items-center gap-2 text-blue-600 font-bold">
+          <div className="flex items-center gap-2 text-brand-primary font-bold">
             <BookOpen className="w-5 h-5" />
             <span className="hidden sm:inline">Em Quem Votar</span>
           </div>
@@ -98,38 +98,38 @@ export default function ArticlePage() {
       </header>
 
       <main className="flex-grow max-w-3xl mx-auto px-4 py-12 md:py-20 w-full">
-        
+
         {/* Article Header */}
         <div className="mb-12 space-y-6 text-center">
-          <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold tracking-wide uppercase">
+          <span className="inline-block px-3 py-1 rounded-full bg-brand-tertiary text-brand-text-alt text-sm font-semibold tracking-wide uppercase">
             {article.category}
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
             {article.title}
           </h1>
-          <p className="text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto">
             {article.excerpt}
           </p>
         </div>
 
         {/* Content */}
-        <article className="prose prose-lg prose-blue mx-auto prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-700 prose-p:leading-8 prose-a:text-blue-600 hover:prose-a:text-blue-700 prose-img:rounded-xl">
+        <article className="prose prose-lg prose-slate mx-auto prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-700 prose-p:leading-8 prose-a:text-brand-primary hover:prose-a:text-brand-text-alt prose-img:rounded-xl">
           <div dangerouslySetInnerHTML={{ __html: article.content }} />
         </article>
 
         {/* References */}
-        <div className="mt-16 pt-8 border-t border-gray-100">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Referências & Leitura Adicional</h3>
+        <div className="mt-16 pt-8 border-t border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">Referências & Leitura Adicional</h3>
           <ul className="space-y-2">
             {article.references.map((ref: any, idx: number) => (
               <li key={idx}>
-                <a 
-                  href={ref.url} 
-                  target="_blank" 
+                <a
+                  href={ref.url}
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center text-gray-600 hover:text-blue-600 transition-colors text-sm group"
+                  className="flex items-center text-slate-600 hover:text-brand-primary transition-colors text-sm group"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-3 group-hover:scale-125 transition-transform" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand-primary mr-3 group-hover:scale-125 transition-transform" />
                   {ref.title}
                   <Share2 className="w-3 h-3 ml-2 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </a>
