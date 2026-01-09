@@ -1,25 +1,17 @@
 import type { Route } from "./+types/votacao.$id";
 import { useLoaderData, Link, Await } from "react-router";
-import { db } from "~/utils/db.server";
+import { BillService } from "~/services/bill.server";
 import { ArrowLeft, CheckCircle2, XCircle, Search } from "lucide-react";
 import { useState, Suspense, useEffect } from "react";
 import { VoteDetailsSkeleton } from "~/components/SkeletonLoader";
 
 export function meta({ data }: Route.MetaArgs) {
-  // Safe access for meta when data is a promise or partial
-  // We might not have data immediately available if deferred, but RR7 meta handles strict data
-  // Use a generic title if data is pending/undefined
   if (!data || !("bill" in data)) {
     return [
       { title: "Votação | Em Quem Votar" },
       { name: "description", content: "Veja quem votou a favor e contra nesta votação importante." },
     ];
   }
-
-  // Note: Meta function runs after loader resolves for SEO, so we might need to await the promise if it's passed as a promise?
-  // Actually in RR7 with single fetch/loader, meta receives the Resolved data if it's critical? 
-  // Let's keep it simple. If we return a promise, meta might receive the promise object.
-  // For basic SEO, we'll try to use a static title first to avoid complications, or check if we can await it.
 
   return [
     { title: "Detalhes da Votação | Em Quem Votar" },
@@ -28,35 +20,10 @@ export function meta({ data }: Route.MetaArgs) {
 }
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const billPromise = db.bill.findUnique({
-    where: { id: params.id },
-    include: {
-      voteLogs: {
-        include: {
-          politician: true,
-        },
-        orderBy: {
-          politician: { name: "asc" },
-        },
-      },
-    },
-  }).then(bill => {
-    if (!bill) return null;
-    // Serialize dates to avoid hydration errors
-    return {
-      ...bill,
-      voteDate: bill.voteDate.toISOString(),
-      voteLogs: bill.voteLogs.map(log => ({
-        ...log,
-        politician: {
-          ...log.politician,
-          createdAt: log.politician.createdAt.toISOString(),
-          updatedAt: log.politician.updatedAt.toISOString(),
-        }
-      }))
-    };
-  });
-
+  if (!params.id) {
+    throw new Response("ID inválido", { status: 400 });
+  }
+  const billPromise = BillService.getById(params.id);
   return { bill: billPromise };
 }
 

@@ -3,7 +3,6 @@ import type { Route } from "./+types/home";
 import { Search, ChevronDown, BookOpen, User, Gavel, Loader2, Sparkles, Mail } from "lucide-react";
 import { Form, Link, useLoaderData, useNavigation, useFetcher, Await } from "react-router";
 import { Suspense } from "react";
-import { db } from "~/utils/db.server";
 import { clsx } from "clsx";
 import { ARTICLES } from "~/data/articles";
 import { FEATURED_FILTERS } from "~/data/filters";
@@ -11,8 +10,8 @@ import { useEffect, useRef, useState } from "react";
 import { PoliticianCardSkeleton, FeaturedVoteSkeleton } from "~/components/SkeletonLoader";
 import { useFilterStore } from "~/stores/filterStore";
 
-import { Prisma } from "@prisma/client";
 import { PoliticianService } from "~/services/politician.server";
+import { BillService } from "~/services/bill.server";
 
 import { NewsletterForm } from "~/components/NewsletterForm";
 
@@ -30,54 +29,24 @@ export async function loader({ request }: Route.LoaderArgs) {
   const offset = parseInt(url.searchParams.get("offset") || "0");
   const limit = 20;
 
-  const where: Prisma.PoliticianWhereInput = {};
-
-  if (query) {
-    where.OR = [
-      { name: { contains: query, mode: "insensitive" } },
-      { party: { contains: query, mode: "insensitive" } },
-    ];
-  }
-
-  if (tagsParam) {
-    const slugs = tagsParam.split(",");
-    where.tags = { some: { tag: { slug: { in: slugs } } } };
-  }
-
   // Fetch featured votes immediately as they are fast and needed for the home page layout
   // Only fetch them on the first load (to keep it fast)
-  const featuredVotesPromise = (!query && !tagsParam) ? db.bill.findMany({
-    where: {
-      id: {
-        in: [
-          "2196833-326", // Reforma Tributária
-          "345311-270",  // Marco Temporal
-          "2357053-47",  // Arcabouço Fiscal
-          "2423268-40",  // Prisão Chiquinho Brazão
-          "2194899-103", // PEC da Transição
-          "2310837-8",   // PL Fake News
-          "2270789-73"   // Eletrobras
-        ]
-      }
-    },
-    select: { id: true, title: true, voteDate: true, description: true }
-  }).then(votes => votes.map(v => ({ ...v, voteDate: v.voteDate.toISOString() }))) : Promise.resolve([]);
+  const featuredVotesPromise = (!query && !tagsParam) ? BillService.listFeatured([
+    "2196833-326", // Reforma Tributária
+    "345311-270",  // Marco Temporal
+    "2357053-47",  // Arcabouço Fiscal
+    "2423268-40",  // Prisão Chiquinho Brazão
+    "2194899-103", // PEC da Transição
+    "2310837-8",   // PL Fake News
+    "2270789-73"   // Eletrobras
+  ]) : Promise.resolve([]);
 
   // Data promise for results
-  const resultsPromise = (query || tagsParam) ? db.politician.findMany({
-    where,
-    skip: offset,
-    take: limit + 1,
-    include: {
-      tags: {
-        take: 3,
-        include: { tag: true },
-      },
-    },
-  }).then(results => {
-    const hasMore = results.length > limit;
-    const items = hasMore ? results.slice(0, limit) : results;
-    return { items, hasMore };
+  const resultsPromise = (query || tagsParam) ? PoliticianService.list({
+    query,
+    tags: tagsParam ? tagsParam.split(",") : null,
+    offset,
+    limit
   }) : Promise.resolve({ items: [], hasMore: false });
 
   return {

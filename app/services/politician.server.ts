@@ -30,38 +30,29 @@ export const PoliticianService = {
       where,
       skip: offset,
       take: limit + 1,
-      select: {
-        id: true,
-        name: true,
-        party: true,
-        state: true,
-        photoUrl: true,
-        spending: true,
-        attendanceRate: true,
+      include: {
         tags: {
           take: 3,
-          select: {
-            tag: {
-              select: {
-                name: true,
-                slug: true,
-                category: true
-              }
-            }
-          }
-        }
+          include: { tag: true },
+        },
       },
       orderBy: { name: 'asc' }
     });
 
     const hasMore = politicians.length > limit;
-    const items = hasMore ? politicians.slice(0, limit) : politicians;
+    const rawItems = hasMore ? politicians.slice(0, limit) : politicians;
+
+    const items = rawItems.map(p => ({
+      ...p,
+      spending: p.spending ? Number(p.spending.toString()) : 0,
+      attendanceRate: p.attendanceRate ? Number(p.attendanceRate.toString()) : 0,
+    }));
 
     return { items, hasMore };
   },
 
   async getById(id: string) {
-    return db.politician.findUnique({
+    const politician = await db.politician.findUnique({
       where: { id },
       select: {
         id: true,
@@ -99,16 +90,50 @@ export const PoliticianService = {
         },
       },
     });
+
+    if (!politician) return null;
+
+    return {
+      ...politician,
+      spending: politician.spending ? Number(politician.spending.toString()) : 0,
+      attendanceRate: politician.attendanceRate ? Number(politician.attendanceRate.toString()) : 0,
+      votes: politician.votes.map(v => ({
+        ...v,
+        bill: {
+          ...v.bill,
+          voteDate: v.bill.voteDate.toISOString()
+        }
+      }))
+    };
   },
 
-  async getFeaturedVotes() {
-    const votes = await db.bill.findMany({
-      where: {
-        id: { in: FEATURED_VOTE_IDS }
-      },
-      select: { id: true, title: true, voteDate: true, description: true }
+  async listForComparison(ids: string[]) {
+    const politicians = await db.politician.findMany({
+      where: { id: { in: ids } },
+      include: {
+        votes: {
+          include: { bill: true }
+        }
+      }
     });
-    
-    return votes.map(v => ({ ...v, voteDate: v.voteDate.toISOString() }));
+
+    return politicians.map(p => ({
+      ...p,
+      spending: p.spending ? Number(p.spending.toString()) : 0,
+      attendanceRate: p.attendanceRate ? Number(p.attendanceRate.toString()) : 0,
+      votes: p.votes.map(v => ({
+        ...v,
+        bill: {
+          ...v.bill,
+          voteDate: v.bill.voteDate.toISOString()
+        }
+      }))
+    }));
+  },
+
+  async listAllIds() {
+    return db.politician.findMany({
+      select: { id: true, updatedAt: true },
+    });
   }
 };

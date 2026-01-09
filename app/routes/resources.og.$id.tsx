@@ -1,19 +1,14 @@
-
-import { db } from "~/utils/db.server";
+import { PoliticianService } from "~/services/politician.server";
 import type { Route } from "./+types/resources.og.$id";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  const politician = await db.politician.findUnique({
-    where: { id: params.id },
-    include: {
-      tags: {
-        take: 3,
-        include: { tag: true },
-      },
-    },
-  });
+  if (!params.id) {
+    return new Response("Not Found", { status: 404 });
+  }
+
+  const politician = await PoliticianService.getById(params.id);
 
   if (!politician) {
     return new Response("Not Found", { status: 404 });
@@ -24,7 +19,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Bold.ttf"
   ).then((res) => res.arrayBuffer());
 
-   const regularFontData = await fetch(
+  const regularFontData = await fetch(
     "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Regular.ttf"
   ).then((res) => res.arrayBuffer());
 
@@ -56,82 +51,82 @@ export async function loader({ params }: Route.LoaderArgs) {
           gap: "60px",
         }}
       >
-          {/* Photo */}
-          <div style={{ display: "flex" }}>
-             {politician.photoUrl ? (
-                <img
-                    src={politician.photoUrl}
-                    width={400}
-                    height={400}
-                    style={{
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        border: "10px solid #f1f5f9",
-                    }}
-                />
-             ) : (
-                <div 
-                    style={{ 
-                        width: 400, 
-                        height: 400, 
-                        borderRadius: "50%", 
-                        backgroundColor: "#cbd5e1",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "150px",
-                        color: "#64748b"
-                    }}
-                >
-                    ?
-                </div>
-             )}
+        {/* Photo */}
+        <div style={{ display: "flex" }}>
+          {politician.photoUrl ? (
+            <img
+              src={politician.photoUrl}
+              width={400}
+              height={400}
+              style={{
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "10px solid #f1f5f9",
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 400,
+                height: 400,
+                borderRadius: "50%",
+                backgroundColor: "#cbd5e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "150px",
+                color: "#64748b"
+              }}
+            >
+              ?
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: 1 }}>
+          {/* Header */}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <div style={{ fontSize: "32px", color: "#64748b", fontWeight: 400, marginBottom: "8px" }}>
+              Em Quem Votar?
+            </div>
+            <div style={{ fontSize: "70px", color: "#0f172a", fontWeight: 700, lineHeight: 1 }}>
+              {politician.name}
+            </div>
+            <div style={{ fontSize: "40px", color: "#3b82f6", fontWeight: 400, marginTop: "10px" }}>
+              {politician.party} • {politician.state}
+            </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: 1 }}>
-              {/* Header */}
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                    <div style={{ fontSize: "32px", color: "#64748b", fontWeight: 400, marginBottom: "8px" }}>
-                        Em Quem Votar?
-                    </div>
-                    <div style={{ fontSize: "70px", color: "#0f172a", fontWeight: 700, lineHeight: 1 }}>
-                        {politician.name}
-                    </div>
-                    <div style={{ fontSize: "40px", color: "#3b82f6", fontWeight: 400, marginTop: "10px" }}>
-                        {politician.party} • {politician.state}
-                    </div>
+          {/* Divider */}
+          <div style={{ width: "100%", height: "4px", backgroundColor: "#f1f5f9", margin: "20px 0" }}></div>
+
+          {/* Tags */}
+          {politician.tags.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div style={{ fontSize: "24px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "2px", fontWeight: 700 }}>
+                Principais Pautas
               </div>
-
-               {/* Divider */}
-               <div style={{ width: "100%", height: "4px", backgroundColor: "#f1f5f9", margin: "20px 0" }}></div>
-
-               {/* Tags */}
-               {politician.tags.length > 0 && (
-                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                         <div style={{ fontSize: "24px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "2px", fontWeight: 700 }}>
-                            Principais Pautas
-                         </div>
-                         <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-                            {politician.tags.map(pt => (
-                                <div 
-                                    key={pt.tag.id}
-                                    style={{
-                                        display: "flex",
-                                        backgroundColor: "#0f172a",
-                                        color: "white",
-                                        fontSize: "30px",
-                                        padding: "12px 30px",
-                                        borderRadius: "20px",
-                                        fontWeight: 700
-                                    }}
-                                >
-                                    {pt.tag.name}
-                                </div>
-                            ))}
-                         </div>
-                   </div>
-               )}
-          </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
+                {politician.tags.map(pt => (
+                  <div
+                    key={pt.tag.id}
+                    style={{
+                      display: "flex",
+                      backgroundColor: "#0f172a",
+                      color: "white",
+                      fontSize: "30px",
+                      padding: "12px 30px",
+                      borderRadius: "20px",
+                      fontWeight: 700
+                    }}
+                  >
+                    {pt.tag.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>,
     {
@@ -145,10 +140,10 @@ export async function loader({ params }: Route.LoaderArgs) {
           style: "normal",
         },
         {
-            name: "Roboto Slab",
-            data: regularFontData,
-            weight: 400,
-            style: "normal",
+          name: "Roboto Slab",
+          data: regularFontData,
+          weight: 400,
+          style: "normal",
         },
       ],
     }

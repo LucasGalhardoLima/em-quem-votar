@@ -1,8 +1,9 @@
 import { Link, useLoaderData, type LoaderFunctionArgs } from "react-router";
-import { db } from "~/utils/db.server";
 import { Check, X, Minus, ArrowLeft, DollarSign, Calendar } from "lucide-react";
 import { Header } from "~/components/Header";
 import { TAG_DEFINITIONS } from "~/data/tag-definitions";
+import { PoliticianService } from "~/services/politician.server";
+import { BillService } from "~/services/bill.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
     const url = new URL(request.url);
@@ -14,14 +15,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
     const ids = idsParam.split(",").filter(Boolean);
 
-    const rawPoliticians = await db.politician.findMany({
-        where: { id: { in: ids } },
-        include: {
-            votes: {
-                include: { bill: true }
-            }
-        }
-    });
+    const politicians = await PoliticianService.listForComparison(ids);
 
     // Identify common important votes to compare
     const billsOfInterest = [
@@ -29,31 +23,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
         TAG_DEFINITIONS["ruralista"].sourceBillId,
         TAG_DEFINITIONS["rigoroso"]?.sourceBillId, // Using optional chaining just in case, but intended is rigoroso
         TAG_DEFINITIONS["conservador-costumes"].sourceBillId,
-    ].filter(id => id && id !== "metrics" && id !== "demographics");
+    ].filter(id => id && id !== "metrics" && id !== "demographics") as string[];
 
     // Fetch bill details
-    const rawFeaturedBills = await db.bill.findMany({
-        where: { id: { in: billsOfInterest } }
-    });
-
-    // SERIALIZATION SAFETY: Convert Decimals to Numbers and Dates to Strings
-    const politicians = rawPoliticians.map(p => ({
-        ...p,
-        spending: p.spending ? Number(p.spending) : 0,
-        attendanceRate: p.attendanceRate ? Number(p.attendanceRate) : 0,
-        votes: p.votes.map(v => ({
-            ...v,
-            bill: {
-                ...v.bill,
-                voteDate: v.bill.voteDate.toISOString()
-            }
-        }))
-    }));
-
-    const featuredBills = rawFeaturedBills.map(b => ({
-        ...b,
-        voteDate: b.voteDate.toISOString()
-    }));
+    const featuredBills = await BillService.listFeatured(billsOfInterest);
 
     return { politicians, featuredBills };
 }

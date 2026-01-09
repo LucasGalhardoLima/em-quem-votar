@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs } from "react-router";
-import { db } from "~/utils/db.server";
+import { NewsletterService } from "~/services/newsletter.server";
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== "POST") {
@@ -14,15 +14,9 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   try {
-    await db.subscriber.create({
-      data: { email },
-    });
+    await NewsletterService.subscribe(email);
     return { success: true };
   } catch (error: any) {
-    if (error.code === 'P2002') { // Unique constraint code
-        // Email already defined, treat as success to avoid leaking info or just say welcome back
-        return { success: true };
-    }
     console.error("Newsletter error:", error);
     return Response.json({ error: "Erro ao salvar inscrição. Tente novamente." }, { status: 500 });
   }

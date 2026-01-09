@@ -1,6 +1,5 @@
 import { useLoaderData, Link, useNavigation, Await } from "react-router";
 import { Suspense, useEffect } from "react";
-import { db } from "~/utils/db.server";
 import type { Route } from "./+types/politico.$id";
 import { ArrowLeft, Check, X, Minus, MapPin, Building2, TrendingUp, DollarSign, Calendar, Share2, Mail } from "lucide-react";
 import { ProfileHeaderSkeleton, VoteHistorySkeleton } from "~/components/SkeletonLoader";
@@ -10,13 +9,9 @@ import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { toast } from "sonner";
 import { PoliticianPerformance } from "~/components/PoliticianPerformance";
 import { PoliticianVoteHistory } from "~/components/PoliticianVoteHistory";
-
-// ... imports
 import { PoliticianService } from "~/services/politician.server";
 
 export async function loader({ params }: Route.LoaderArgs) {
-  // Fetch basic politician info as fast as possible
-  // Ensure we await the data for SEO (meta tags need it)
   if (!params.id) {
     throw new Response("ID inválido", { status: 400 });
   }
@@ -27,20 +22,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     return { politician: null };
   }
 
-  return {
-    politician: {
-      ...politician,
-      spending: politician.spending ? Number(politician.spending.toString()) : 0,
-      attendanceRate: politician.attendanceRate ? Number(politician.attendanceRate.toString()) : 0,
-      votes: politician.votes.map(v => ({
-        ...v,
-        bill: {
-          ...v.bill,
-          voteDate: v.bill.voteDate.toISOString()
-        }
-      }))
-    }
-  };
+  return { politician };
 }
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {

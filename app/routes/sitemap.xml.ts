@@ -1,15 +1,12 @@
-
-import { db } from "~/utils/db.server";
 import { ARTICLES } from "~/data/articles";
 import type { Route } from "./+types/sitemap.xml";
+import { PoliticianService } from "~/services/politician.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const baseUrl = `${url.protocol}//${url.host}`;
 
-  const politicians = await db.politician.findMany({
-    select: { id: true, updatedAt: true },
-  });
+  const politicians = await PoliticianService.listAllIds();
 
   const staticRoutes = [
     "",
