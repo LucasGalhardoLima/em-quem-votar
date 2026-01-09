@@ -33,18 +33,18 @@ export default function Quiz() {
     };
 
     const finishQuiz = (finalScores: Record<string, number>) => {
-        // Find top 2 tags
-        const sortedTags = Object.entries(finalScores)
-            .sort(([, a], [, b]) => b - a)
-            .map(([tag]) => tag)
-            .slice(0, 2); // Get top 2
-
         const queryParams = new URLSearchParams();
-        if (sortedTags.length > 0) {
-            queryParams.set("tags", sortedTags.join(","));
+
+        // Serialize scores: tag1:5,tag2:3
+        const scoreString = Object.entries(finalScores)
+            .map(([tag, score]) => `${tag}:${score}`)
+            .join(",");
+
+        if (scoreString) {
+            queryParams.set("s", scoreString);
         }
 
-        navigate(`/busca?${queryParams.toString()}`);
+        navigate(`/resultado?${queryParams.toString()}`);
     };
 
     const renderIcon = (iconName?: string) => {
@@ -113,9 +113,9 @@ export default function Quiz() {
                                     <span className="font-bold text-lg block mb-1">{option.label}</span>
                                     {option.description && (
                                         <span className={`text-sm opacity-80 font-medium ${option.color === 'green' ? 'text-green-700' :
-                                                option.color === 'red' ? 'text-red-700' :
-                                                    option.color === 'blue' ? 'text-blue-700' :
-                                                        'text-gray-600'
+                                            option.color === 'red' ? 'text-red-700' :
+                                                option.color === 'blue' ? 'text-blue-700' :
+                                                    'text-gray-600'
                                             }`}>{option.description}</span>
                                     )}
                                 </div>
