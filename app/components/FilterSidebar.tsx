@@ -75,15 +75,15 @@ export function FilterSidebar({ query, showHeader = true }: FilterSidebarProps) 
                           : "text-gray-600 hover:bg-gray-100"
                       )}
                     >
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 min-w-0">
                         {/* Optional: Checkbox icon simulator */}
                         <div className={clsx(
-                          "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                          "w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0",
                           isSelected ? "bg-blue-600 border-blue-600" : "border-gray-300 group-hover:border-gray-400 bg-white"
                         )}>
                           {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-sm" />}
                         </div>
-                        {filter.label}
+                        <span className="truncate">{filter.label}</span>
                       </span>
                     </button>
                   );

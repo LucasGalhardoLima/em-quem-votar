@@ -3,6 +3,8 @@ import { X } from "lucide-react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FilterSidebar } from "./FilterSidebar";
+import { useFilterStore } from "~/stores/filterStore";
+import { useSubmit } from "react-router";
 
 interface MobileFilterDrawerProps {
     isOpen: boolean;
@@ -11,6 +13,17 @@ interface MobileFilterDrawerProps {
 }
 
 export function MobileFilterDrawer({ isOpen, onClose, query }: MobileFilterDrawerProps) {
+    const { selectedTags, setTags } = useFilterStore();
+    const submit = useSubmit();
+
+    const clearFilters = () => {
+        setTags([]);
+
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        submit(params, { method: "get", preventScrollReset: true, replace: false });
+    };
+
     // Lock body scroll when open
     useEffect(() => {
         if (isOpen) {
@@ -48,7 +61,7 @@ export function MobileFilterDrawer({ isOpen, onClose, query }: MobileFilterDrawe
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[85vh] flex flex-col shadow-2xl lg:hidden"
+                        className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl z-50 max-h-[85vh] flex flex-col shadow-2xl lg:hidden w-full max-w-[100vw] overflow-hidden"
                         drag="y"
                         dragConstraints={{ top: 0 }}
                         dragElastic={0.05}
@@ -65,7 +78,17 @@ export function MobileFilterDrawer({ isOpen, onClose, query }: MobileFilterDrawe
 
                         {/* Header */}
                         <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-900">Filtros</h2>
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-xl font-bold text-gray-900">Filtros</h2>
+                                {selectedTags.length > 0 && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="text-xs text-red-500 hover:text-red-700 font-medium bg-red-50 px-2 py-1 rounded-md transition-colors"
+                                    >
+                                        Limpar
+                                    </button>
+                                )}
+                            </div>
                             <button onClick={onClose} className="p-2 -mr-2 text-gray-500 hover:bg-gray-100 rounded-full">
                                 <X size={24} />
                             </button>
