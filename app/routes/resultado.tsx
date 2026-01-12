@@ -187,39 +187,14 @@ export default function Resultado() {
                         {/* Background Pattern */}
                         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:20px_20px]"></div>
 
-                        <div className="max-w-6xl mx-auto px-4 relative z-10">
-                            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                        <div className="max-w-4xl mx-auto flex flex-col items-center gap-10">
 
-                                {/* Winner Profile */}
-                                <div className="flex-1 text-center lg:text-right space-y-4 animate-fade-in-up">
-                                    <div className="inline-block px-4 py-1 bg-brand-secondary text-brand-text-alt rounded-full text-sm font-bold tracking-wide uppercase mb-2">
-                                        Seu Match #1
-                                    </div>
-                                    <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight">
-                                        {winner.politician.name}
-                                    </h1>
-                                    <p className="text-xl md:text-2xl text-blue-200 font-medium">
-                                        {winner.politician.party}
-                                    </p>
-                                    <div className="flex items-center justify-center lg:justify-end gap-3 mt-4">
-                                        <div className="text-6xl font-bold text-white">{winner.percentage}%</div>
-                                        <div className="text-sm text-brand-primary leading-tight text-left">
-                                            de<br />compatibilidade
-                                        </div>
-                                    </div>
-                                    <div className="pt-6 flex justify-center lg:justify-end">
-                                        <Link
-                                            to={`/politico/${winner.politician.id}`}
-                                            className="bg-white text-brand-text-alt hover:bg-brand-tertiary font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center gap-2"
-                                        >
-                                            Ver Perfil Completo <ArrowRight size={20} />
-                                        </Link>
-                                    </div>
-                                </div>
+                            {/* Top Row: Photo + Info/Match */}
+                            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
 
-                                {/* Winner Photo Circle */}
+                                {/* 1. Photo */}
                                 <div className="relative shrink-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                                    <div className="w-64 h-64 md:w-80 md:h-80 rounded-full border-8 border-white/20 shadow-2xl overflow-hidden relative z-10 bg-gray-800">
+                                    <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-8 border-white/20 shadow-2xl overflow-hidden relative z-10 bg-gray-800">
                                         {winner.politician.photoUrl ? (
                                             <img src={winner.politician.photoUrl} alt={winner.politician.name} className="w-full h-full object-cover" />
                                         ) : (
@@ -230,13 +205,40 @@ export default function Resultado() {
                                     <div className="absolute inset-0 bg-brand-primary rounded-full blur-3xl opacity-30 -z-10 transform scale-110"></div>
                                 </div>
 
-                                {/* Radar Chart */}
-                                <div className="flex-1 w-full max-w-sm bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                                    <h3 className="text-center text-sm font-bold text-brand-tertiary mb-2 uppercase tracking-wide">Áreas de Afinidade</h3>
-                                    <MatchRadarChart data={winner.categoryScores} />
+                                {/* 2. Info + Match */}
+                                <div className="text-center md:text-left space-y-4 animate-fade-in-up max-w-lg">
+                                    <div>
+                                        <div className="inline-block px-4 py-1 bg-brand-secondary text-brand-text-alt rounded-full text-sm font-bold tracking-wide uppercase mb-3">
+                                            Seu Match #1
+                                        </div>
+                                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none mb-1">
+                                            {winner.politician.name}
+                                        </h1>
+                                        <p className="text-xl md:text-2xl text-blue-200 font-medium">
+                                            {winner.politician.party}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center justify-center md:justify-start gap-4 pt-2">
+                                        <div className="text-6xl font-bold text-white">{winner.percentage}%</div>
+                                        <div className="text-sm text-blue-100 leading-tight text-left opacity-90 font-medium">
+                                            de<br />compatibilidade
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
+
+                            {/* Bottom: Button */}
+                            <div className="animate-fade-in-up w-full text-center" style={{ animationDelay: '0.2s' }}>
+                                <Link
+                                    to={`/politico/${winner.politician.id}`}
+                                    className="bg-white text-brand-text-alt hover:bg-brand-tertiary hover:text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center gap-2 text-lg"
+                                >
+                                    Ver Perfil Completo <ArrowRight size={20} />
+                                </Link>
+                            </div>
+
                         </div>
                     </section>
                 ) : (
@@ -246,6 +248,23 @@ export default function Resultado() {
                 )}
 
                 <div className="max-w-4xl mx-auto space-y-16 px-4 mt-16">
+
+                    {/* Affinity Radar Chart Section */}
+                    {/* Affinity Radar Chart Section */}
+                    <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col items-center gap-8 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                        <div className="w-full text-center space-y-4 max-w-3xl mx-auto">
+                            <h2 className="text-2xl font-bold flex items-center justify-center gap-2 text-gray-800">
+                                <Trophy className="text-brand-secondary" />
+                                Áreas de Afinidade
+                            </h2>
+                            <p className="text-gray-600 leading-relaxed">
+                                Este gráfico mostra como suas prioridades se alinham com a atuação de <strong>{winner.politician.name}</strong> em diferentes temas legislativos.
+                            </p>
+                        </div>
+                        <div className="w-full bg-gray-50 rounded-2xl p-6 border border-gray-100 h-[450px]">
+                            <MatchRadarChart data={winner.categoryScores} />
+                        </div>
+                    </section>
 
                     {/* Top Politicians Grid (Runners Up) */}
                     {topPoliticians.length > 1 && (

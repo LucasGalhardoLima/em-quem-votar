@@ -14,7 +14,7 @@ export function TagWithTooltip({ tag }: TagWithTooltipProps) {
 
   if (!definition) {
     return (
-      <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-900 text-white shadow-sm">
+      <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-primary-light text-brand-primary shadow-sm border border-brand-primary/20">
         {tag.name}
       </span>
     );
@@ -22,9 +22,9 @@ export function TagWithTooltip({ tag }: TagWithTooltipProps) {
 
   return (
     <div className="group/tooltip relative inline-block">
-      <span className="cursor-help inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-900 text-white shadow-sm hover:bg-gray-800 transition-colors">
+      <span className="cursor-help inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-brand-primary-light text-brand-primary shadow-sm hover:bg-brand-primary/10 transition-colors border border-brand-primary/20">
         {tag.name}
-        <Info size={12} className="text-gray-400 group-hover/tooltip:text-brand-secondary transition-colors" />
+        <Info size={12} className="text-brand-primary/60 group-hover/tooltip:text-brand-primary transition-colors" />
       </span>
 
       {/* Tooltip */}

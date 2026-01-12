@@ -66,6 +66,7 @@ model Bill {
   voteLogs    VoteLog[]
 
   @@index([voteDate])
+  @@unique([id])
 }
 
 model VoteLog {
@@ -79,6 +80,7 @@ model VoteLog {
 
   @@index([politicianId])
   @@index([billId])
+  @@unique([politicianId, billId])
 }
 
 model Subscriber {

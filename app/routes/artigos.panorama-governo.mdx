@@ -1,0 +1,92 @@
+---
+title: "Panorama do Governo Atual"
+excerpt: "Uma análise objetiva sobre os principais desafios, conquistas e a direção econômica da atual gestão."
+image: ""
+date: "2026-01-08"
+category: "Política Nacional"
+readTime: "7 min"
+---
+
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { TrendingUp, TrendingDown, AlertCircle, Building2 } from "lucide-react";
+
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+  <Header />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    
+    {/* Header */}
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-primary-light rounded-2xl mb-2 text-brand-primary">
+        <Building2 size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
+        Panorama do <span className="text-brand-primary">Governo Atual</span>
+      </h1>
+      <div className="flex items-center justify-center gap-4 text-sm text-gray-500 font-medium">
+        <span>08 de Janeiro de 2026</span>
+        <span>•</span>
+        <span>7 min de leitura</span>
+      </div>
+    </header>
+
+    <div className="prose prose-lg prose-slate text-gray-600 mx-auto">
+      <p className="lead text-xl text-gray-600 font-medium text-center max-w-2xl mx-auto leading-relaxed not-prose mb-12">
+        Entender o cenário atual é essencial para decidir os próximos passos nas urnas. Analisamos os pilares econômicos e sociais da gestão vigente.
+      </p>
+
+      <h2>O Cenário Econômico</h2>
+      <p>
+        A economia tem sido o ponto focal de debates intensos. Com a flutuação da inflação e o desafio do controle fiscal, o governo tem adotado medidas mistas de estímulo ao consumo e tentativa de arrecadação.
+      </p>
+      
+      <div className="grid md:grid-cols-2 gap-6 my-8 not-prose">
+         <div className="bg-green-50 p-6 rounded-2xl border border-green-100">
+            <h3 className="flex items-center gap-2 font-bold text-green-800 text-lg mb-2">
+               <TrendingUp size={20} /> Pontos Positivos
+            </h3>
+            <ul className="space-y-2 text-sm text-green-700">
+               <li>• Redução do desemprego em setores de serviço</li>
+               <li>• Programas de transferência de renda ampliados</li>
+               <li>• Investimentos em energia limpa</li>
+            </ul>
+         </div>
+
+         <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
+            <h3 className="flex items-center gap-2 font-bold text-red-800 text-lg mb-2">
+               <TrendingDown size={20} /> Desafios
+            </h3>
+             <ul className="space-y-2 text-sm text-red-700">
+               <li>• Déficit fiscal persistente</li>
+               <li>• Dificuldade na aprovação de reformas administrativas</li>
+               <li>• Inflação de alimentos pressionada</li>
+            </ul>
+         </div>
+      </div>
+
+      <h2>Relação com o Congresso</h2>
+      <p>
+        A governabilidade tem exigido negociações constantes com o chamado "Centrão". A aprovação de pautas importantes depende de emendas parlamentares e concessões ministeriais, uma prática que, embora comum, gera debates sobre a eficiência da gestão pública.
+      </p>
+
+      <h2>O Que Vem Por Aí?</h2>
+      <p>
+        Para o restante do mandato, espera-se foco na consolidação de obras de infraestrutura e na tentativa de reeleição ou sucessão. O eleitor deve ficar atento:
+      </p>
+      <ul>
+        <li>À execução do orçamento público.</li>
+        <li>À transparência nas decisões ministeriais.</li>
+        <li>Ao cumprimento das promessas de campanha originais.</li>
+      </ul>
+
+      <div className="bg-brand-primary-light p-8 rounded-2xl my-8 not-prose text-center">
+         <h3 className="text-xl font-bold text-brand-primary mb-2">Sua Voz Conta</h3>
+         <p className="text-gray-700 mb-0">
+            Avalie o governo não apenas por simpatia partidária, mas pelos resultados concretos na sua vida e na sua comunidade.
+         </p>
+      </div>
+    </div>
+
+  </main>
+  <Footer />
+</div>

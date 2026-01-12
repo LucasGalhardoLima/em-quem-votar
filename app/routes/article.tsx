@@ -101,7 +101,7 @@ export default function ArticlePage() {
 
         {/* Article Header */}
         <div className="mb-12 space-y-6 text-center">
-          <span className="inline-block px-3 py-1 rounded-full bg-brand-tertiary text-brand-text-alt text-sm font-semibold tracking-wide uppercase">
+          <span className="inline-block px-3 py-1 rounded-full bg-brand-primary-light text-brand-primary text-sm font-semibold tracking-wide uppercase">
             {article.category}
           </span>
           <h1 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">

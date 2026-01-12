@@ -114,7 +114,7 @@ export default function Home() {
                       "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border",
                       isSelected
                         ? "bg-brand-primary text-white border-brand-primary hover:bg-brand-primary/90"
-                        : "bg-white text-brand-text border-gray-200 hover:bg-brand-tertiary hover:border-brand-primary/30 hover:text-brand-primary"
+                        : "bg-white text-brand-text border-gray-200 hover:bg-brand-tertiary hover:border-brand-primary/30 hover:text-white"
                     )}
                   >
                     {filter.label}
@@ -182,7 +182,7 @@ export default function Home() {
                       >
                         <div className="flex-grow">
                           <div className="flex items-center gap-2 mb-4">
-                            <span className="inline-block px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 text-xs font-semibold tracking-wide uppercase">
+                            <span className="inline-block px-3 py-1 rounded-lg bg-brand-primary-light text-brand-primary text-xs font-semibold tracking-wide uppercase">
                               Votação Nominal
                             </span>
                             <span className="text-xs text-gray-400 font-medium">
@@ -252,7 +252,7 @@ export default function Home() {
                 className="group bg-gray-50 rounded-2xl p-8 hover:bg-white hover:shadow-xl transition-all duration-300 border border-transparent hover:border-gray-100 cursor-pointer flex flex-col"
               >
                 <div className="flex-grow">
-                  <span className="inline-block px-3 py-1 rounded-lg bg-brand-tertiary text-brand-text-alt text-xs font-semibold tracking-wide uppercase mb-4">
+                  <span className="inline-block px-3 py-1 rounded-lg bg-brand-primary-light text-brand-primary text-xs font-semibold tracking-wide uppercase mb-4">
                     {article.category}
                   </span>
                   <h3 className="text-xl font-bold text-brand-text mb-3 group-hover:text-brand-primary transition-colors">

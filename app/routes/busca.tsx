@@ -35,22 +35,84 @@ import { PoliticianCard } from "~/components/PoliticianCard";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const query = url.searchParams.get("q");
+  let query = url.searchParams.get("q");
   const tagsParam = url.searchParams.get("tags");
+
+  // Standard Params
+  let stateParam = url.searchParams.get("uf")?.split(",").filter(Boolean) || [];
+  let partyParam = url.searchParams.get("partido")?.split(",").filter(Boolean) || [];
+
   const offset = parseInt(url.searchParams.get("offset") || "0");
   const limit = 20;
+
+  // Complex Search Parser (The "Hacker Mode")
+  // If 'q' contains ';', we attempt to parse it into structured filters
+  if (query && query.includes(";")) {
+    const parts = query.split(";").map(p => p.trim()).filter(Boolean);
+    let newQuery = "";
+
+    // We allow the user to type "SP" or "PL" and try to guess.
+    // Ideally we match against actual lists, but for now heuristics:
+    for (const part of parts) {
+      const upper = part.toUpperCase();
+      // State Heuristic: 2 chars
+      if (upper.length === 2 && /^[A-Z]{2}$/.test(upper)) {
+        stateParam.push(upper);
+      }
+      // Party Heuristic: 2-6 chars, mostly letters? Or we just treat as generic query if unknown?
+      // Let's assume if it looks like a party (UPPERCASE) and isn't a state, it's a party preference.
+      // But "ABC" could be part of a name.
+      // For safety: if it matches a known party list it's better. 
+      // We'll fetch filters anyway, let's look.
+      // Actually, simplified: If it's not a state, treat as Party if short, otherwise text?
+      // Let's simple-parse: If it's 2 chars -> State. Else -> Party if < 10 chars? 
+      // Or just assume text search for name if not state.
+      // User requirement: "novato; baixo custo; PL".
+      // "novato" -> Tag. "baixo custo" -> Tag (mapped). "PL" -> Party.
+      else {
+        // Check if it's a known tag?
+        // Complex. For now, let's handle "Parties" roughly or just add to Name Query if logic fails.
+        // Let's prioritize Name/Party mixed search in 'query' field of list() service?
+        // No, list() splits query vs party.
+
+        // Heuristic: If < 6 chars and no spaces, try as Party.
+        if (!part.includes(" ") && part.length < 8) {
+          partyParam.push(upper);
+        } else {
+          // Check for tags? (We need to look up slugs? Too expensive here?)
+          // User said "novato" -> Tag.
+          // We will keep it as text query to be safe, unless we implement a full parser.
+          // For MVP Phase 2, let's treat non-state parts as "Query" (Name/Party text search handles both).
+          // Wait, user specifically said "PL" -> Party.
+          // PoliticianService.list ORs name/party in 'query'. So adding "PL" to query works!
+          // But "novato" is a tag.
+          // Let's just append to newQuery.
+          newQuery += (newQuery ? " " : "") + part;
+        }
+      }
+    }
+    query = newQuery || null; // If parsed everything into filters, query is empty
+  }
+
+  // Fetch available filters for Sidebar
+  const filtersPromise = PoliticianService.getFilters();
 
   const resultsPromise = PoliticianService.list({
     query,
     tags: tagsParam ? tagsParam.split(",") : null,
+    state: stateParam.length > 0 ? stateParam : null,
+    party: partyParam.length > 0 ? partyParam : null,
     offset,
     limit
   });
 
   return {
     results: resultsPromise,
+    filters: filtersPromise,
     query,
     tagsParam,
+    stateParam,
+    partyParam,
     offset
   };
 }
@@ -59,7 +121,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 // ... inside Busca component ...
 
 export default function Busca() {
-  const { results: deferredResults, query, tagsParam } = useLoaderData<typeof loader>();
+  const { results: deferredResults, filters: deferredFilters, query, tagsParam, stateParam, partyParam } = useLoaderData<typeof loader>();
   const submit = useSubmit();
   const fetcher = useFetcher<typeof loader>();
   const [allResults, setAllResults] = useState<any[]>([]);
@@ -155,7 +217,18 @@ export default function Busca() {
 
           {/* Sidebar (Desktop) */}
           <div className="hidden md:block">
-            <FilterSidebar query={query} />
+            <Suspense fallback={<div className="w-64 bg-gray-100 h-screen animate-pulse rounded-xl" />}>
+              <Await resolve={deferredFilters}>
+                {(filters) => (
+                  <FilterSidebar
+                    query={query}
+                    filters={filters}
+                    activeStates={stateParam}
+                    activeParties={partyParam}
+                  />
+                )}
+              </Await>
+            </Suspense>
           </div>
 
           <div className="flex-1 space-y-6">
@@ -175,7 +248,7 @@ export default function Busca() {
             </Form>
 
             {/* Active Filters Display */}
-            <ActiveFilters query={query} />
+            <ActiveFilters query={query} tags={tagsParam ? tagsParam.split(',') : []} states={stateParam} parties={partyParam} />
 
             {/* Results Grid */}
             <div id="results" className="w-full space-y-4">
@@ -239,8 +312,8 @@ export default function Busca() {
                             animate={{ opacity: 1, scale: 1 }}
                             className="text-center py-20 px-4 bg-white rounded-2xl border border-gray-100 shadow-sm mx-auto max-w-lg mt-8"
                           >
-                            <div className="bg-brand-tertiary w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                              <User className="w-10 h-10 text-brand-primary/30" />
+                            <div className="bg-brand-primary-light w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                              <User className="w-10 h-10 text-brand-primary" />
                             </div>
                             <h3 className="text-xl font-bold text-gray-900 mb-3">Nenhum político encontrado</h3>
                             <p className="text-gray-500 mb-6 leading-relaxed">

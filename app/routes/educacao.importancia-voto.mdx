@@ -15,7 +15,7 @@ import { Megaphone, History, Vote, Lightbulb, BookOpen } from "lucide-react";
   <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
     {/* Header */}
     <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-brand-primary">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
         <Megaphone size={32} />
       </div>
       <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
@@ -54,8 +54,8 @@ import { Megaphone, History, Vote, Lightbulb, BookOpen } from "lucide-react";
     {/* Power of Choice Card */}
     <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
        <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center shrink-0">
-          <Vote className="text-indigo-600 w-6 h-6" />
+        <div className="w-12 h-12 bg-brand-primary-light rounded-2xl flex items-center justify-center shrink-0">
+          <Vote className="text-brand-primary w-6 h-6" />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 m-0">O Poder da Escolha</h2>
       </div>
@@ -70,7 +70,7 @@ import { Megaphone, History, Vote, Lightbulb, BookOpen } from "lucide-react";
     </section>
 
     {/* Conscious Vote Card */}
-    <section className="bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl">
+    <section className="bg-brand-tertiary text-white p-8 md:p-12 rounded-3xl shadow-xl">
        <div className="flex items-center gap-4 mb-6">
         <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
           <Lightbulb className="text-amber-400 w-6 h-6" />

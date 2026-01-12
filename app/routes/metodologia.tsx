@@ -28,7 +28,7 @@ export default function Methodology() {
         {/* Core Pillars */}
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-            <div className="w-12 h-12 bg-brand-tertiary rounded-2xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-brand-primary-light rounded-2xl flex items-center justify-center">
               <DollarSign className="text-brand-primary w-6 h-6" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Gasto Mensal (Cota)</h2>
@@ -94,7 +94,7 @@ export default function Methodology() {
         </section>
 
         {/* Data Sources */}
-        <section className="bg-slate-900 text-white p-8 md:p-12 rounded-3xl shadow-xl space-y-8">
+        <section className="bg-brand-tertiary text-white p-8 md:p-12 rounded-3xl shadow-xl space-y-8">
           <div className="flex items-center gap-4">
             <Database className="text-brand-primary w-8 h-8" />
             <h2 className="text-3xl font-bold">Fontes de Dados</h2>

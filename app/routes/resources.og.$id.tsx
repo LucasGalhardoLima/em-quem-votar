@@ -33,7 +33,7 @@ export async function loader({ params }: Route.LoaderArgs) {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        backgroundImage: 'linear-gradient(to bottom right, #f8fafc, #e2e8f0)',
+        backgroundImage: 'linear-gradient(to bottom right, #DFDFDF, #e8eaf6)',
         fontFamily: '"Roboto Slab"',
         padding: "40px",
       }}
@@ -61,7 +61,7 @@ export async function loader({ params }: Route.LoaderArgs) {
               style={{
                 borderRadius: "50%",
                 objectFit: "cover",
-                border: "10px solid #f1f5f9",
+                border: "10px solid #DFDFDF",
               }}
             />
           ) : (
@@ -70,12 +70,12 @@ export async function loader({ params }: Route.LoaderArgs) {
                 width: 400,
                 height: 400,
                 borderRadius: "50%",
-                backgroundColor: "#cbd5e1",
+                backgroundColor: "#DFDFDF",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "150px",
-                color: "#64748b"
+                color: "#5a5a5a"
               }}
             >
               ?
@@ -86,24 +86,24 @@ export async function loader({ params }: Route.LoaderArgs) {
         <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: 1 }}>
           {/* Header */}
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: "32px", color: "#64748b", fontWeight: 400, marginBottom: "8px" }}>
+            <div style={{ fontSize: "32px", color: "#5a5a5a", fontWeight: 400, marginBottom: "8px" }}>
               Em Quem Votar?
             </div>
-            <div style={{ fontSize: "70px", color: "#0f172a", fontWeight: 700, lineHeight: 1 }}>
+            <div style={{ fontSize: "70px", color: "#343434", fontWeight: 700, lineHeight: 1 }}>
               {politician.name}
             </div>
-            <div style={{ fontSize: "40px", color: "#3b82f6", fontWeight: 400, marginTop: "10px" }}>
+            <div style={{ fontSize: "40px", color: "#0E34A0", fontWeight: 400, marginTop: "10px" }}>
               {politician.party} • {politician.state}
             </div>
           </div>
 
           {/* Divider */}
-          <div style={{ width: "100%", height: "4px", backgroundColor: "#f1f5f9", margin: "20px 0" }}></div>
+          <div style={{ width: "100%", height: "4px", backgroundColor: "#DFDFDF", margin: "20px 0" }}></div>
 
           {/* Tags */}
           {politician.tags.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div style={{ fontSize: "24px", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "2px", fontWeight: 700 }}>
+              <div style={{ fontSize: "24px", color: "#5a5a5a", textTransform: "uppercase", letterSpacing: "2px", fontWeight: 700 }}>
                 Principais Pautas
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
@@ -112,7 +112,7 @@ export async function loader({ params }: Route.LoaderArgs) {
                     key={pt.tag.id}
                     style={{
                       display: "flex",
-                      backgroundColor: "#0f172a",
+                      backgroundColor: "#2F3061",
                       color: "white",
                       fontSize: "30px",
                       padding: "12px 30px",

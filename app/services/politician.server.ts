@@ -5,12 +5,14 @@ import { FEATURED_VOTE_IDS } from "~/data/votes";
 interface FindPoliticiansParams {
   query?: string | null;
   tags?: string[] | null;
+  state?: string[] | null;
+  party?: string[] | null;
   offset?: number;
   limit?: number;
 }
 
 export const PoliticianService = {
-  async list({ query, tags, offset = 0, limit = 20 }: FindPoliticiansParams) {
+  async list({ query, tags, state, party, offset = 0, limit = 20 }: FindPoliticiansParams) {
     const where: Prisma.PoliticianWhereInput = {};
 
     if (query) {
@@ -24,6 +26,14 @@ export const PoliticianService = {
       where.AND = tags.map(slug => ({
         tags: { some: { tag: { slug: slug } } }
       }));
+    }
+
+    if (state && state.length > 0) {
+      where.state = { in: state };
+    }
+
+    if (party && party.length > 0) {
+      where.party = { in: party };
     }
 
     const politicians = await db.politician.findMany({
@@ -49,6 +59,18 @@ export const PoliticianService = {
     }));
 
     return { items, hasMore };
+  },
+
+  async getFilters() {
+    const [parties, states] = await Promise.all([
+      db.politician.findMany({ select: { party: true }, distinct: ['party'], orderBy: { party: 'asc' } }),
+      db.politician.findMany({ select: { state: true }, distinct: ['state'], orderBy: { state: 'asc' } })
+    ]);
+
+    return {
+      parties: parties.map(p => p.party).filter(Boolean),
+      states: states.map(s => s.state).filter(Boolean)
+    };
   },
 
   async getById(id: string) {

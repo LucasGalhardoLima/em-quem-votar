@@ -70,7 +70,7 @@ function VoteDetailsContent({ bill }: { bill: any }) {
           <Link
             to="/"
             prefetch="intent"
-            className="p-2 -ml-2 text-gray-400 hover:text-brand-primary hover:bg-brand-tertiary rounded-full transition-colors md:hidden"
+            className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-brand-tertiary rounded-full transition-colors md:hidden"
           >
             <ArrowLeft className="w-6 h-6" />
           </Link>

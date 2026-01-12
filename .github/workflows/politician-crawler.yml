@@ -1,0 +1,31 @@
+name: Politician Crawler (Monthly)
+
+on:
+  schedule:
+    # Runs at 00:00 on the 1st day of every month
+    - cron: '0 0 1 * *'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  sync_politicians:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Seed Script (Upserts Politicians)
+        # We reuse the seed script as it already fetches all politicians and upserts them.
+        # It also checks votes but that's fine/redundant or we can split it.
+        # For now, running the full seed ensures everything is consistent.
+        run: npx ts-node scripts/seed-politicos.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}

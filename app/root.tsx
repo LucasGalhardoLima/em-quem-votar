@@ -42,8 +42,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#DFDFDF" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#2F3061" media="(prefers-color-scheme: dark)" />
         <meta name="color-scheme" content="light dark" />
         <Meta />
         <Links />

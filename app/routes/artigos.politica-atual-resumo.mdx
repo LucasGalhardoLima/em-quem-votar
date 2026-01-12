@@ -1,0 +1,75 @@
+---
+title: "Política Atual: Resumo do Cenário"
+excerpt: "Um mapa das forças políticas, as principais disputas no Congresso e como isso afeta seu dia a dia."
+image: ""
+date: "2026-01-02"
+category: "Análise"
+readTime: "6 min"
+---
+
+import { Header } from "../components/Header";
+import { Footer } from "../components/Footer";
+import { Map, Users, Scale } from "lucide-react";
+
+<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+  <Header />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+    
+    <header className="text-center space-y-4">
+      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
+        <Map size={32} />
+      </div>
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
+        Política Atual: <span className="text-brand-primary">Resumo do Cenário</span>
+      </h1>
+      <div className="flex items-center justify-center gap-4 text-sm text-gray-500 font-medium">
+        <span>02 de Janeiro de 2026</span>
+        <span>•</span>
+        <span>6 min de leitura</span>
+      </div>
+    </header>
+
+    <div className="prose prose-lg prose-slate text-gray-600 mx-auto">
+      <p className="lead text-xl text-gray-600 font-medium text-center max-w-2xl mx-auto leading-relaxed not-prose mb-12">
+        Para navegar na política brasileira, você precisa de um mapa. Quem detém o poder hoje? Quais são as forças em jogo?
+      </p>
+
+      <h2>O Executivo vs. Legislativo</h2>
+      <p>
+        O Brasil vive um momento de "presidencialismo de coalizão" levado ao extremo. O Executivo (Presidente) detém a caneta, mas o Legislativo (Congresso) detém o cofre através do controle inédito sobre o orçamento (emendas impositivas).
+      </p>
+      
+      <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm my-8 not-prose">
+         <h3 className="flex items-center gap-2 font-bold text-gray-900 mb-4">
+            <Scale className="text-brand-primary" /> Equilíbrio de Forças
+         </h3>
+         <div className="grid grid-cols-2 gap-4 text-sm text-center">
+            <div className="bg-gray-50 p-4 rounded-xl">
+                <span className="block font-bold text-gray-800 mb-1">Governo</span>
+                <span className="text-gray-500">Foca em pautas sociais e aumento da arrecadação.</span>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-xl">
+                <span className="block font-bold text-gray-800 mb-1">Oposição</span>
+                <span className="text-gray-500">Foca em pautas de costumes e fiscalização de gastos.</span>
+            </div>
+         </div>
+      </div>
+
+      <h2>O Papel do Judiciário</h2>
+      <p>
+        O STF continua sendo um ator político central, arbitrando conflitos entre os outros poderes. Isso gera debates sobre "ativismo judicial", mas também serve como freio e contrapeso em momentos de crise institucional.
+      </p>
+
+      <h2>Como isso afeta você?</h2>
+      <p>
+        Essa disputa de poder atrasa reformas estruturais (como a tributária ou administrativa) e muitas vezes foca mais em sobrevivência política do que em eficiência.
+      </p>
+      <p>
+        Entender esse jogo é vital para cobrar seu deputado e senador. Eles não estão lá apenas para fazer leis, mas para fiscalizar e negociar em seu nome.
+      </p>
+
+    </div>
+
+  </main>
+  <Footer />
+</div>

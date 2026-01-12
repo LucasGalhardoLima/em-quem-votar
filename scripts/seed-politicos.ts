@@ -77,10 +77,11 @@ async function fetchJson(url: string) {
 
 async function seedPoliticians() {
   console.log("🌱 Fetching politicians from API...");
-  const data = await fetchJson(`${CAMARA_API}/deputados?ordem=ASC&ordenarPor=nome`);
+  // Add itens=1000 to get all deputies (default is usually small, or 15)
+  const data = await fetchJson(`${CAMARA_API}/deputados?ordem=ASC&ordenarPor=nome&itens=1000`);
   const deputados = data.dados;
   
-  console.log(`Found ${deputados.length} politicians. Preparing Batch Upsert...`);
+  console.log(`Found ${deputados.length} politicians from API.`);
   
   const upsertOperations = deputados.map((deputy: any) => 
     prisma.politician.upsert({
@@ -105,7 +106,7 @@ async function seedPoliticians() {
   const chunkSize = 50;
   for (let i = 0; i < upsertOperations.length; i += chunkSize) {
     const chunk = upsertOperations.slice(i, i + chunkSize);
-    console.log(`  - Processing chunk ${i / chunkSize + 1}/${Math.ceil(upsertOperations.length / chunkSize)}...`);
+    // console.log(`  - Processing chunk ${i / chunkSize + 1}/${Math.ceil(upsertOperations.length / chunkSize)}...`);
     await prisma.$transaction(chunk);
   }
   
@@ -117,6 +118,7 @@ async function seedVotes() {
 
   const allPoliticians = await prisma.politician.findMany({ select: { id: true } });
   const politicianIds = new Set(allPoliticians.map(p => p.id));
+  console.log(`ℹ️  Loaded ${politicianIds.size} politician IDs from DB.`);
 
   for (const voteMeta of KEY_VOTES) {
     console.log(`Processing: ${voteMeta.name} (ID: ${voteMeta.id})...`);
@@ -151,13 +153,18 @@ async function seedVotes() {
     const response = await fetch(`${CAMARA_API}/votacoes/${voteMeta.id}/votos`);
     const data = await response.json();
     const votosAPI = data.dados;
+    
+    console.log(`   - API returned ${votosAPI.length} votes for this bill.`);
 
     const voteLogsToCreate: any[] = [];
     const politicianTagsToCreate: any[] = [];
 
     for (const voto of votosAPI) {
       const depId = String(voto.deputado_.id);
-      if (!politicianIds.has(depId)) continue; 
+      if (!politicianIds.has(depId)) {
+        // console.log(`Skipping unknown deputy ID: ${depId}`);
+        continue; 
+      }
 
       const tipoVoto = voto.tipoVoto.toUpperCase();
 
@@ -169,16 +176,19 @@ async function seedVotes() {
 
       if (tipoVoto === 'SIM') {
         politicianTagsToCreate.push({ politicianId: depId, tagId: tagSim.id });
-      } else if (tipoVoto === 'NÃO') {
+      } else if (tipoVoto === 'NÃO' || tipoVoto === 'NAO') {
         politicianTagsToCreate.push({ politicianId: depId, tagId: tagNao.id });
       }
     }
 
     if (voteLogsToCreate.length > 0) {
-      await prisma.voteLog.createMany({
+      const result = await prisma.voteLog.createMany({
         data: voteLogsToCreate,
         skipDuplicates: true 
       });
+      console.log(`   - DB Inserted: ${result.count} votes.`);
+    } else {
+        console.warn(`   - ⚠️ No votes to insert! (Matched: ${voteLogsToCreate.length})`);
     }
 
     if (politicianTagsToCreate.length > 0) {
@@ -188,9 +198,7 @@ async function seedVotes() {
       });
     }
 
-// ... (previous API votes) ...
-
-    console.log(`  - Batch Inserted: ${voteLogsToCreate.length} logs and ${politicianTagsToCreate.length} tags.`);
+    // console.log(`  - Batch Inserted: ${voteLogsToCreate.length} logs and ${politicianTagsToCreate.length} tags.`);
   }
 }
 
@@ -244,7 +252,7 @@ async function seedSystemTags() {
 async function main() {
     try {
         console.time("Total Seed Time");
-        // await seedPoliticians(); // Already seeded 513 politicians
+        await seedPoliticians(); // Re-seed politicians after DB wipe
         await seedVotes();
         await seedSystemTags();
         console.timeEnd("Total Seed Time");

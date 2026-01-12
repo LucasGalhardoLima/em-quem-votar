@@ -5,28 +5,32 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
-  /* TECH NEUTRALITY PALETTE */
-  /* Brand: Royal Indigo */
-  --color-brand-primary: #4f46e5;
-  /* indigo-600 - Buttons, links, highlights */
-  --color-brand-primary-hover: #4338ca;
-  /* indigo-700 - Hover states */
-  --color-brand-primary-light: #eef2ff;
-  /* indigo-50 - Light backgrounds */
+  /* NEXAVERSE PALETTE (Reordered) */
+  /* Primary: Egyptian Blue */
+  --color-brand-primary: #0E34A0;
+  /* Vibrant blue - Buttons, links, highlights */
+  --color-brand-primary-hover: #0a2a80;
+  /* Darker blue - Hover states */
+  --color-brand-primary-light: #e8eef8;
+  /* Light blue tint - Light backgrounds */
 
-  /* Accent: Amber (for warnings and secondary actions) */
-  --color-brand-secondary: #f59e0b;
-  /* amber-500 - Warnings, neutral states */
+  /* Secondary: Tangerine Dream (for accents and CTAs) */
+  --color-brand-secondary: #F7996E;
+  /* Warm coral - Accent buttons, badges */
 
-  /* Structure: Slate (Cool gray) */
-  --color-brand-tertiary: #f1f5f9;
-  /* slate-100 - Card backgrounds, subtle fills */
-  --color-brand-text: #0f172a;
-  /* slate-900 - Primary text */
-  --color-brand-text-alt: #475569;
-  /* slate-600 - Secondary text, captions */
+  /* Tertiary: Twilight Indigo */
+  --color-brand-tertiary: #2F3061;
+  /* Deep indigo - Dark sections, footer */
+  --color-brand-text: #343434;
+  /* Graphite - Primary text */
+  --color-brand-text-alt: #5a5a5a;
+  /* Medium gray - Secondary text, captions */
 
-  /* Semantic: Emerald & Rose */
+  /* Structure: Alabaster Grey */
+  --color-brand-structure: #DFDFDF;
+  /* Light gray - Borders, subtle fills */
+
+  /* Semantic: Keep consistent for UX clarity */
   --color-brand-success: #059669;
   /* emerald-600 - Positive votes, high matches */
   --color-brand-alert: #e11d48;
