@@ -11,28 +11,13 @@ export function meta() {
     return [{ title: "Seu Resultado Político | Em Quem Votar" }];
 }
 
-import { db } from "~/utils/db.server";
-import { createSupabaseServerClient } from "~/utils/supabase.server";
 import { MatchService, type TagMatchInfo, type MatchResult, type PartyResult } from "~/services/match.server";
-
-// ... interfaces removed as they are imported ...
-
+import { db } from "~/utils/db.server";
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const scoresParam = url.searchParams.get("s"); // Format: tag1:5,tag2:3
-    const { supabase, headers } = createSupabaseServerClient(request);
-
-    // Check Session
-    const { data: { user } } = await supabase.auth.getUser();
-    const session = user ? { user } : null;
 
     let userScores: Record<string, number> = {};
-
-    // Strategy:
-    // 1. If params exist: Use them (User just finished quiz)
-    //    -> If logged in: SAVE them to DB.
-    // 2. If NO params but Logged In: LOAD from DB.
-    // 3. If NO params and Anonymous: Return empty.
 
     if (scoresParam) {
         // Parse from URL
@@ -42,40 +27,6 @@ export async function loader({ request }: Route.LoaderArgs) {
                 userScores[tagSlug] = parseInt(score, 10);
             }
         });
-
-        // Persist if logged in
-        if (session?.user) {
-            try {
-                // Use upsert instead of update to handle cases where profile might be missing
-                await db.userProfile.upsert({
-                    where: { id: session.user.id },
-                    update: {
-                        quizAnswers: userScores as any,
-                        updatedAt: new Date()
-                    },
-                    create: {
-                        id: session.user.id,
-                        email: session.user.email!,
-                        name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "Usuário",
-                        photoUrl: session.user.user_metadata?.avatar_url,
-                        quizAnswers: userScores as any,
-                    }
-                });
-            } catch (e) {
-                // Fail silently or log, don't block user
-                console.error("Failed to save quiz results", e);
-            }
-        }
-    } else if (session?.user) {
-        // Load from DB
-        const profile = await db.userProfile.findUnique({
-            where: { id: session.user.id },
-            select: { quizAnswers: true }
-        });
-
-        if (profile?.quizAnswers) {
-            userScores = profile.quizAnswers as Record<string, number>;
-        }
     }
 
     if (Object.keys(userScores).length === 0) {

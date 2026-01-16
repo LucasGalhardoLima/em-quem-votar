@@ -1,11 +1,7 @@
-import { Link, useLocation, useRouteLoaderData } from "react-router";
-import { ArrowLeft, User, ChevronRight, Home } from "lucide-react";
-import { useState, useEffect } from "react";
-import { LoginModal } from "./LoginModal";
-import { createBrowserClient } from "@supabase/ssr";
+import { Link, useLocation } from "react-router";
+import { ArrowLeft, ChevronRight, Home } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "~/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 export interface BreadcrumbItem {
   label: string;
@@ -18,36 +14,8 @@ interface HeaderProps {
 }
 
 export function Header({ breadcrumbItems = [] }: HeaderProps) {
-  const rootData = useRouteLoaderData("root") as { session: any } | undefined;
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [session, setSession] = useState<any>(rootData?.session || null);
   const location = useLocation();
   const isHome = location.pathname === "/";
-
-  const supabase = createBrowserClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
-  );
-
-  // Client-side session check (for UI state only)
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) setSession({ user });
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
 
   // On Home, we don't show the header (handled by home.tsx)
   if (isHome) return null;
@@ -58,13 +26,19 @@ export function Header({ breadcrumbItems = [] }: HeaderProps) {
         {/* Left Side: Breadcrumbs (Desktop) or Back (Mobile) */}
         <div className="flex items-center">
           {/* Mobile Only: Simple Back link */}
-          <div className="md:hidden">
+          {/* Mobile Only: Back link + context */}
+          <div className="md:hidden flex items-center gap-1">
             <Link to="/">
               <Button variant="ghost" size="icon" className="h-11 w-11 -ml-3">
                 <ArrowLeft className="h-5 w-5" />
                 <span className="sr-only">Voltar</span>
               </Button>
             </Link>
+            {breadcrumbItems.length > 0 && (
+              <span className="text-sm font-bold text-foreground truncate max-w-[180px]">
+                {breadcrumbItems.find(item => item.active)?.label || breadcrumbItems[breadcrumbItems.length - 1].label}
+              </span>
+            )}
           </div>
 
           {/* Desktop Only: Breadcrumbs */}
@@ -104,46 +78,15 @@ export function Header({ breadcrumbItems = [] }: HeaderProps) {
           </nav>
         </div>
 
-        {/* Right Side: User Info / Login */}
+        {/* Right Side: Site Name/Logo */}
         <div className="flex items-center gap-2">
-          {/* Current Page Title (Mobile Only - Center Aligned if needed, but keeping right aligned controls for now) */}
-
-          {session ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 group cursor-default">
-                <Avatar className="h-8 w-8 md:h-9 md:w-9 border border-border">
-                  <AvatarImage src={session.user.user_metadata?.avatar_url} alt="Avatar" />
-                  <AvatarFallback className="text-xs">
-                    {session.user.email?.slice(0, 2).toUpperCase() || <User size={14} />}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="hidden md:block text-xs font-bold text-foreground tracking-tight">
-                  {session.user.user_metadata?.full_name?.split(' ')[0] || "Usuário"}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="hidden md:flex text-xs uppercase tracking-widest font-bold text-muted-foreground hover:text-destructive"
-              >
-                Sair
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setIsLoginOpen(true)}
-              className="text-xs font-bold md:px-6 h-9"
-            >
-              Entrar
-            </Button>
-          )}
+          <Link to="/" className="flex items-center gap-1 group">
+            <span className="text-sm md:text-lg font-black tracking-tighter text-brand-text group-hover:text-brand-primary transition-colors">
+              <span className="md:inline">EM QUEM</span> <span className="text-brand-primary group-hover:text-brand-text">VOTAR?</span>
+            </span>
+          </Link>
         </div>
       </div>
-
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }

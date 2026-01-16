@@ -26,6 +26,5 @@ export default [
   route("sitemap.xml", "routes/sitemap.xml.ts"),
   route("sobre", "routes/sobre.mdx"),
   route("faq", "routes/faq.mdx"),
-  route("auth/callback", "routes/auth.callback.tsx"),
   route("resources/og/:id", "routes/resources.og.$id.tsx")
 ] satisfies RouteConfig;

@@ -1,5 +1,5 @@
 import type { Route } from "./+types/home";
-import { Search, ChevronDown, BookOpen, User, Gavel, Loader2, Sparkles, Mail, ArrowRight, Trophy, LogIn, LogOut } from "lucide-react";
+import { Search, ChevronDown, BookOpen, User, Gavel, Loader2, Sparkles, Mail, ArrowRight, Trophy } from "lucide-react";
 import { redirect, Form, Link, useLoaderData, useNavigation, useFetcher, Await } from "react-router";
 import { Footer } from "~/components/Footer";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -12,10 +12,7 @@ import { BillService } from "~/services/bill.server";
 import { ArticleService } from "~/services/article.server";
 import { MatchService } from "~/services/match.server";
 import { NewsletterForm } from "~/components/NewsletterForm";
-import { createSupabaseServerClient } from "~/utils/supabase.server";
 import { db } from "~/utils/db.server";
-import { LoginModal } from "~/components/LoginModal";
-import { createBrowserClient } from "@supabase/ssr";
 
 export function meta({ }: Route.MetaArgs) {
   return [
@@ -51,31 +48,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     limit
   }) : Promise.resolve({ items: [], hasMore: false });
 
-  // 2. Perform Auth Verification (Concurrent with above)
-  const { supabase } = createSupabaseServerClient(request);
-  const { data: { user } } = await supabase.auth.getUser();
-  const session = user ? { user } : null;
-  let topMatch = null;
-
-  // 3. Fetch User-Specific Data if Logged In
-  if (session?.user && !query && !tagsParam) {
-    const profile = await db.userProfile.findUnique({
-      where: { id: session.user.id },
-      select: { quizAnswers: true }
-    });
-
-    if (!profile?.quizAnswers || Object.keys(profile.quizAnswers as object).length === 0) {
-      return redirect("/quiz");
-    }
-
-    if (profile?.quizAnswers && Object.keys(profile.quizAnswers as object).length > 0) {
-      const { topPoliticians } = await MatchService.calculate(profile.quizAnswers as Record<string, number>);
-      if (topPoliticians.length > 0) {
-        topMatch = topPoliticians[0];
-      }
-    }
-  }
-
   return {
     results: resultsPromise,
     featuredVotes: featuredVotesPromise,
@@ -83,20 +55,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     query,
     tagsParam,
     offset,
-    topMatch,
-    session
+    topMatch: null,
+    session: null
   };
 }
 
 export default function Home() {
-  const { featuredVotes: deferredVotes, articles: deferredArticles, topMatch, session } = useLoaderData<typeof loader>();
+  const { featuredVotes: deferredVotes, articles: deferredArticles } = useLoaderData<typeof loader>();
   const { selectedTags, setTags } = useFilterStore();
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-
-  const supabase = createBrowserClient(
-    import.meta.env.VITE_SUPABASE_URL!,
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
-  );
 
   useEffect(() => {
     setTags([]);
@@ -106,49 +72,9 @@ export default function Home() {
     document.getElementById("content")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-brand-primary/20 selection:text-brand-primary overflow-x-hidden">
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
-      {/* Top Right Auth Section */}
-      <div className="fixed top-4 right-4 z-50 animate-fade-in">
-        {session ? (
-          <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md pl-2 pr-2 py-1.5 rounded-full border border-gray-100 shadow-xl ring-1 ring-black/5 group transition-all">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center text-white overflow-hidden shadow-sm">
-                {session.user.user_metadata?.avatar_url ? (
-                  <img src={session.user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User size={16} />
-                )}
-              </div>
-              <span className="text-sm font-bold text-gray-700 hidden sm:block">
-                {session.user.user_metadata?.full_name?.split(' ')[0] || "Usuário"}
-              </span>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-              title="Sair"
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsLoginOpen(true)}
-            className="text-sm font-bold text-gray-500 hover:text-brand-primary transition-all active:scale-95 bg-white/80 backdrop-blur px-4 py-2 rounded-full shadow-sm border border-gray-100"
-          >
-            Entrar
-          </button>
-        )}
-      </div>
 
       {/* Hero Section */}
       <section className="min-h-screen flex flex-col justify-center items-center px-4 relative pt-24 pb-12">
@@ -202,49 +128,14 @@ export default function Home() {
               <div className="h-px bg-gray-200 flex-1"></div>
             </div>
 
-            {topMatch ? (
-              <Link
-                to={`/resultado`}
-                className="group w-full flex items-center justify-between gap-4 bg-white border-2 border-brand-secondary/20 p-4 rounded-3xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all text-left relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-secondary/5 to-transparent"></div>
-
-                <div className="flex items-center gap-4 z-10">
-                  <div className="w-16 h-16 rounded-full border-2 border-brand-secondary shadow-sm overflow-hidden flex-shrink-0">
-                    {topMatch.politician.photoUrl ? (
-                      <img src={topMatch.politician.photoUrl} alt="Foto" className="w-full h-full object-cover" />
-                    ) : (
-                      <User className="w-8 h-8 m-auto text-gray-400" />
-                    )}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-brand-secondary uppercase tracking-wider mb-0.5 flex items-center gap-1">
-                      <Trophy size={12} />
-                      Seu Match do Dia
-                    </div>
-                    <div className="font-bold text-gray-900 text-lg leading-tight">
-                      {topMatch.politician.name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {topMatch.percentage}% de compatibilidade
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-12 h-12 bg-brand-secondary text-white rounded-full flex items-center justify-center shadow-md group-hover:scale-110 transition-transform z-10">
-                  <ArrowRight size={24} />
-                </div>
-              </Link>
-            ) : (
-              <Link
-                to="/quiz"
-                prefetch="intent"
-                className="group w-full flex items-center justify-center gap-3 bg-brand-text text-white py-4 rounded-xl md:rounded-2xl font-bold text-base md:text-lg shadow-lg hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all text-center"
-              >
-                <Sparkles className="text-brand-secondary group-hover:rotate-12 transition-transform" />
-                Fazer Quiz de Afinidade
-              </Link>
-            )}
+            <Link
+              to="/quiz"
+              prefetch="intent"
+              className="group w-full flex items-center justify-center gap-3 bg-brand-text text-white py-4 rounded-xl md:rounded-2xl font-bold text-base md:text-lg shadow-lg hover:bg-black hover:shadow-xl hover:-translate-y-0.5 transition-all text-center"
+            >
+              <Sparkles className="text-brand-secondary group-hover:rotate-12 transition-transform" />
+              Fazer Quiz de Afinidade
+            </Link>
 
           </div>
         </div>
