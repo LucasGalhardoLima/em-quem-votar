@@ -12,7 +12,6 @@ export function meta() {
 }
 
 import { MatchService, type TagMatchInfo, type MatchResult, type PartyResult } from "~/services/match.server";
-import { db } from "~/utils/db.server";
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const scoresParam = url.searchParams.get("s"); // Format: tag1:5,tag2:3

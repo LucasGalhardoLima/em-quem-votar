@@ -10,9 +10,7 @@ import { useFilterStore } from "~/stores/filterStore";
 import { PoliticianService } from "~/services/politician.server";
 import { BillService } from "~/services/bill.server";
 import { ArticleService } from "~/services/article.server";
-import { MatchService } from "~/services/match.server";
 import { NewsletterForm } from "~/components/NewsletterForm";
-import { db } from "~/utils/db.server";
 
 export function meta({ }: Route.MetaArgs) {
   return [
