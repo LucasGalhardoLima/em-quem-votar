@@ -1,6 +1,6 @@
 import { useLoaderData, Link } from "react-router";
 import type { Route } from "./+types/resultado";
-import { PoliticianService } from "~/services/politician.server";
+// PoliticianService removed to avoid server-code in client bundle error
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { ArrowRight, Trophy, Users, AlertCircle, Share2, CheckCircle } from "lucide-react";
@@ -11,164 +11,80 @@ export function meta() {
     return [{ title: "Seu Resultado Político | Em Quem Votar" }];
 }
 
-interface TagMatchInfo {
-    slug: string;
-    name: string;
-    score: number;
-    reasonText: string;
-}
+import { db } from "~/utils/db.server";
+import { createSupabaseServerClient } from "~/utils/supabase.server";
+import { MatchService, type TagMatchInfo, type MatchResult, type PartyResult } from "~/services/match.server";
 
-interface MatchResult {
-    politician: {
-        id: string;
-        name: string;
-        party: string;
-        photoUrl: string | null;
-    };
-    score: number;
-    percentage: number;
-    matchedTags: TagMatchInfo[];
-    categoryScores: { subject: string; user: number; politician: number; fullMark: number }[];
-}
-
-interface PartyResult {
-    party: string;
-    score: number;
-    percentage: number;
-    count: number;
-}
+// ... interfaces removed as they are imported ...
 
 export async function loader({ request }: Route.LoaderArgs) {
     const url = new URL(request.url);
     const scoresParam = url.searchParams.get("s"); // Format: tag1:5,tag2:3
+    const { supabase, headers } = createSupabaseServerClient(request);
 
-    if (!scoresParam) {
-        return { topPoliticians: [], topParties: [], userScores: {} };
-    }
+    // Check Session
+    const { data: { user } } = await supabase.auth.getUser();
+    const session = user ? { user } : null;
 
-    // Parse user scores
-    const userScores: Record<string, number> = {};
-    const userCategoryScores: Record<string, number> = {};
+    let userScores: Record<string, number> = {};
 
-    scoresParam.split(",").forEach(pair => {
-        const [tagSlug, score] = pair.split(":");
-        if (tagSlug && score) {
-            const val = parseInt(score, 10);
-            userScores[tagSlug] = val;
+    // Strategy:
+    // 1. If params exist: Use them (User just finished quiz)
+    //    -> If logged in: SAVE them to DB.
+    // 2. If NO params but Logged In: LOAD from DB.
+    // 3. If NO params and Anonymous: Return empty.
 
-            // Calculate max potential per category (for Radar Chart)
-            // Assuming TAG_DEFINITIONS has categories mapped correctly, 
-            // but for now we'll do a simple mapping or default
-            // Since we don't have category in TAG_DEFINITIONS yet, we'll infer or use hardcoded map.
-            // Wait, Prisma model has category in Tag. Let's rely on finding the tag in politicians first? 
-            // Actually better: We need the Tag model to know category. 
-            // PoliticianService.findAllForMatch returns tags with category.
-        }
-    });
-
-    const politicians = await PoliticianService.findAllForMatch();
-
-    // Helper to get category for a slug (from the first politician who has it, adequate for MVP)
-    // Or we could fetch all tags separately. For efficiency, let's build a temporary map from the fetched politicians.
-    const tagCategoryMap: Record<string, string> = {};
-    politicians.forEach(p => p.tags.forEach(pt => {
-        tagCategoryMap[pt.tag.slug] = pt.tag.category;
-    }));
-
-    // Calculate user max scores per category
-    Object.entries(userScores).forEach(([slug, score]) => {
-        const cat = tagCategoryMap[slug] || "Geral";
-        if (!userCategoryScores[cat]) userCategoryScores[cat] = 0;
-        userCategoryScores[cat] += Math.abs(score);
-    });
-
-    // Calculate Matches
-    const politicianMatches: MatchResult[] = politicians.map(politician => {
-        let totalPossibleScore = 0;
-        let earnedScore = 0;
-        const matchedTags: TagMatchInfo[] = [];
-        const polCategoryScores: Record<string, number> = {};
-
-        // Reset pol category scores
-        Object.keys(userCategoryScores).forEach(cat => polCategoryScores[cat] = 0);
-
-        Object.entries(userScores).forEach(([tagSlug, weight]) => {
-            totalPossibleScore += Math.abs(weight);
-            const cat = tagCategoryMap[tagSlug] || "Geral";
-
-            const politicianTag = politician.tags.find(t => t.tag.slug === tagSlug);
-
-            if (politicianTag) {
-                earnedScore += weight;
-                if (!polCategoryScores[cat]) polCategoryScores[cat] = 0;
-                polCategoryScores[cat] += weight;
-
-                const def = TAG_DEFINITIONS[tagSlug];
-                matchedTags.push({
-                    slug: tagSlug,
-                    name: politicianTag.tag.name,
-                    score: weight,
-                    reasonText: def ? def.reasonText : `Vocês convergem em ${politicianTag.tag.name}`
-                });
+    if (scoresParam) {
+        // Parse from URL
+        scoresParam.split(",").forEach(pair => {
+            const [tagSlug, score] = pair.split(":");
+            if (tagSlug && score) {
+                userScores[tagSlug] = parseInt(score, 10);
             }
         });
 
-        matchedTags.sort((a, b) => b.score - a.score);
-
-        const percentage = totalPossibleScore > 0
-            ? Math.max(0, Math.min(100, (earnedScore / totalPossibleScore) * 100))
-            : 0;
-
-        // Prepare Radar Data
-        const categoryData = Object.keys(userCategoryScores).map(cat => ({
-            subject: cat,
-            user: 100, // User is always 100% of themselves relative to the axes? Or should be normalized?
-            // Let's normalize: If User max is 10, and they got 10, it's 100.
-            // If Politician got 5 out of 10, it's 50.
-            politician: userCategoryScores[cat] > 0
-                ? Math.max(0, (polCategoryScores[cat] / userCategoryScores[cat]) * 100)
-                : 0,
-            fullMark: 100
-        }));
-
-        return {
-            politician: {
-                id: politician.id,
-                name: politician.name,
-                party: politician.party,
-                photoUrl: politician.photoUrl,
-            },
-            score: earnedScore,
-            percentage: Math.round(percentage),
-            matchedTags,
-            categoryScores: categoryData
-        };
-    });
-
-    const topPoliticians = politicianMatches
-        .sort((a, b) => b.percentage - a.percentage)
-        .slice(0, 6);
-
-    // Calculate Party Averages
-    const partyMap: Record<string, { totalPercentage: number; count: number }> = {};
-    politicianMatches.forEach(match => {
-        if (!partyMap[match.politician.party]) {
-            partyMap[match.politician.party] = { totalPercentage: 0, count: 0 };
+        // Persist if logged in
+        if (session?.user) {
+            try {
+                // Use upsert instead of update to handle cases where profile might be missing
+                await db.userProfile.upsert({
+                    where: { id: session.user.id },
+                    update: {
+                        quizAnswers: userScores as any,
+                        updatedAt: new Date()
+                    },
+                    create: {
+                        id: session.user.id,
+                        email: session.user.email!,
+                        name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0] || "Usuário",
+                        photoUrl: session.user.user_metadata?.avatar_url,
+                        quizAnswers: userScores as any,
+                    }
+                });
+            } catch (e) {
+                // Fail silently or log, don't block user
+                console.error("Failed to save quiz results", e);
+            }
         }
-        partyMap[match.politician.party].totalPercentage += match.percentage;
-        partyMap[match.politician.party].count += 1;
-    });
+    } else if (session?.user) {
+        // Load from DB
+        const profile = await db.userProfile.findUnique({
+            where: { id: session.user.id },
+            select: { quizAnswers: true }
+        });
 
-    const topParties: PartyResult[] = Object.entries(partyMap)
-        .map(([party, data]) => ({
-            party,
-            score: 0,
-            percentage: Math.round(data.totalPercentage / data.count),
-            count: data.count
-        }))
-        .sort((a, b) => b.percentage - a.percentage)
-        .slice(0, 5);
+        if (profile?.quizAnswers) {
+            userScores = profile.quizAnswers as Record<string, number>;
+        }
+    }
 
+    if (Object.keys(userScores).length === 0) {
+        return { topPoliticians: [], topParties: [], userScores: {} };
+    }
+
+    const { topPoliticians, topParties } = await MatchService.calculate(userScores);
+
+    // Return headers to manage session cookies if needed
     return { topPoliticians, topParties, userScores };
 }
 
@@ -178,7 +94,7 @@ export default function Resultado() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-            <Header />
+            <Header breadcrumbItems={[{ label: "Seu Resultado", active: true }]} />
 
             <main className="flex-grow pb-12">
                 {/* Winner Hero Section */}
@@ -194,7 +110,7 @@ export default function Resultado() {
 
                                 {/* 1. Photo */}
                                 <div className="relative shrink-0 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                                    <div className="w-48 h-48 md:w-64 md:h-64 rounded-full border-8 border-white/20 shadow-2xl overflow-hidden relative z-10 bg-gray-800">
+                                    <div className="w-40 h-40 md:w-64 md:h-64 rounded-full border-4 md:border-8 border-white/20 shadow-2xl overflow-hidden relative z-10 bg-gray-800">
                                         {winner.politician.photoUrl ? (
                                             <img src={winner.politician.photoUrl} alt={winner.politician.name} className="w-full h-full object-cover" />
                                         ) : (
@@ -220,8 +136,8 @@ export default function Resultado() {
                                     </div>
 
                                     <div className="flex items-center justify-center md:justify-start gap-4 pt-2">
-                                        <div className="text-6xl font-bold text-white">{winner.percentage}%</div>
-                                        <div className="text-sm text-blue-100 leading-tight text-left opacity-90 font-medium">
+                                        <div className="text-5xl md:text-6xl font-bold text-white">{winner.percentage}%</div>
+                                        <div className="text-xs md:text-sm text-blue-100 leading-tight text-left opacity-90 font-medium">
                                             de<br />compatibilidade
                                         </div>
                                     </div>
@@ -233,7 +149,7 @@ export default function Resultado() {
                             <div className="animate-fade-in-up w-full text-center" style={{ animationDelay: '0.2s' }}>
                                 <Link
                                     to={`/politico/${winner.politician.id}`}
-                                    className="bg-white text-brand-text-alt hover:bg-brand-tertiary hover:text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center gap-2 text-lg"
+                                    className="bg-white text-brand-text-alt hover:bg-brand-tertiary hover:text-white font-bold py-4 px-10 rounded-full shadow-lg transition-transform transform hover:-translate-y-1 inline-flex items-center justify-center gap-2 text-lg w-full md:w-auto"
                                 >
                                     Ver Perfil Completo <ArrowRight size={20} />
                                 </Link>
@@ -261,7 +177,7 @@ export default function Resultado() {
                                 Este gráfico mostra como suas prioridades se alinham com a atuação de <strong>{winner.politician.name}</strong> em diferentes temas legislativos.
                             </p>
                         </div>
-                        <div className="w-full bg-gray-50 rounded-2xl p-6 border border-gray-100 h-[450px]">
+                        <div className="w-full bg-gray-50 rounded-2xl p-4 md:p-6 border border-gray-100 h-[350px] md:h-[450px]">
                             <MatchRadarChart data={winner.categoryScores} />
                         </div>
                     </section>
@@ -341,9 +257,9 @@ export default function Resultado() {
                                             </div>
                                             <span className="font-bold text-blue-600 text-xl">{party.percentage}%</span>
                                         </div>
-                                        <div className="w-full bg-gray-100 rounded-full h-3">
+                                        <div className="w-full bg-gray-100 rounded-full h-4">
                                             <div
-                                                className="bg-brand-primary h-3 rounded-full transition-all duration-1000 ease-out"
+                                                className="bg-brand-primary h-4 rounded-full transition-all duration-1000 ease-out"
                                                 style={{ width: `${party.percentage}%` }}
                                             />
                                         </div>
@@ -367,6 +283,6 @@ export default function Resultado() {
                 </div>
             </main>
             <Footer />
-        </div>
+        </div >
     );
 }

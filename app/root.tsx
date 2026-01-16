@@ -13,12 +13,21 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import { checkRateLimit } from "~/utils/rate-limit.server";
 
+import { createSupabaseServerClient } from "~/utils/supabase.server";
+
 export async function loader({ request }: Route.LoaderArgs) {
   const ip = request.headers.get("x-forwarded-for") || "local";
   if (!checkRateLimit(ip)) {
     throw new Response("Too Many Requests", { status: 429 });
   }
-  return null;
+
+  const { supabase } = createSupabaseServerClient(request);
+  const { data: { user } } = await supabase.auth.getUser();
+
+  return {
+    user,
+    session: user ? { user } : null
+  };
 }
 
 import { Toaster } from "sonner";

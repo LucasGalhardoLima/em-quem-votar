@@ -29,6 +29,7 @@ model Politician {
   @@index([name])
   @@index([party])
   @@index([state])
+  @@index([state, party]) // Optimization for combined filters
 }
 
 // As "Categorias" do seu e-commerce
@@ -87,4 +88,18 @@ model Subscriber {
   id        String   @id @default(uuid())
   email     String   @unique
   createdAt DateTime @default(now())
+}
+
+model UserProfile {
+  id              String   @id @default(uuid()) // Linked to Supabase Auth ID
+  email           String   @unique
+  name            String?
+  photoUrl        String?
+  
+  // Perfil Político
+  quizAnswers     Json?    // Respostas cruas do quiz
+  politicalVector Json?    // Vetor calculado de afinidade
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

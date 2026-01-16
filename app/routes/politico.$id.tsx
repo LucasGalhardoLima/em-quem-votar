@@ -5,7 +5,6 @@ import { ArrowLeft, Check, X, Minus, MapPin, Building2, TrendingUp, DollarSign, 
 import { ProfileHeaderSkeleton, VoteHistorySkeleton } from "~/components/SkeletonLoader";
 import { TagWithTooltip } from "~/components/TagWithTooltip";
 import { Header } from "~/components/Header";
-import { Breadcrumbs } from "~/components/Breadcrumbs";
 import { toast } from "sonner";
 import { PoliticianPerformance } from "~/components/PoliticianPerformance";
 import { PoliticianVoteHistory } from "~/components/PoliticianVoteHistory";
@@ -71,15 +70,13 @@ export default function PoliticianProfile() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-      <Header />
+      <Header breadcrumbItems={[
+        { label: "Políticos", href: "/busca" },
+        { label: politician.name, active: true }
+      ]} />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        {/* Breadcrumbs */}
-        <div className="flex justify-between items-center">
-          <Breadcrumbs items={[
-            { label: "Políticos", href: "/busca" },
-            { label: politician.name }
-          ]} />
+        <div className="flex justify-end">
 
           <button
             onClick={handleShare}
@@ -90,8 +87,8 @@ export default function PoliticianProfile() {
           </button>
         </div>
 
-        <section className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner flex-shrink-0 bg-gray-200">
+        <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
+          <div className="w-28 h-28 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-gray-50 shadow-inner flex-shrink-0 bg-gray-200">
             {politician.photoUrl ? (
               <img src={politician.photoUrl} alt={politician.name} className="w-full h-full object-cover" />
             ) : (
@@ -101,13 +98,13 @@ export default function PoliticianProfile() {
 
           <div className="flex-1 text-center md:text-left space-y-4">
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">{politician.name}</h1>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-2 text-gray-600">
-                <span className="flex items-center gap-1.5 bg-brand-primary-light text-brand-primary px-3 py-1 rounded-full text-sm font-semibold">
+              <h1 className="text-2xl md:text-4xl font-bold text-gray-900 tracking-tight leading-tight">{politician.name}</h1>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-3 mt-3 md:mt-2 text-gray-600">
+                <span className="flex items-center gap-1.5 bg-brand-primary-light text-brand-primary px-3 py-1 rounded-full text-xs md:text-sm font-semibold">
                   <Building2 size={14} />
                   {politician.party}
                 </span>
-                <span className="flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-medium">
+                <span className="flex items-center gap-1.5 bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs md:text-sm font-medium">
                   <MapPin size={14} />
                   {politician.state}
                 </span>
@@ -116,7 +113,7 @@ export default function PoliticianProfile() {
 
             {politician.tags && politician.tags.length > 0 && (
               <div className="pt-2">
-                <h3 className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Posicionamentos Identificados</h3>
+                <h3 className="text-[10px] md:text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Posicionamentos Identificados</h3>
                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                   {politician.tags.map((pt: any) => (
                     <TagWithTooltip key={pt.tag.id} tag={pt.tag} />

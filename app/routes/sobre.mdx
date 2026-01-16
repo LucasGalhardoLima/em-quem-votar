@@ -5,10 +5,10 @@ description: "Nossa missão é democratizar o acesso à informação política c
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { Info, Target, Cpu, BarChart3, Shield, AlertTriangle, Github, Mail } from "lucide-react";
+import { Info, Target, Users, BookOpen, Shield, Code, Cpu, BarChart3, AlertTriangle, Github, Mail } from "lucide-react";
 
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header />
+<div className="min-h-screen bg-white flex flex-col font-sans text-gray-900 border-none">
+  <Header breadcrumbItems={[{ label: "Sobre o Projeto", active: true }]} />
 
   <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-16">
     {/* Page Header */}

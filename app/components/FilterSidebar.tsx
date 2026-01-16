@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { clsx } from "clsx";
 import { Link, useSubmit } from "react-router";
 import { FILTER_GROUPS } from "~/data/filters";
 import { useFilterStore } from "~/stores/filterStore";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 
 interface FilterSidebarProps {
   query: string | null;
@@ -24,6 +25,15 @@ export function FilterSidebar({
 }: FilterSidebarProps) {
   const { selectedTags, toggleTag, setTags } = useFilterStore();
   const submit = useSubmit();
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    tags: true,
+    parties: true,
+    states: true
+  });
+
+  const toggleSection = (id: string) => {
+    setOpenSections((prev: Record<string, boolean>) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleTagClick = (slug: string) => {
     toggleTag(slug);
@@ -90,11 +100,27 @@ export function FilterSidebar({
     </button>
   );
 
+  const CollapsibleSection = ({ id, title, children }: { id: string, title: string, children: React.ReactNode }) => {
+    const isOpen = openSections[id];
+    return (
+      <div className="space-y-3">
+        <button
+          onClick={() => toggleSection(id)}
+          className="w-full flex items-center justify-between text-xs font-semibold text-gray-500 uppercase tracking-wider group hover:text-brand-primary transition-colors"
+        >
+          <span className="flex items-center gap-2">{title}</span>
+          <ChevronDown size={14} className={clsx("transition-transform duration-200", !isOpen && "-rotate-90")} />
+        </button>
+        {isOpen && <div className="space-y-1.5">{children}</div>}
+      </div>
+    );
+  };
+
   return (
     <aside className="w-full md:w-64 flex-shrink-0 space-y-8 pb-20">
       <div>
         {showHeader && (
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
             <h3 className="font-bold text-gray-900 text-lg">Filtros</h3>
             {hasAnyFilter && (
               <button
@@ -110,30 +136,22 @@ export function FilterSidebar({
         <div className="space-y-8">
 
           {/* 1. Categorias Básicas */}
-          {FILTER_GROUPS.map((group) => (
-            <div key={group.title} className="space-y-3">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                {group.title}
-              </h4>
-              <div className="flex flex-col gap-1.5">
-                {group.filters.map((filter) => (
-                  <FilterCheckbox
-                    key={filter.slug}
-                    label={filter.label}
-                    isSelected={selectedTags.includes(filter.slug)}
-                    onClick={() => handleTagClick(filter.slug)}
-                  />
-                ))}
-              </div>
-            </div>
+          {FILTER_GROUPS.map((group, idx) => (
+            <CollapsibleSection key={group.title} id={`tags-${idx}`} title={group.title}>
+              {group.filters.map((filter) => (
+                <FilterCheckbox
+                  key={filter.slug}
+                  label={filter.label}
+                  isSelected={selectedTags.includes(filter.slug)}
+                  onClick={() => handleTagClick(filter.slug)}
+                />
+              ))}
+            </CollapsibleSection>
           ))}
 
           {/* 2. Partidos */}
           {filters.parties.length > 0 && (
-            <div className="space-y-3 pt-4 border-t border-gray-100">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                Partidos
-              </h4>
+            <CollapsibleSection id="parties" title="Partidos">
               <div className="max-h-60 overflow-y-auto pr-2 space-y-1 scrollbar-thin scrollbar-thumb-gray-200">
                 {filters.parties.map(party => (
                   <FilterCheckbox
@@ -144,15 +162,12 @@ export function FilterSidebar({
                   />
                 ))}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
           {/* 3. Estados */}
           {filters.states.length > 0 && (
-            <div className="space-y-3 pt-4 border-t border-gray-100">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2">
-                Estados
-              </h4>
+            <CollapsibleSection id="states" title="Estados">
               <div className="grid grid-cols-3 gap-1">
                 {filters.states.map(state => {
                   const isSelected = activeStates.includes(state);
@@ -172,7 +187,7 @@ export function FilterSidebar({
                   )
                 })}
               </div>
-            </div>
+            </CollapsibleSection>
           )}
 
         </div>

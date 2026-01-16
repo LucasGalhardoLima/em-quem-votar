@@ -33,6 +33,38 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 import { PoliticianService } from "~/services/politician.server";
 import { PoliticianCard } from "~/components/PoliticianCard";
 
+// Helper to identify tags from search parts
+const KNOWN_TAG_MAP: Record<string, string> = {
+  "novato": "novato",
+  "veterano": "veterano",
+  "baixo custo": "baixo-custo",
+  "alto custo": "gastao",
+  "gastador": "gastao",
+  "reformista": "reformista-economico",
+  "ruralista": "ruralista",
+  "ambientalista": "ambientalista",
+  "rigoroso": "rigoroso",
+  "garantista": "garantista",
+  "conservador": "conservador-costumes",
+  "progressista": "progressista-costumes",
+  "assíduo": "assiduo",
+  "assiduo": "assiduo",
+  "ausente": "ausente"
+};
+
+const STATE_NAME_MAP: Record<string, string> = {
+  "acre": "AC", "alagoas": "AL", "mapa": "AP", "amapa": "AP", "amazonas": "AM",
+  "bahia": "BA", "ceara": "CE", "ceará": "CE", "distrito federal": "DF",
+  "espirito santo": "ES", "espírito santo": "ES", "goias": "GO", "goiás": "GO",
+  "maranhao": "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS",
+  "minas gerais": "MG", "minas": "MG", "para": "PA", "pará": "PA", "paraiba": "PB",
+  "paraíba": "PB", "parana": "PR", "paraná": "PR", "pernambuco": "PE", "piaui": "PI",
+  "piauí": "PI", "rio de janeiro": "RJ", "rio": "RJ", "rio grande do norte": "RN",
+  "rio grande do sul": "RS", "rondonia": "RO", "rondônia": "RO", "roraima": "RR",
+  "santa catarina": "SC", "sao paulo": "SP", "são paulo": "SP", "sergipe": "SE",
+  "tocantins": "TO"
+};
+
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   let query = url.searchParams.get("q");
@@ -41,65 +73,89 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Standard Params
   let stateParam = url.searchParams.get("uf")?.split(",").filter(Boolean) || [];
   let partyParam = url.searchParams.get("partido")?.split(",").filter(Boolean) || [];
+  let tagsList = tagsParam?.split(",").filter(Boolean) || [];
 
   const offset = parseInt(url.searchParams.get("offset") || "0");
   const limit = 20;
 
+  // Fetch available filters early for Parser Intelligence
+  const filters = await PoliticianService.getFilters();
+  const validParties = new Set(filters.parties.map(p => p.toUpperCase()));
+  const validUFs = new Set([
+    "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG",
+    "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"
+  ]);
+
   // Complex Search Parser (The "Hacker Mode")
-  // If 'q' contains ';', we attempt to parse it into structured filters
   if (query && query.includes(";")) {
     const parts = query.split(";").map(p => p.trim()).filter(Boolean);
-    let newQuery = "";
+    let newQueryParts: string[] = [];
 
-    // We allow the user to type "SP" or "PL" and try to guess.
-    // Ideally we match against actual lists, but for now heuristics:
     for (const part of parts) {
+      const lower = part.toLowerCase();
       const upper = part.toUpperCase();
-      // State Heuristic: 2 chars
-      if (upper.length === 2 && /^[A-Z]{2}$/.test(upper)) {
+
+      // 1. Check for explicit prefixes (Highest Priority)
+      if (lower.startsWith("uf:") || lower.startsWith("estado:")) {
+        const val = upper.split(":")[1]?.trim();
+        if (val && validUFs.has(val)) {
+          stateParam.push(val);
+        } else {
+          // Try to map name to code if prefix used with name (e.g. uf: São Paulo)
+          const nameVal = lower.split(":")[1]?.trim();
+          if (nameVal && STATE_NAME_MAP[nameVal]) {
+            stateParam.push(STATE_NAME_MAP[nameVal]);
+          }
+        }
+        continue;
+      }
+      if (lower.startsWith("partido:")) {
+        const val = upper.split(":")[1]?.trim();
+        if (val && validParties.has(val)) partyParam.push(val);
+        continue;
+      }
+      if (lower.startsWith("perfil:") || lower.startsWith("tag:")) {
+        const val = lower.split(":")[1]?.trim();
+        if (val && KNOWN_TAG_MAP[val]) {
+          tagsList.push(KNOWN_TAG_MAP[val]);
+        } else if (val) {
+          tagsList.push(val);
+        }
+        continue;
+      }
+
+      // 2. Heuristics (Natural Search)
+
+      // A. Check for States (Code or Full Name)
+      if (upper.length === 2 && validUFs.has(upper)) {
         stateParam.push(upper);
       }
-      // Party Heuristic: 2-6 chars, mostly letters? Or we just treat as generic query if unknown?
-      // Let's assume if it looks like a party (UPPERCASE) and isn't a state, it's a party preference.
-      // But "ABC" could be part of a name.
-      // For safety: if it matches a known party list it's better. 
-      // We'll fetch filters anyway, let's look.
-      // Actually, simplified: If it's not a state, treat as Party if short, otherwise text?
-      // Let's simple-parse: If it's 2 chars -> State. Else -> Party if < 10 chars? 
-      // Or just assume text search for name if not state.
-      // User requirement: "novato; baixo custo; PL".
-      // "novato" -> Tag. "baixo custo" -> Tag (mapped). "PL" -> Party.
-      else {
-        // Check if it's a known tag?
-        // Complex. For now, let's handle "Parties" roughly or just add to Name Query if logic fails.
-        // Let's prioritize Name/Party mixed search in 'query' field of list() service?
-        // No, list() splits query vs party.
+      else if (STATE_NAME_MAP[lower]) {
+        stateParam.push(STATE_NAME_MAP[lower]);
+      }
 
-        // Heuristic: If < 6 chars and no spaces, try as Party.
-        if (!part.includes(" ") && part.length < 8) {
-          partyParam.push(upper);
-        } else {
-          // Check for tags? (We need to look up slugs? Too expensive here?)
-          // User said "novato" -> Tag.
-          // We will keep it as text query to be safe, unless we implement a full parser.
-          // For MVP Phase 2, let's treat non-state parts as "Query" (Name/Party text search handles both).
-          // Wait, user specifically said "PL" -> Party.
-          // PoliticianService.list ORs name/party in 'query'. So adding "PL" to query works!
-          // But "novato" is a tag.
-          // Let's just append to newQuery.
-          newQuery += (newQuery ? " " : "") + part;
-        }
+      // B. Check for Parties
+      else if (validParties.has(upper)) {
+        partyParam.push(upper);
+      }
+
+      // C. Check for Tags
+      else if (KNOWN_TAG_MAP[lower]) {
+        tagsList.push(KNOWN_TAG_MAP[lower]);
+      }
+
+      // D. Fallback -> General Text Query
+      else {
+        newQueryParts.push(part);
       }
     }
-    query = newQuery || null; // If parsed everything into filters, query is empty
+    // Update query to ONLY contain the parts that weren't parsed into structured filters
+    query = newQueryParts.join(" ") || null;
   }
-
-  // Fetch available filters for Sidebar
-  const filtersPromise = PoliticianService.getFilters();
 
   const resultsPromise = PoliticianService.list({
     query,
-    tags: tagsParam ? tagsParam.split(",") : null,
+    tags: tagsList.length > 0 ? tagsList : null,
     state: stateParam.length > 0 ? stateParam : null,
     party: partyParam.length > 0 ? partyParam : null,
     offset,
@@ -108,9 +164,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   return {
     results: resultsPromise,
-    filters: filtersPromise,
+    filters: Promise.resolve(filters), // We already awaited it, but keeping deferred structure if needed?
+    // Actually, loader return must match what's expected.
+    // Since I awaited it, I can return it normally.
     query,
-    tagsParam,
+    tagsParam: tagsList.join(","),
     stateParam,
     partyParam,
     offset
@@ -120,6 +178,10 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 // ... inside Busca component ...
 
+import { Breadcrumbs } from "~/components/Breadcrumbs";
+
+// ...
+
 export default function Busca() {
   const { results: deferredResults, filters: deferredFilters, query, tagsParam, stateParam, partyParam } = useLoaderData<typeof loader>();
   const submit = useSubmit();
@@ -127,23 +189,29 @@ export default function Busca() {
   const [allResults, setAllResults] = useState<any[]>([]);
   const [hasMore, setHasMore] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
+  // Guard to prevent duplicate fetches for the same offset
+  const lastFetchedOffset = useRef<number>(-1);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const { setTags } = useFilterStore();
   const { toggleId, isSelected } = useComparisonStore();
 
   useEffect(() => {
+    // Reset guard when filters change
+    lastFetchedOffset.current = -1;
     if (tagsParam) {
       setTags(tagsParam.split(","));
     } else {
       setTags([]);
     }
-  }, [tagsParam, setTags]);
+  }, [tagsParam, setTags, query, stateParam, partyParam]);
 
   // 1. Sync initial results
   useEffect(() => {
     Promise.resolve(deferredResults).then(data => {
       setAllResults(data.items);
       setHasMore(data.hasMore);
+      // Reset guard on initial load
+      lastFetchedOffset.current = -1;
     });
   }, [deferredResults]);
 
@@ -151,7 +219,10 @@ export default function Busca() {
   useEffect(() => {
     if (fetcher.data?.results && fetcher.state === "idle") {
       Promise.resolve(fetcher.data.results).then((data: any) => {
-        setAllResults(prev => [...prev, ...data.items]);
+        // Only append if we actually got items
+        if (data.items.length > 0) {
+          setAllResults(prev => [...prev, ...data.items]);
+        }
         setHasMore(data.hasMore);
       });
     }
@@ -161,11 +232,20 @@ export default function Busca() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && fetcher.state === "idle") {
+        const offset = allResults.length;
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          fetcher.state === "idle" &&
+          offset > lastFetchedOffset.current // Guard: Ensure we haven't already fetched this offset
+        ) {
+          lastFetchedOffset.current = offset; // Mark as fetched
           const params = new URLSearchParams();
           if (query) params.set("q", query);
           if (tagsParam) params.set("tags", tagsParam);
-          params.set("offset", String(allResults.length));
+          if (stateParam?.length) params.set("uf", stateParam.join(","));
+          if (partyParam?.length) params.set("partido", partyParam.join(","));
+          params.set("offset", String(offset));
 
           fetcher.load(`/busca?${params.toString()}`);
         }
@@ -175,7 +255,7 @@ export default function Busca() {
 
     if (observerTarget.current) observer.observe(observerTarget.current);
     return () => observer.disconnect();
-  }, [hasMore, fetcher.state, query, tagsParam, allResults.length]);
+  }, [hasMore, fetcher.state, query, tagsParam, allResults.length, stateParam, partyParam]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -194,7 +274,7 @@ export default function Busca() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
-      <Header />
+      <Header breadcrumbItems={[{ label: "Buscar Políticos", active: true }]} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row gap-8">
@@ -203,9 +283,9 @@ export default function Busca() {
           <div className="md:hidden">
             <button
               onClick={() => setShowMobileFilters(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-700 font-medium w-full justify-center active:scale-[0.98] transition-transform"
+              className="flex items-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-gray-700 font-bold w-full justify-center active:scale-[0.98] transition-transform text-lg"
             >
-              <SlidersHorizontal size={18} />
+              <SlidersHorizontal size={20} />
               Filtros
             </button>
             <MobileFilterDrawer
@@ -233,17 +313,42 @@ export default function Busca() {
 
           <div className="flex-1 space-y-6">
             {/* Search Bar */}
-            <Form method="get" action="/busca" className="w-full relative group" onChange={(e) => submit(e.currentTarget, { replace: true })}>
+            <Form
+              method="get"
+              action="/busca"
+              className="w-full relative group"
+              onSubmit={(e) => {
+                // Prevent default submission to handle it via debounce/controlled input logic if needed, 
+                // but standard Enter key works fine. 
+                // Actually, let standard submit happen on Enter.
+              }}
+            >
               <input type="hidden" name="tags" value={tagsParam || ""} />
               <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-brand-primary transition-colors">
-                <Search className="w-5 h-5" />
+                <Search className="w-5 h-5 md:w-5 md:h-5" />
               </div>
               <input
                 type="text"
                 name="q"
                 defaultValue={query || ""}
                 placeholder="Busque por nome, partido..."
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                className="w-full pl-12 pr-4 py-4 md:py-3 bg-white border border-gray-200 rounded-2xl md:rounded-xl shadow-sm text-base md:text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all"
+                onChange={(e) => {
+                  const form = e.currentTarget.form;
+                  if (form) {
+                    // Debounce logic
+                    const timeoutId = setTimeout(() => {
+                      submit(form, { replace: true });
+                    }, 500);
+                    // Store timeout ID on the input element to clear it? 
+                    // React way: use a ref for the timeout
+                    (e.target as any)._timeoutId = timeoutId;
+                  }
+                }}
+                onInput={(e) => {
+                  const target = e.target as any;
+                  if (target._timeoutId) clearTimeout(target._timeoutId);
+                }}
               />
             </Form>
 
@@ -322,7 +427,15 @@ export default function Busca() {
                             <div className="bg-yellow-50 text-yellow-800 text-sm p-4 rounded-xl text-left mb-6">
                               <strong>Dica:</strong> Tente remover alguns filtros. Por exemplo, é raro encontrar alguém que seja "Comunista" e "Ruralista" ao mesmo tempo.
                             </div>
-                            <button onClick={() => { setTags([]); submit(null, { action: "/busca" }); }} className="w-full py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold transition-colors">
+                            <button
+                              onClick={() => {
+                                setTags([]);
+                                // Submit empty params to clear everything
+                                const params = new URLSearchParams();
+                                submit(params, { action: "/busca", replace: false });
+                              }}
+                              className="w-full py-3 bg-brand-primary hover:bg-brand-primary/90 text-white rounded-xl font-bold transition-colors"
+                            >
                               Limpar todos os filtros
                             </button>
                           </motion.div>

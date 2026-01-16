@@ -16,11 +16,14 @@ export const meta = () => {
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react";
+import { Info, Users, Shield, ArrowRightLeft, Zap, Scale, History, TrendingUp } from "lucide-react";
 
 <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+  <Header breadcrumbItems={[
+    { label: "Educação Política", href: "/educacao" },
+    { label: "Espectro Político", active: true }
+  ]} />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
     <header className="text-center space-y-4">
       <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
         <Scale size={32} />
@@ -34,7 +37,7 @@ import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react"
     </header>
 
     {/* Origin Card */}
-    <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-8 items-center">
+    <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-6 md:gap-8 items-center">
         <div className="flex-1 space-y-4">
              <div className="flex items-center gap-3 mb-2">
                 <div className="bg-slate-100 p-2 rounded-lg"><History size={20} /></div>
@@ -48,7 +51,7 @@ import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react"
 
     <div className="grid md:grid-cols-2 gap-6">
         {/* Left Wing */}
-        <section className="bg-white p-8 rounded-3xl shadow-sm border-t-4 border-red-500 space-y-6">
+        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-t-4 border-red-500 space-y-6">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600">
                     <Users size={24} />
@@ -73,7 +76,7 @@ import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react"
         </section>
 
         {/* Right Wing */}
-        <section className="bg-white p-8 rounded-3xl shadow-sm border-t-4 border-blue-500 space-y-6">
+        <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border-t-4 border-blue-500 space-y-6">
             <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
                     <TrendingUp size={24} />
@@ -99,11 +102,11 @@ import { Scale, Users, TrendingUp, ArrowRightLeft, History } from "lucide-react"
     </div>
 
     {/* Center */}
-    <section className="bg-brand-tertiary text-white p-8 md:p-12 rounded-3xl shadow-xl text-center space-y-6">
+    <section className="bg-brand-tertiary text-white p-6 md:p-12 rounded-3xl shadow-xl text-center space-y-6">
         <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Scale size={32} className="text-brand-primary" />
         </div>
-        <h2 className="text-3xl font-bold">O Centro</h2>
+        <h2 className="text-2xl md:text-3xl font-bold">O Centro</h2>
         <p className="text-slate-300 max-w-2xl mx-auto text-lg leading-relaxed">
             O fiel da balança. Busca o <strong>equilíbrio</strong> e o pragmatismo, evitando extremos. 
             Pode apoiar a economia de direita e o social de esquerda. No Brasil, é frequentemente associado à governabilidade.

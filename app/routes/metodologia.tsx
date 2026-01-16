@@ -1,4 +1,3 @@
-
 import { Header } from "~/components/Header";
 import { Scale, DollarSign, Calendar, Tag, ShieldCheck, Database } from "lucide-react";
 
@@ -12,7 +11,7 @@ export function meta() {
 export default function Methodology() {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <Header />
+      <Header breadcrumbItems={[{ label: "Metodologia", active: true }]} />
 
       <main className="max-w-4xl mx-auto px-4 py-12 space-y-16">
         {/* Hero Section */}

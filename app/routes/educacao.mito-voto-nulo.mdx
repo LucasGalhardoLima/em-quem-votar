@@ -15,11 +15,14 @@ export const meta = () => {
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { AlertTriangle, CheckCircle2, XCircle, Calculator, Info, Ban } from "lucide-react";
+import { HelpCircle, AlertTriangle, FileCheck, CheckCircle2, Scale, Info } from "lucide-react";
 
 <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+  <Header breadcrumbItems={[
+    { label: "Educação Política", href: "/educacao" },
+    { label: "O Mito do Voto Nulo", active: true }
+  ]} />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
     <header className="text-center space-y-4">
       <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
         <AlertTriangle size={32} />

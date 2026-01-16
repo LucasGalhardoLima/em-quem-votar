@@ -52,7 +52,7 @@ export default function VotacoesIndex() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-            <Header />
+            <Header breadcrumbItems={[{ label: "Votações", active: true }]} />
 
             <main className="flex-grow max-w-7xl mx-auto w-full px-4 py-12">
 

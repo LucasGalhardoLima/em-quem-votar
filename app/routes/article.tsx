@@ -1,7 +1,8 @@
 import { useLoaderData, Link } from "react-router";
 import type { Route } from "./+types/article";
 import { ARTICLES } from "~/data/articles";
-import { ArrowLeft, BookOpen, Share2 } from "lucide-react";
+import { Header } from "~/components/Header";
+import { BookOpen, Share2 } from "lucide-react";
 import { clsx } from "clsx";
 
 export function meta({ data }: Route.MetaArgs) {
@@ -80,22 +81,11 @@ export default function ArticlePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Header / Nav */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link
-            to="/"
-            className="flex items-center text-slate-600 hover:text-brand-primary transition-colors font-medium group"
-          >
-            <ArrowLeft className="w-5 h-5 mr-2 transform group-hover:-translate-x-1 transition-transform" />
-            Voltar
-          </Link>
-          <div className="flex items-center gap-2 text-brand-primary font-bold">
-            <BookOpen className="w-5 h-5" />
-            <span className="hidden sm:inline">Em Quem Votar</span>
-          </div>
-        </div>
-      </header>
+
+      <Header breadcrumbItems={[
+        { label: "Educação Política", href: "/educacao" },
+        { label: article.title, active: true }
+      ]} />
 
       <main className="flex-grow max-w-3xl mx-auto px-4 py-12 md:py-20 w-full">
 

@@ -1,52 +1,66 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useComparisonStore } from "~/stores/comparisonStore";
-import { X, ArrowRight } from "lucide-react";
-
+import { ArrowRight } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Badge } from "~/components/ui/badge";
+import { toast } from "sonner";
+import { cn } from "~/lib/utils";
 
 export function ComparisonFloatingBar() {
   const { selectedIds, clear } = useComparisonStore();
+  const navigate = useNavigate();
 
   if (selectedIds.length === 0) return null;
 
+  const handleCompare = (e: React.MouseEvent) => {
+    if (selectedIds.length < 2) {
+      e.preventDefault();
+      toast.info("Selecione pelo menos 2 políticos para comparar");
+    }
+  };
+
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
-      <div className="bg-gray-900 text-white rounded-full shadow-2xl px-6 py-3 flex items-center gap-6 border border-gray-700">
-        <div className="flex items-center gap-3">
-          <span className="bg-blue-600 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300 w-[95%] max-w-md md:w-auto">
+      <div className="bg-popover/95 backdrop-blur-md text-popover-foreground rounded-full shadow-2xl p-2 pl-5 flex items-center justify-between gap-4 border border-border/50 ring-1 ring-black/5">
+        <div className="flex items-center gap-3 min-w-0">
+          <Badge className="h-6 w-6 rounded-full flex items-center justify-center p-0 text-xs shrink-0">
             {selectedIds.length}
-          </span>
-          <span className="font-medium text-sm">
-            {selectedIds.length === 1 ? "Político selecionado" : "Políticos selecionados"}
-            <span className="text-gray-400 ml-1 text-xs">(máx 3)</span>
-          </span>
+          </Badge>
+          <div className="flex flex-col min-w-0">
+            <span className="font-semibold text-sm leading-none truncate">
+              Para comparar
+            </span>
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              Máximo de 3 políticos
+            </span>
+          </div>
         </div>
 
-        <div className="h-4 w-px bg-gray-700"></div>
-
-        <div className="flex items-center gap-3">
-          <button
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clear}
-            className="text-xs text-gray-400 hover:text-white transition-colors"
+            className="text-xs text-muted-foreground hover:text-foreground h-9 px-3 hidden sm:flex"
           >
             Limpar
-          </button>
+          </Button>
 
-          <Link
-            to={`/comparar?ids=${selectedIds.join(",")}`}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm transition-all ${selectedIds.length >= 2
-              ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50"
-              : "bg-gray-800 text-gray-400 cursor-not-allowed"
-              }`}
-            onClick={(e) => {
-              if (selectedIds.length < 2) {
-                e.preventDefault();
-                alert("Selecione pelo menos 2 políticos para comparar.");
-              }
-            }}
+          <Button
+            asChild
+            disabled={selectedIds.length < 2}
+            className={cn("rounded-full h-10 pl-5 pr-4 font-bold shadow-lg transition-all",
+              selectedIds.length >= 2 ? "shadow-primary/25 hover:shadow-primary/40" : "opacity-50 cursor-not-allowed"
+            )}
           >
-            Comparar
-            <ArrowRight size={14} />
-          </Link>
+            <Link
+              to={`/comparar?ids=${selectedIds.join(",")}`}
+              onClick={handleCompare}
+            >
+              Comparar
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </div>

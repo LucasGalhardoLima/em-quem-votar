@@ -1,45 +1,50 @@
 import { Link } from "react-router";
 import { ChevronRight, Home } from "lucide-react";
+import { clsx } from "clsx";
 
-interface BreadcrumbItem {
+export interface BreadcrumbItem {
     label: string;
     href?: string;
+    active?: boolean;
 }
 
 interface BreadcrumbsProps {
     items: BreadcrumbItem[];
+    className?: string;
 }
 
-export function Breadcrumbs({ items }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
     return (
-        <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-                <li className="inline-flex items-center">
+        <nav aria-label="Breadcrumb" className={clsx("flex items-center text-sm font-medium", className)}>
+            <ol className="flex items-center space-x-2">
+                <li className="flex items-center">
                     <Link
                         to="/"
-                        className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors"
+                        className="text-gray-400 hover:text-brand-primary transition-colors flex items-center"
                     >
-                        <Home className="w-4 h-4 mr-2" />
-                        Início
+                        <Home size={14} className="mr-1.5" />
+                        <span className="sr-only">Início</span>
                     </Link>
                 </li>
+
                 {items.map((item, index) => (
-                    <li key={index}>
-                        <div className="flex items-center">
-                            <ChevronRight className="w-4 h-4 text-gray-400 mx-1" />
-                            {item.href ? (
-                                <Link
-                                    to={item.href}
-                                    className="ml-1 text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors md:ml-2"
-                                >
-                                    {item.label}
-                                </Link>
-                            ) : (
-                                <span className="ml-1 text-sm font-medium text-gray-700 md:ml-2 line-clamp-1 max-w-[200px] md:max-w-none">
-                                    {item.label}
-                                </span>
-                            )}
-                        </div>
+                    <li key={index} className="flex items-center">
+                        <ChevronRight size={14} className="text-gray-300 mx-1" />
+                        {item.href && !item.active ? (
+                            <Link
+                                to={item.href}
+                                className="text-gray-500 hover:text-brand-primary transition-colors"
+                            >
+                                {item.label}
+                            </Link>
+                        ) : (
+                            <span className={clsx(
+                                "font-bold",
+                                item.active ? "text-brand-primary" : "text-gray-400"
+                            )}>
+                                {item.label}
+                            </span>
+                        )}
                     </li>
                 ))}
             </ol>

@@ -4,6 +4,10 @@ import { TagWithTooltip } from "~/components/TagWithTooltip";
 import { toast } from "sonner";
 import { useComparisonStore } from "~/stores/comparisonStore";
 import { motion } from "framer-motion";
+import { Card, CardContent } from "~/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 interface PoliticianCardProps {
     politician: {
@@ -27,71 +31,84 @@ interface PoliticianCardProps {
 
 export function PoliticianCard({ politician, variants }: PoliticianCardProps) {
     const { toggleId, isSelected } = useComparisonStore();
+    const selected = isSelected(politician.id);
+
+    const handleCompare = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleId(politician.id);
+
+        if (!selected) {
+            toast.success(`${politician.name} adicionado à comparação`, {
+                duration: 2000,
+                position: "bottom-center"
+            });
+        } else {
+            toast.info(`${politician.name} removido`, {
+                duration: 1500,
+                position: "bottom-center"
+            });
+        }
+    };
 
     return (
-        <motion.div variants={variants}>
+        <motion.div variants={variants} layout>
             <Link
                 to={`/politico/${politician.id}`}
                 prefetch="intent"
-                className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-start gap-4 group cursor-pointer h-full relative"
+                className="block h-full outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             >
-                <button
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const newState = !isSelected(politician.id);
-                        toggleId(politician.id);
-
-                        if (newState) {
-                            toast.success(`${politician.name} adicionado à comparação`, {
-                                duration: 2000,
-                                position: "bottom-center"
-                            });
-                        } else {
-                            toast.info(`${politician.name} removido`, {
-                                duration: 1500,
-                                position: "bottom-center"
-                            });
-                        }
-                    }}
-                    className="absolute top-3 right-3 z-10 p-1.5 rounded-full hover:bg-gray-50 transition-colors group/btn"
-                    title="Comparar"
-                >
-                    <div className={`w-5 h-5 rounded flex items-center justify-center transition-all ${isSelected(politician.id)
-                        ? "bg-brand-primary text-white shadow-sm"
-                        : "bg-white border-2 border-gray-200 group-hover:border-brand-primary"
-                        }`}>
-                        {isSelected(politician.id) && <Check size={14} strokeWidth={3} />}
-                    </div>
-                </button>
-
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-gray-100">
-                    {politician.photoUrl ? (
-                        <img src={politician.photoUrl} alt={politician.name} className="w-full h-full object-cover" />
-                    ) : (
-                        <User className="w-full h-full p-3 text-gray-400" />
-                    )}
-                </div>
-                <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-gray-900 group-hover:text-brand-primary transition-colors truncate text-lg">{politician.name}</h3>
-                    <p className="text-sm text-gray-500 truncate mb-2">{politician.party} • {politician.state}</p>
-
-                    {politician.tags && politician.tags.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap">
-                            {politician.tags.slice(0, 3).map((pt: any) => (
-                                <TagWithTooltip key={pt.tag.id || pt.tag.slug} tag={pt.tag} />
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="mt-3 pt-2 border-t border-gray-50 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span
-                            className="text-[10px] text-gray-300 hover:text-gray-500 hover:underline transition-colors block"
+                <Card className={cn(
+                    "h-full transition-all duration-200 hover:shadow-md border-transparent hover:border-primary/10",
+                    selected ? "ring-2 ring-primary border-primary bg-primary/5" : "bg-card"
+                )}>
+                    <CardContent className="p-4 flex items-start gap-4 relative">
+                        {/* Compare Toggle */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCompare}
+                            className={cn(
+                                "absolute top-2 right-2 h-8 w-8 rounded-full transition-all z-10",
+                                selected
+                                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                    : "bg-background/80 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
+                            title={selected ? "Remover da comparação" : "Comparar"}
                         >
-                            Ver perfil completo
-                        </span>
-                    </div>
-                </div>
+                            <Check className={cn("h-4 w-4", selected ? "opacity-100" : "opacity-0 group-hover:opacity-50")} />
+                            <span className="sr-only">Comparar</span>
+                            {/* Ring for unselected state to look like a checkbox outline */}
+                            {!selected && (
+                                <div className="absolute inset-0 rounded-full border-2 border-muted-foreground/20 group-hover:border-primary/50 pointer-events-none" />
+                            )}
+                        </Button>
+
+                        <Avatar className="h-14 w-14 border border-border bg-muted shrink-0">
+                            <AvatarImage src={politician.photoUrl || undefined} alt={politician.name} className="object-cover" />
+                            <AvatarFallback>
+                                <User className="h-6 w-6 text-muted-foreground" />
+                            </AvatarFallback>
+                        </Avatar>
+
+                        <div className="min-w-0 flex-1 flex flex-col pt-0.5">
+                            <h3 className="font-semibold text-lg text-foreground leading-tight truncate pr-8">
+                                {politician.name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground truncate mb-3">
+                                {politician.party} • {politician.state}
+                            </p>
+
+                            {politician.tags && politician.tags.length > 0 && (
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {politician.tags.slice(0, 3).map((pt: any) => (
+                                        <TagWithTooltip key={pt.tag.id || pt.tag.slug} tag={pt.tag} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
             </Link>
         </motion.div>
     );

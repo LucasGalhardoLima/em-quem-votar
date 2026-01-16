@@ -42,7 +42,7 @@ export default function VotacaoRoute() {
   );
 }
 
-import { Breadcrumbs } from "~/components/Breadcrumbs";
+import { Header } from "~/components/Header";
 
 function VoteDetailsContent({ bill }: { bill: any }) {
   const [filter, setFilter] = useState("");
@@ -64,30 +64,16 @@ function VoteDetailsContent({ bill }: { bill: any }) {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans pb-20">
-      {/* Header with Breadcrumbs */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center gap-4">
-          <Link
-            to="/"
-            prefetch="intent"
-            className="p-2 -ml-2 text-gray-400 hover:text-white hover:bg-brand-tertiary rounded-full transition-colors md:hidden"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </Link>
-
-          <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <div className="hidden md:block mb-1">
-              <Breadcrumbs items={[{ label: "Votações", href: "/" }, { label: "Detalhes" }]} />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-sm md:text-lg font-bold truncate leading-tight">{bill.title}</h1>
-              <span className="text-xs text-gray-500 hidden md:inline">• {new Date(bill.voteDate).toLocaleDateString('pt-BR')}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header breadcrumbItems={[{ label: "Votações", href: "/votacoes" }, { label: "Detalhes", active: true }]} />
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        <div className="space-y-2">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">{bill.title}</h1>
+          <div className="flex items-center gap-2 text-gray-500 font-medium">
+            <Search size={14} />
+            <span className="text-sm">Votação realizada em {new Date(bill.voteDate).toLocaleDateString('pt-BR')}</span>
+          </div>
+        </div>
 
         {/* Description Card */}
         <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">

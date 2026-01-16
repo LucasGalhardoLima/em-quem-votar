@@ -9,11 +9,14 @@ readTime: "7 min"
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { TrendingUp, TrendingDown, AlertCircle, Building2 } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle, Building2, Landmark, Users, DollarSign, Activity, PieChart } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-  <Header />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+  <Header breadcrumbItems={[
+    { label: "Educação Política", href: "/educacao" },
+    { label: "Panorama do Governo", active: true }
+  ]} />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
     
     {/* Header */}
     <header className="text-center space-y-4">

@@ -38,7 +38,7 @@ export default function Comparar() {
     if (!politicians || politicians.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
-                <Header />
+                <Header breadcrumbItems={[{ label: "Comparação", active: true }]} />
                 <div className="p-8 text-center mt-8">
                     <p className="text-gray-500 mb-4">Nenhum político selecionado.</p>
                     <Link to="/busca" className="text-brand-primary hover:underline">Voltar para busca</Link>
@@ -49,31 +49,28 @@ export default function Comparar() {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-            <Header />
+            <Header breadcrumbItems={[
+                { label: "Busca", href: "/busca" },
+                { label: "Comparação", active: true }
+            ]} />
 
             <main className="max-w-7xl mx-auto px-4 py-8">
-                <div className="mb-8 flex items-center gap-4">
-                    <Link to="/busca" className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                        <ArrowLeft size={20} className="text-gray-600" />
-                    </Link>
-                    <h1 className="text-2xl font-bold text-gray-900">Comparação</h1>
-                </div>
 
                 <div className="overflow-x-auto pb-6">
                     <div className="min-w-[800px] bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="p-6 w-48 text-slate-400 font-medium uppercase text-xs tracking-wider"></th>
+                                    <th className="p-4 md:p-6 w-32 md:w-48 text-slate-400 font-medium uppercase text-xs tracking-wider sticky left-0 bg-slate-50 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:shadow-none"></th>
                                     {politicians.map(p => (
-                                        <th key={p.id} className="p-6 min-w-[200px] align-top">
+                                        <th key={p.id} className="p-4 md:p-6 min-w-[160px] md:min-h-[200px] align-top">
                                             <div className="flex flex-col items-center text-center gap-3">
-                                                <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
+                                                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-sm">
                                                     {p.photoUrl && <img src={p.photoUrl} alt={p.name} className="w-full h-full object-cover" />}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-slate-900 text-lg leading-tight">{p.name}</h3>
-                                                    <p className="text-sm text-slate-500">{p.party} • {p.state}</p>
+                                                    <h3 className="font-bold text-slate-900 text-base md:text-lg leading-tight">{p.name}</h3>
+                                                    <p className="text-xs md:text-sm text-slate-500">{p.party} • {p.state}</p>
                                                 </div>
                                             </div>
                                         </th>
@@ -83,12 +80,12 @@ export default function Comparar() {
                             <tbody className="divide-y divide-slate-100">
                                 {/* Spending Row */}
                                 <tr>
-                                    <th className="p-6 bg-gray-50/50 align-top">
-                                        <span className="flex items-center gap-2 font-semibold text-gray-700">
-                                            <DollarSign size={16} className="text-gray-400" />
-                                            Gasto Mensal
+                                    <th className="p-4 md:p-6 bg-gray-50/95 md:bg-gray-50/50 align-top sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:shadow-none backdrop-blur-sm md:backdrop-filter-none">
+                                        <span className="flex items-center gap-2 font-semibold text-gray-700 text-sm md:text-base">
+                                            <DollarSign size={16} className="text-gray-400 shrink-0" />
+                                            Gasto
                                         </span>
-                                        <p className="text-xs text-gray-400 font-normal mt-1">Cota Parlamentar</p>
+                                        <p className="text-[10px] md:text-xs text-gray-400 font-normal mt-1">Mensal (Cota)</p>
                                     </th>
                                     {politicians.map(p => {
                                         const spending = Number(p.spending || 0);
@@ -116,12 +113,12 @@ export default function Comparar() {
 
                                 {/* Attendance Row */}
                                 <tr>
-                                    <th className="p-6 bg-gray-50/50 align-top">
-                                        <span className="flex items-center gap-2 font-semibold text-gray-700">
-                                            <Calendar size={16} className="text-gray-400" />
+                                    <th className="p-4 md:p-6 bg-gray-50/95 md:bg-gray-50/50 align-top sticky left-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] md:shadow-none backdrop-blur-sm md:backdrop-filter-none">
+                                        <span className="flex items-center gap-2 font-semibold text-gray-700 text-sm md:text-base">
+                                            <Calendar size={16} className="text-gray-400 shrink-0" />
                                             Assiduidade
                                         </span>
-                                        <p className="text-xs text-gray-400 font-normal mt-1">Presença em Plenário</p>
+                                        <p className="text-[10px] md:text-xs text-gray-400 font-normal mt-1">Plenário</p>
                                     </th>
                                     {politicians.map(p => {
                                         const attendance = Number(p.attendanceRate || 0);

@@ -9,11 +9,14 @@ readTime: "5 min"
 
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { Calendar, CheckCircle, AlertTriangle } from "lucide-react";
+import { Calendar, TrendingUp, Users, Target, Rocket, Zap, Clock } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-  <Header />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
+<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+  <Header breadcrumbItems={[
+    { label: "Educação Política", href: "/educacao" },
+    { label: "Eleição 2026", active: true }
+  ]} />
+  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
     
     <header className="text-center space-y-4">
       <div className="inline-flex items-center justify-center p-3 bg-brand-secondary/10 rounded-2xl mb-2 text-brand-secondary">

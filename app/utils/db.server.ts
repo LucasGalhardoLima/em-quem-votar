@@ -13,10 +13,10 @@ declare global {
 if (process.env.NODE_ENV === "production") {
   prisma = new PrismaClient();
 } else {
-  if (!global.__db__) {
-    global.__db__ = new PrismaClient();
+  if (!global.__db_v2__) {
+    global.__db_v2__ = new PrismaClient();
   }
-  prisma = global.__db__;
+  prisma = global.__db_v2__;
   
   // connect eagerly in dev
   prisma.$connect();
