@@ -20,6 +20,7 @@ export default [
   route("resultado", "routes/resultado.tsx"),
   route("comparar", "routes/comparar.tsx"),
   route("quiz", "routes/quiz.tsx"),
+  route("artigos/:slug", "routes/article.tsx"),
   route("api/newsletter", "routes/api.newsletter.ts"),
   route("metodologia", "routes/metodologia.tsx"),
   route("sitemap.xml", "routes/sitemap.xml.ts"),
