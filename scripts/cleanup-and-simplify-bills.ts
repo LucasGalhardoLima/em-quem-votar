@@ -77,6 +77,7 @@ async function main() {
         { simplifiedTitle: "" },
         { simplifiedDescription: null },
         { simplifiedDescription: "" },
+        { simplifiedDescription: { contains: "Não foi possível gerar" } },
       ],
     },
     select: {
@@ -97,6 +98,11 @@ async function main() {
       bill.description
     );
 
+    if (simplified.description.includes("Não foi possível gerar")) {
+      console.log(`   ❌ Falha na IA, pulando atualização...`);
+      continue;
+    }
+
     await prisma.bill.update({
       where: { id: bill.id },
       data: { 
@@ -105,10 +111,10 @@ async function main() {
       },
     });
 
-    console.log(`   ✓ Conteúdo gerado`);
+    console.log(`   ✓ Conteúdo gerado e salvo: ${simplified.title}`);
     
-    // Rate limiting
-    await new Promise(r => setTimeout(r, 1000));
+    // Rate limiting maior para evitar timeout
+    await new Promise(r => setTimeout(r, 2000));
   }
 
   console.log(`\n🎉 Concluído!`);

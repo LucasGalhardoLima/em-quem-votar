@@ -4,12 +4,9 @@ import { z } from "zod";
 import { db } from "~/utils/db.server";
 
 // Configuração do Vercel AI Gateway
-// IMPORTANTE: Configure fallback models no dashboard do Vercel AI Gateway:
-// https://vercel.com/docs/ai-gateway/configuration
-// Exemplo: gpt-4o-mini → gpt-3.5-turbo → claude-3-haiku
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-  baseURL: "https://gateway.ai.vercel.com/v1",
+  baseURL: "https://ai-gateway.vercel.sh/v1",
 });
 
 // Schema para resposta da IA
@@ -197,26 +194,44 @@ IMPORTANTE:
 - NÃO use markdown, formatação ou emojis, apenas texto plano
 - Se o texto original não tiver informação suficiente, seja honesto`;
 
-    try {
-      const { object } = await generateObject({
-        model: openai("gpt-4o-mini"),
-        schema: z.object({
-          title: z.string().describe("Título simplificado da votação (máx 80 chars)"),
-          description: z.string().describe("Explicação simplificada da votação"),
-        }),
-        prompt,
-      });
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      return {
-        title: object.title,
-        description: object.description,
-      };
-    } catch (error) {
-      console.error("[VoteClassifier] Error simplifying:", error);
-      return {
-        title: title.substring(0, 100), // Fallback: truncar título original
-        description: "Não foi possível gerar uma descrição simplificada para esta votação.",
-      };
+    while (attempts < maxAttempts) {
+      try {
+        const { object } = await generateObject({
+          model: openai("gpt-4o-mini"),
+          schema: z.object({
+            title: z.string().describe("Título simplificado da votação (máx 80 chars)"),
+            description: z.string().describe("Explicação simplificada da votação"),
+          }),
+          prompt,
+        });
+
+        return {
+          title: object.title,
+          description: object.description,
+        };
+      } catch (error: any) {
+        attempts++;
+        console.error(`[VoteClassifier] Attempt ${attempts} failed:`, error.message);
+        
+        if (attempts >= maxAttempts) {
+          console.error("[VoteClassifier] Max attempts reached.");
+          return {
+            title: title.substring(0, 100), // Fallback: truncar título original
+            description: "Não foi possível gerar uma descrição simplificada para esta votação.",
+          };
+        }
+        
+        // Wait before retry
+        await new Promise(r => setTimeout(r, 2000 * attempts));
+      }
     }
+
+    return {
+      title: title.substring(0, 100),
+      description: "Não foi possível gerar uma descrição simplificada para esta votação.",
+    };
   },
 };
