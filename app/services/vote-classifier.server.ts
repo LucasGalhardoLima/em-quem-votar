@@ -4,6 +4,9 @@ import { z } from "zod";
 import { db } from "~/utils/db.server";
 
 // Configuração do Vercel AI Gateway
+// IMPORTANTE: Configure fallback models no dashboard do Vercel AI Gateway:
+// https://vercel.com/docs/ai-gateway/configuration
+// Exemplo: gpt-4o-mini → gpt-3.5-turbo → claude-3-haiku
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: "https://gateway.ai.vercel.com/v1",
