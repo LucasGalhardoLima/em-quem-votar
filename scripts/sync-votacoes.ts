@@ -86,6 +86,11 @@ async function getVotacaoDetails(votacaoId: string): Promise<any> {
   return data.dados;
 }
 
+async function getProposicaoDetails(url: string): Promise<any> {
+  const data = await fetchJson(url);
+  return data.dados;
+}
+
 async function syncVotacoes() {
   console.log("🗳️ Iniciando sincronização de votações...\n");
 
@@ -127,12 +132,29 @@ async function syncVotacoes() {
 
     // Buscar detalhes
     let details;
+    let contextText = "";
     try {
       details = await getVotacaoDetails(votacao.id);
+      
+      // Tentar buscar ementa da proposição principal para dar mais contexto à IA
+      if (details.proposicaoObjetoPrincipal?.uri) {
+        console.log(`   🔎 Buscando contexto da proposição principal...`);
+        try {
+          const prop = await getProposicaoDetails(details.proposicaoObjetoPrincipal.uri);
+          if (prop.ementa) {
+            contextText = `Ementa da Proposição: ${prop.ementa}`;
+            console.log(`   📝 Ementa encontrada: ${prop.ementa.substring(0, 100)}...`);
+          }
+        } catch (e) {
+          console.warn("   ⚠️ Erro ao buscar ementa da proposição.");
+        }
+      }
     } catch (e) {
       console.warn(`⚠️ Não foi possível obter detalhes de ${votacao.id}`);
       details = { descricao: votacao.descricao };
     }
+
+    const fullContext = `${details.descricao}\n\n${contextText}`.trim();
 
     console.log(`\n📋 Processando: ${details.descricao?.substring(0, 60)}...`);
     console.log(`   ID: ${votacao.id} | Votos: ${votos.length}`);
@@ -152,14 +174,14 @@ async function syncVotacoes() {
     console.log(`   🤖 Gerando conteúdo simplificado...`);
     const simplified = await VoteClassifierService.simplifyDescription(
       title,
-      details.descricao
+      fullContext
     );
 
     // Classificar via IA para pegar relevância e tags sugeridas
     console.log(`   🤖 Classificando votação...`);
     let classification;
     try {
-      classification = await VoteClassifierService.classify(title, details.descricao);
+      classification = await VoteClassifierService.classify(title, fullContext);
       
       // Filtro de relevância por IA: se for muito baixa, pular
       if (classification.relevance < 4) {
