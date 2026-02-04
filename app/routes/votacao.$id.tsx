@@ -68,18 +68,33 @@ function VoteDetailsContent({ bill }: { bill: any }) {
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">{bill.title}</h1>
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">{bill.simplifiedTitle || bill.title}</h1>
           <div className="flex items-center gap-2 text-gray-500 font-medium">
             <Search size={14} />
             <span className="text-sm">Votação realizada em {new Date(bill.voteDate).toLocaleDateString('pt-BR')}</span>
           </div>
         </div>
 
-        {/* Description Card */}
-        <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Sobre a Votação</h2>
-          <p className="text-gray-700 leading-relaxed text-lg">{bill.description}</p>
-        </section>
+        {/* Simplified Description Card */}
+        {bill.simplifiedDescription && (
+          <section className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl p-6 shadow-sm border border-purple-100">
+            <h2 className="text-sm font-bold text-purple-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 9a1 1 0 012 0v4a1 1 0 01-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" />
+              </svg>
+              Sobre a Votação
+            </h2>
+            <p className="text-gray-700 leading-relaxed whitespace-pre-line">{bill.simplifiedDescription}</p>
+          </section>
+        )}
+
+        {/* Technical Description - Only if no simplified version */}
+        {!bill.simplifiedDescription && bill.description && (
+          <section className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Sobre a Votação</h2>
+            <p className="text-gray-700 leading-relaxed text-lg">{bill.description}</p>
+          </section>
+        )}
 
         {/* Scoreboard */}
         <section className="grid md:grid-cols-2 gap-4">

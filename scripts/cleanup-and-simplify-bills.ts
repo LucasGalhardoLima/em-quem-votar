@@ -73,6 +73,8 @@ async function main() {
   const billsNeedingSimplification = await prisma.bill.findMany({
     where: {
       OR: [
+        { simplifiedTitle: null },
+        { simplifiedTitle: "" },
         { simplifiedDescription: null },
         { simplifiedDescription: "" },
       ],
@@ -84,9 +86,9 @@ async function main() {
     },
   });
 
-  console.log(`\n🤖 Gerando descrições simplificadas para ${billsNeedingSimplification.length} votações...\n`);
+  console.log(`\n🤖 Gerando títulos e descrições simplificadas para ${billsNeedingSimplification.length} votações...\n`);
 
-  // 5. Gerar descrições simplificadas
+  // 5. Gerar conteúdo simplificado
   for (const bill of billsNeedingSimplification) {
     console.log(`   Processando: ${bill.title.substring(0, 60)}...`);
     
@@ -97,10 +99,13 @@ async function main() {
 
     await prisma.bill.update({
       where: { id: bill.id },
-      data: { simplifiedDescription: simplified },
+      data: { 
+        simplifiedTitle: simplified.title,
+        simplifiedDescription: simplified.description,
+      },
     });
 
-    console.log(`   ✓ Descrição gerada`);
+    console.log(`   ✓ Conteúdo gerado`);
     
     // Rate limiting
     await new Promise(r => setTimeout(r, 1000));
@@ -108,7 +113,7 @@ async function main() {
 
   console.log(`\n🎉 Concluído!`);
   console.log(`   Removidas: ${genericBills.length} votações genéricas`);
-  console.log(`   Simplificadas: ${billsNeedingSimplification.length} votações`);
+  console.log(`   Simplificadas: ${billsNeedingSimplification.length} votações (título + descrição)`);
 }
 
 main()

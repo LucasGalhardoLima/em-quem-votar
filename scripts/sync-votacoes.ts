@@ -120,8 +120,8 @@ async function syncVotacoes() {
     console.log(`\n📋 Processando: ${details.descricao?.substring(0, 60)}...`);
     console.log(`   ID: ${votacao.id} | Votos: ${votos.length}`);
 
-    // Simplificar descrição usando IA
-    console.log(`   🤖 Simplificando descrição...`);
+    // Simplificar título e descrição usando IA
+    console.log(`   🤖 Gerando conteúdo simplificado...`);
     const simplified = await VoteClassifierService.simplifyDescription(
       details.descricao || `Votação ${votacao.id}`,
       details.descricao
@@ -133,7 +133,8 @@ async function syncVotacoes() {
         id: votacao.id,
         title: details.descricao || `Votação ${votacao.id}`,
         description: details.descricao,
-        simplifiedDescription: simplified,
+        simplifiedTitle: simplified.title,
+        simplifiedDescription: simplified.description,
         voteDate: new Date(votacao.dataHoraRegistro),
         status: "pending", // Aguardando classificação/aprovação
         lastSyncAt: new Date(),

@@ -173,41 +173,50 @@ Retorne tags que sejam opostas e representem bem os dois lados do debate.`;
   },
 
   /**
-   * Simplifica descrição jurídica para linguagem acessível
+   * Gera título e descrição simplificados em linguagem acessível
    */
-  async simplifyDescription(title: string, description: string | null): Promise<string> {
+  async simplifyDescription(title: string, description: string | null): Promise<{ title: string; description: string }> {
     const prompt = `Você é um jornalista político especializado em tornar leis e votações acessíveis ao cidadão comum.
 
-Transforme esta votação em uma explicação clara e objetiva:
+Transforme esta votação em um título e explicação claros:
 
-**Título:** ${title}
+**Título original:** ${title}
 **Descrição técnica:** ${description || "Não disponível"}
 
-Responda em 2-3 parágrafos curtos explicando de forma simples e direta:
-1. **O que foi votado:** Qual era o tema principal? Do que se tratava?
-2. **A proposta:** O que cada lado (SIM/NÃO) defendia?
-3. **Resultado (se mencionado):** O que aconteceu?
+Responda com:
+1. **Título simplificado:** Um título curto (máx 80 caracteres) que explique claramente do que se trata
+2. **Explicação:** 2-3 parágrafos curtos explicando:
+   - O que foi votado
+   - O que cada lado (SIM/NÃO) defendia  
+   - Resultado (se mencionado)
 
 IMPORTANTE:
 - Use linguagem MUITO simples, como se estivesse explicando para alguém que não entende nada de política
 - Evite jargão jurídico, siglas complexas, ou termos técnicos
-- Seja objetivo, máximo 3 parágrafos curtos
+- Seja objetivo e direto
 - NÃO use markdown, formatação ou emojis, apenas texto plano
-- Se o texto original não tiver informação suficiente, seja honesto: "Informações limitadas sobre esta votação"`;
+- Se o texto original não tiver informação suficiente, seja honesto`;
 
     try {
       const { object } = await generateObject({
         model: openai("gpt-4o-mini"),
         schema: z.object({
-          simplified: z.string().describe("Explicação simplificada da votação"),
+          title: z.string().describe("Título simplificado da votação (máx 80 chars)"),
+          description: z.string().describe("Explicação simplificada da votação"),
         }),
         prompt,
       });
 
-      return object.simplified;
+      return {
+        title: object.title,
+        description: object.description,
+      };
     } catch (error) {
-      console.error("[VoteClassifier] Error simplifying description:", error);
-      return "Não foi possível gerar uma descrição simplificada para esta votação.";
+      console.error("[VoteClassifier] Error simplifying:", error);
+      return {
+        title: title.substring(0, 100), // Fallback: truncar título original
+        description: "Não foi possível gerar uma descrição simplificada para esta votação.",
+      };
     }
   },
 };

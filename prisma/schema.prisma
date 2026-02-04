@@ -74,6 +74,7 @@ model Bill {
   lastSyncAt      DateTime?
   
   // Linguagem simplificada gerada por IA
+  simplifiedTitle       String? // Título em linguagem clara
   simplifiedDescription String? @db.Text // Explicação em linguagem acessível
   
   voteLogs    VoteLog[]

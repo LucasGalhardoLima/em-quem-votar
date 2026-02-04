@@ -6,6 +6,8 @@ interface Bill {
     id: string;
     title: string;
     description: string | null;
+    simplifiedTitle?: string | null;
+    simplifiedDescription?: string | null;
     voteDate: Date;
 }
 
@@ -65,7 +67,7 @@ export function RecentVotesSection({ bills }: RecentVotesSectionProps) {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start justify-between gap-3 mb-2">
                                             <h3 className="font-bold text-gray-900 group-hover:text-brand-primary transition-colors line-clamp-2 leading-tight">
-                                                {bill.title}
+                                                {bill.simplifiedTitle || bill.title}
                                             </h3>
                                             <span className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shrink-0 ${status.color}`}>
                                                 <StatusIcon size={12} />
@@ -74,7 +76,7 @@ export function RecentVotesSection({ bills }: RecentVotesSectionProps) {
                                         </div>
 
                                         <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                                            {bill.description || "Sem descrição disponível."}
+                                            {bill.simplifiedDescription || bill.description || "Sem descrição disponível."}
                                         </p>
 
                                         <div className="flex items-center justify-between">
