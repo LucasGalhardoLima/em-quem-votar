@@ -17,6 +17,23 @@ const CAMARA_API = "https://dadosabertos.camara.leg.br/api/v2";
 const DAYS_TO_SYNC = 30; // Buscar votações dos últimos N dias
 const MIN_VOTES = 100;   // Mínimo de votos para considerar relevante
 
+// Padrões de votações que devem ser ignoradas (irrelevantes/burocráticas)
+const IRRELEVANT_PATTERNS = [
+  /^mantido o texto/i,
+  /^rejeitado o requerimento/i,
+  /^aprovado o requerimento/i,
+  /^arquivad/i,
+  /^tramitação/i,
+  /^retirada de pauta/i,
+  /^prejudicad/i,
+  /^devolvid/i,
+  /^retirado de pauta/i,
+];
+
+function isIrrelevant(title: string): boolean {
+  return IRRELEVANT_PATTERNS.some(pattern => pattern.test(title));
+}
+
 interface VotacaoAPI {
   id: string;
   dataHoraRegistro: string;
@@ -120,21 +137,33 @@ async function syncVotacoes() {
     console.log(`\n📋 Processando: ${details.descricao?.substring(0, 60)}...`);
     console.log(`   ID: ${votacao.id} | Votos: ${votos.length}`);
 
+    // Filtrar votações irrelevantes/burocráticas
+    const title = details.descricao || `Votação ${votacao.id}`;
+    if (isIrrelevant(title)) {
+      console.log(`   ⏭️ Votação irrelevante (burocrática), pulando...`);
+      skippedCount++;
+      continue;
+    }
+
     // Simplificar título e descrição usando IA
     console.log(`   🤖 Gerando conteúdo simplificado...`);
     const simplified = await VoteClassifierService.simplifyDescription(
-      details.descricao || `Votação ${votacao.id}`,
+      title,
       details.descricao
     );
+
+    // Construir URL da fonte
+    const sourceUrl = `https://www.camara.leg.br/internet/votacao/mostraVotacao.asp?ideVotacao=${votacao.id?.split('-')[0]}`;
 
     // Criar Bill no banco (status: pending, sem tags ainda)
     const bill = await prisma.bill.create({
       data: {
         id: votacao.id,
-        title: details.descricao || `Votação ${votacao.id}`,
+        title: title,
         description: details.descricao,
         simplifiedTitle: simplified.title,
         simplifiedDescription: simplified.description,
+        sourceUrl: sourceUrl,
         voteDate: new Date(votacao.dataHoraRegistro),
         status: "pending", // Aguardando classificação/aprovação
         lastSyncAt: new Date(),

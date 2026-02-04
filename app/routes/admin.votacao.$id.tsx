@@ -210,6 +210,27 @@ export default function AdminVotacaoDetail() {
                         </div>
                     )}
 
+                    {/* Link para Fonte Original */}
+                    {bill.sourceUrl && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                            <a
+                                href={bill.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-sm font-medium text-brand-primary hover:underline"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                Verificar votação original na Câmara dos Deputados
+                            </a>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Use este link para confirmar os detalhes antes de aprovar.
+                            </p>
+                        </div>
+                    )}
+
+
                     {/* Sugestões da IA */}
                     {bill.suggestedTagSim && (
                         <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
