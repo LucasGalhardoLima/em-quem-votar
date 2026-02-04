@@ -73,6 +73,9 @@ model Bill {
   approvedAt      DateTime?
   lastSyncAt      DateTime?
   
+  // Linguagem simplificada gerada por IA
+  simplifiedDescription String? @db.Text // Explicação em linguagem acessível
+  
   voteLogs    VoteLog[]
 
   @@index([voteDate])

@@ -26,5 +26,7 @@ export default [
   route("sitemap.xml", "routes/sitemap.xml.ts"),
   route("sobre", "routes/sobre.mdx"),
   route("faq", "routes/faq.mdx"),
+  route("admin", "routes/admin._index.tsx"),
+  route("admin/votacao/:id", "routes/admin.votacao.$id.tsx"),
   route("resources/og/:id", "routes/resources.og.$id.tsx")
 ] satisfies RouteConfig;

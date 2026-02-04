@@ -157,10 +157,10 @@ export default function AdminVotacaoDetail() {
                         <div>
                             <span
                                 className={`px-2 py-1 text-xs font-bold rounded-full ${bill.status === "pending"
-                                        ? "bg-amber-100 text-amber-700"
-                                        : bill.status === "approved"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : bill.status === "approved"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
                                     }`}
                             >
                                 {bill.status === "pending" ? "Pendente" : bill.status === "approved" ? "Aprovada" : "Rejeitada"}
@@ -187,7 +187,27 @@ export default function AdminVotacaoDetail() {
                     </div>
 
                     {bill.description && (
-                        <p className="text-gray-600 leading-relaxed">{bill.description}</p>
+                        <div className="mb-4">
+                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Descrição Técnica</p>
+                            <p className="text-sm text-gray-600 leading-relaxed">{bill.description}</p>
+                        </div>
+                    )}
+
+                    {/* Descrição Simplificada pela IA */}
+                    {bill.simplifiedDescription && (
+                        <div className="mt-4 p-5 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-100">
+                            <p className="text-sm font-bold text-purple-700 mb-3 flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 9a1 1 0 012 0v4a1 1 0 01-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" />
+                                </svg>
+                                Sobre esta Votação
+                            </p>
+                            <div className="prose prose-sm max-w-none">
+                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                    {bill.simplifiedDescription}
+                                </p>
+                            </div>
+                        </div>
                     )}
 
                     {/* Sugestões da IA */}

@@ -168,4 +168,43 @@ Retorne tags que sejam opostas e representem bem os dois lados do debate.`;
       return { success: false, error };
     }
   },
+
+  /**
+   * Simplifica descrição jurídica para linguagem acessível
+   */
+  async simplifyDescription(title: string, description: string | null): Promise<string> {
+    const prompt = `Você é um jornalista político especializado em tornar leis e votações acessíveis ao cidadão comum.
+
+Transforme esta votação em uma explicação clara e objetiva:
+
+**Título:** ${title}
+**Descrição técnica:** ${description || "Não disponível"}
+
+Responda em 2-3 parágrafos curtos explicando de forma simples e direta:
+1. **O que foi votado:** Qual era o tema principal? Do que se tratava?
+2. **A proposta:** O que cada lado (SIM/NÃO) defendia?
+3. **Resultado (se mencionado):** O que aconteceu?
+
+IMPORTANTE:
+- Use linguagem MUITO simples, como se estivesse explicando para alguém que não entende nada de política
+- Evite jargão jurídico, siglas complexas, ou termos técnicos
+- Seja objetivo, máximo 3 parágrafos curtos
+- NÃO use markdown, formatação ou emojis, apenas texto plano
+- Se o texto original não tiver informação suficiente, seja honesto: "Informações limitadas sobre esta votação"`;
+
+    try {
+      const { object } = await generateObject({
+        model: openai("gpt-4o-mini"),
+        schema: z.object({
+          simplified: z.string().describe("Explicação simplificada da votação"),
+        }),
+        prompt,
+      });
+
+      return object.simplified;
+    } catch (error) {
+      console.error("[VoteClassifier] Error simplifying description:", error);
+      return "Não foi possível gerar uma descrição simplificada para esta votação.";
+    }
+  },
 };

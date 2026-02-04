@@ -8,6 +8,7 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import { VoteClassifierService } from "../app/services/vote-classifier.server";
 
 const prisma = new PrismaClient();
 const CAMARA_API = "https://dadosabertos.camara.leg.br/api/v2";
@@ -119,12 +120,20 @@ async function syncVotacoes() {
     console.log(`\n📋 Processando: ${details.descricao?.substring(0, 60)}...`);
     console.log(`   ID: ${votacao.id} | Votos: ${votos.length}`);
 
+    // Simplificar descrição usando IA
+    console.log(`   🤖 Simplificando descrição...`);
+    const simplified = await VoteClassifierService.simplifyDescription(
+      details.descricao || `Votação ${votacao.id}`,
+      details.descricao
+    );
+
     // Criar Bill no banco (status: pending, sem tags ainda)
     const bill = await prisma.bill.create({
       data: {
         id: votacao.id,
         title: details.descricao || `Votação ${votacao.id}`,
         description: details.descricao,
+        simplifiedDescription: simplified,
         voteDate: new Date(votacao.dataHoraRegistro),
         status: "pending", // Aguardando classificação/aprovação
         lastSyncAt: new Date(),
