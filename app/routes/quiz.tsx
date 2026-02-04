@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { Header } from "~/components/Header";
 import { Footer } from "~/components/Footer";
 import { QUIZ_QUESTIONS, type QuizOption } from "~/data/quiz-questions";
-import { ArrowRight, Check, X, Undo2, ThumbsUp, ThumbsDown, Scale, Shield, DollarSign, Lock, Unlock, Zap, TreePine, Tractor, Sparkles, Award, Heart, Briefcase } from "lucide-react";
+import { ArrowRight, Check, X, Undo2, ThumbsUp, ThumbsDown, Scale, Shield, DollarSign, Lock, Unlock, Zap, TreePine, Tractor, Sparkles, Award, Heart, Briefcase, Loader2 } from "lucide-react";
 
 export function meta() {
     return [{ title: "Quiz Político: Descubra seu perfil | Em Quem Votar" }];
@@ -12,6 +12,7 @@ export function meta() {
 export default function Quiz() {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [scores, setScores] = useState<Record<string, number>>({});
+    const [isFinishing, setIsFinishing] = useState(false);
     const navigate = useNavigate();
 
     const currentQuestion = QUIZ_QUESTIONS[currentQuestionIndex];
@@ -34,6 +35,8 @@ export default function Quiz() {
     };
 
     const finishQuiz = (finalScores: Record<string, number>) => {
+        setIsFinishing(true);
+
         const queryParams = new URLSearchParams();
 
         // Serialize scores: tag1:5,tag2:3
@@ -45,7 +48,10 @@ export default function Quiz() {
             queryParams.set("s", scoreString);
         }
 
-        navigate(`/resultado?${queryParams.toString()}`);
+        // Small delay to show loading state
+        setTimeout(() => {
+            navigate(`/resultado?${queryParams.toString()}`);
+        }, 300);
     };
 
     const renderIcon = (iconName?: string) => {
@@ -139,6 +145,24 @@ export default function Quiz() {
                     )}
                 </div>
             </main>
+
+            {/* Loading Overlay */}
+            {isFinishing && (
+                <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                    <div className="bg-white rounded-3xl p-8 md:p-12 max-w-md mx-4 text-center shadow-2xl">
+                        <div className="w-16 h-16 mx-auto mb-6 relative">
+                            <Loader2 className="w-16 h-16 text-brand-primary animate-spin" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-900 mb-3">
+                            Calculando seu match...
+                        </h3>
+                        <p className="text-slate-600 leading-relaxed">
+                            Estamos analisando suas respostas e comparando com o histórico de votações de todos os deputados federais.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <Footer />
         </div>
     );

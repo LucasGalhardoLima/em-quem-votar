@@ -1,5 +1,11 @@
 import { PoliticianService } from "./politician.server";
 import { TAG_DEFINITIONS } from "~/data/tag-definitions";
+import {
+    calculateArchetype,
+    calculateMatchStrength,
+    getDominantCategories,
+    type Archetype
+} from "~/data/archetypes";
 
 export interface TagMatchInfo {
     slug: string;
@@ -28,9 +34,37 @@ export interface PartyResult {
     count: number;
 }
 
+export interface MatchMetadata {
+    archetype: Archetype;
+    dominantCategories: string[];
+    matchStrength: "strong" | "moderate" | "weak";
+}
+
+// Cache simples em memória para otimizar performance
+let cachedPoliticians: Awaited<ReturnType<typeof PoliticianService.findAllForMatch>> | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
 export const MatchService = {
-    async calculate(userScores: Record<string, number>): Promise<{ topPoliticians: MatchResult[], topParties: PartyResult[], userScores: Record<string, number> }> {
-        const politicians = await PoliticianService.findAllForMatch();
+    async calculate(userScores: Record<string, number>): Promise<{
+        topPoliticians: MatchResult[],
+        topParties: PartyResult[],
+        userScores: Record<string, number>,
+        metadata: MatchMetadata
+    }> {
+        // Usar cache se disponível e válido
+        const now = Date.now();
+        let politicians;
+        
+        if (cachedPoliticians && (now - cacheTimestamp) < CACHE_TTL) {
+            console.log('[MatchService] Using cached politicians data');
+            politicians = cachedPoliticians;
+        } else {
+            console.log('[MatchService] Fetching fresh politicians data from database');
+            politicians = await PoliticianService.findAllForMatch();
+            cachedPoliticians = politicians;
+            cacheTimestamp = now;
+        }
 
         // Helper to get category for a slug
         const tagCategoryMap: Record<string, string> = {};
@@ -132,6 +166,18 @@ export const MatchService = {
             .sort((a, b) => b.percentage - a.percentage)
             .slice(0, 5);
 
-        return { topPoliticians, topParties, userScores };
+        // Calculate metadata for the result page
+        const archetype = calculateArchetype(userScores);
+        const topMatch = topPoliticians[0];
+        const matchStrength = topMatch ? calculateMatchStrength(topMatch.percentage) : "weak";
+        const dominantCategories = topMatch ? getDominantCategories(topMatch.categoryScores) : [];
+
+        const metadata: MatchMetadata = {
+            archetype,
+            dominantCategories,
+            matchStrength
+        };
+
+        return { topPoliticians, topParties, userScores, metadata };
     }
 };

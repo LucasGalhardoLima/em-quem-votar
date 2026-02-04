@@ -5,17 +5,18 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand Colors (Preserved from original) */
-  --color-brand-primary: #0E34A0;
-  --color-brand-primary-hover: #0a2a80;
-  --color-brand-primary-light: #e8eef8;
+  /* Brand Colors - Indigo/Slate Palette (Q1 2026 Redesign) */
+  --color-brand-primary: #4f46e5;
+  --color-brand-primary-hover: #4338ca;
+  --color-brand-primary-light: #eef2ff;
   --color-brand-secondary: #F7996E;
-  --color-brand-tertiary: #2F3061;
-  --color-brand-text: #343434;
-  --color-brand-text-alt: #5a5a5a;
-  --color-brand-structure: #DFDFDF;
-  --color-brand-success: #059669;
+  --color-brand-tertiary: #334155;
+  --color-brand-text: #1e293b;
+  --color-brand-text-alt: #475569;
+  --color-brand-structure: #e2e8f0;
+  --color-brand-success: #0d9488;
   --color-brand-alert: #e11d48;
 
   /* Shadcn Border Radius */
@@ -59,8 +60,8 @@
 }
 
 :root {
-  /* Shadcn Variables (Slate Base + Brand overrides) */
-  --background: 0 0% 100%;
+  /* Shadcn Variables (Slate Base + Indigo Primary - Q1 2026 Redesign) */
+  --background: 210 40% 98%;
   --foreground: 222.2 84% 4.9%;
 
   --card: 0 0% 100%;
@@ -69,16 +70,15 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
 
-  /* Maps to Brand Primary #0E34A0 (224, 84%, 34%) */
-  --primary: 224 84% 34%;
+  /* Maps to Brand Primary #4f46e5 (Indigo 600) */
+  --primary: 239 84% 67%;
   --primary-foreground: 210 40% 98%;
 
   /* Maps to Brand Secondary #F7996E (19, 90%, 70%) */
   --secondary: 19 90% 70%;
   --secondary-foreground: 222.2 47.4% 11.2%;
 
-  /* Maps to Brand Tertiary #2F3061 (239, 35%, 28%) */
-  /* Used as 'muted' or 'accent' typically? keeping slate default for now unless specified */
+  /* Slate-based muted colors */
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%;
 
@@ -90,7 +90,7 @@
 
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 224 84% 34%;
+  --ring: 239 84% 67%;
 
   --radius: 0.5rem;
 }
@@ -105,7 +105,7 @@
   --popover: 222.2 84% 4.9%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 224 84% 34%; /* Dark mode might utilize a lighter shade? */
+  --primary: 239 84% 67%;
   --primary-foreground: 210 40% 98%;
 
   --secondary: 19 90% 70%;
@@ -122,7 +122,7 @@
 
   --border: 217.2 32.6% 17.5%;
   --input: 217.2 32.6% 17.5%;
-  --ring: 224 84% 34%;
+  --ring: 239 84% 67%;
 }
 
 @layer base {
@@ -132,4 +132,18 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Typography - Heading Font */
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Bento UI Card Style */
+.bento-card {
+  @apply rounded-xl border border-slate-200 bg-card shadow-none transition-all duration-200;
+}
+
+.bento-card:hover {
+  @apply border-slate-300 shadow-sm;
 }

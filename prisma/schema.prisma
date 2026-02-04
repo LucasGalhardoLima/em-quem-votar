@@ -64,9 +64,19 @@ model Bill {
   voteNaoDetails String?
   voteDate    DateTime
   
+  // Campos para workflow de aprovação
+  status          String   @default("approved") // pending, approved, rejected
+  aiConfidence    Float?   // 0-100, confiança da classificação
+  suggestedTagSim String?  // Tag sugerida pela IA para voto SIM
+  suggestedTagNao String?  // Tag sugerida pela IA para voto NÃO
+  suggestedCategory String? // Categoria sugerida
+  approvedAt      DateTime?
+  lastSyncAt      DateTime?
+  
   voteLogs    VoteLog[]
 
   @@index([voteDate])
+  @@index([status])
   @@unique([id])
 }
 

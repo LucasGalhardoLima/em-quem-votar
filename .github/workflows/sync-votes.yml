@@ -1,0 +1,38 @@
+name: Sync Votações
+
+on:
+  schedule:
+    # Roda todo dia às 06:00 UTC (03:00 BRT)
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    # Permite rodar manualmente
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Sync Script
+        run: npx tsx scripts/sync-votacoes.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Summary
+        run: echo "✅ Sync completed at $(date)"
