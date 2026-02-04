@@ -65,7 +65,7 @@ model Bill {
   voteDate    DateTime
   
   // Campos para workflow de aprovação
-  status          String   @default("approved") // pending, approved, rejected
+  status          String   @default("pending") // pending, approved, rejected
   aiConfidence    Float?   // 0-100, confiança da classificação
   suggestedTagSim String?  // Tag sugerida pela IA para voto SIM
   suggestedTagNao String?  // Tag sugerida pela IA para voto NÃO

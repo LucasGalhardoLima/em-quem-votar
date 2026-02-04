@@ -145,6 +145,9 @@ async function syncVotacoes() {
       continue;
     }
 
+    // Construir URL da fonte
+    const sourceUrl = `https://www.camara.leg.br/internet/votacao/mostraVotacao.asp?ideVotacao=${votacao.id?.split('-')[0]}`;
+
     // Simplificar título e descrição usando IA
     console.log(`   🤖 Gerando conteúdo simplificado...`);
     const simplified = await VoteClassifierService.simplifyDescription(
@@ -152,10 +155,24 @@ async function syncVotacoes() {
       details.descricao
     );
 
-    // Construir URL da fonte
-    const sourceUrl = `https://www.camara.leg.br/internet/votacao/mostraVotacao.asp?ideVotacao=${votacao.id?.split('-')[0]}`;
+    // Classificar via IA para pegar relevância e tags sugeridas
+    console.log(`   🤖 Classificando votação...`);
+    let classification;
+    try {
+      classification = await VoteClassifierService.classify(title, details.descricao);
+      
+      // Filtro de relevância por IA: se for muito baixa, pular
+      if (classification.relevance < 4) {
+        console.log(`   ⏭️ Relevância baixa (${classification.relevance}/10), pulando...`);
+        skippedCount++;
+        continue;
+      }
+      console.log(`   🔸 Relevância: ${classification.relevance}/10 | Categoria: ${classification.category}`);
+    } catch (e) {
+      console.warn(`   ⚠️ Erro na classificação, salvando sem sugerir tags.`);
+    }
 
-    // Criar Bill no banco (status: pending, sem tags ainda)
+    // Criar Bill no banco (status: pending por padrão)
     const bill = await prisma.bill.create({
       data: {
         id: votacao.id,
@@ -164,8 +181,12 @@ async function syncVotacoes() {
         simplifiedTitle: simplified.title,
         simplifiedDescription: simplified.description,
         sourceUrl: sourceUrl,
+        status: "pending",
+        aiConfidence: classification ? classification.relevance * 10 : null,
+        suggestedTagSim: classification?.tagSim.slug,
+        suggestedTagNao: classification?.tagNao.slug,
+        suggestedCategory: classification?.category,
         voteDate: new Date(votacao.dataHoraRegistro),
-        status: "pending", // Aguardando classificação/aprovação
         lastSyncAt: new Date(),
       },
     });

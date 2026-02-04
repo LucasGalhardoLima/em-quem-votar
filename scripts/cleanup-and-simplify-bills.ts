@@ -78,6 +78,7 @@ async function main() {
         { simplifiedDescription: null },
         { simplifiedDescription: "" },
         { simplifiedDescription: { contains: "Não foi possível gerar" } },
+        { suggestedTagSim: null },
       ],
     },
     select: {
@@ -99,8 +100,17 @@ async function main() {
     );
 
     if (simplified.description.includes("Não foi possível gerar")) {
-      console.log(`   ❌ Falha na IA, pulando atualização...`);
+      console.log(`   ❌ Falha na IA na simplificação, pulando...`);
       continue;
+    }
+
+    // Tentar classificar também para sugerir tags no admin
+    let classification;
+    try {
+      console.log(`   🤖 Classificando para sugestões...`);
+      classification = await VoteClassifierService.classify(bill.title, bill.description);
+    } catch (e) {
+      console.warn(`   ⚠️ Erro na classificação.`);
     }
 
     await prisma.bill.update({
@@ -108,10 +118,14 @@ async function main() {
       data: { 
         simplifiedTitle: simplified.title,
         simplifiedDescription: simplified.description,
+        aiConfidence: classification ? classification.relevance * 10 : undefined,
+        suggestedTagSim: classification?.tagSim.slug,
+        suggestedTagNao: classification?.tagNao.slug,
+        suggestedCategory: classification?.category,
       },
     });
 
-    console.log(`   ✓ Conteúdo gerado e salvo: ${simplified.title}`);
+    console.log(`   ✓ Conteúdo e sugestões gerados: ${simplified.title}`);
     
     // Rate limiting maior para evitar timeout
     await new Promise(r => setTimeout(r, 2000));
