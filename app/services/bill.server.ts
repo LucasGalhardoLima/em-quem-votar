@@ -2,8 +2,11 @@ import { db } from "~/utils/db.server";
 
 export const BillService = {
   async getById(id: string) {
-    const bill = await db.bill.findUnique({
-      where: { id },
+    const bill = await db.bill.findFirst({
+      where: { 
+        id,
+        status: "approved" // Apenas votações aprovadas são públicas
+      },
       include: {
         voteLogs: {
           include: {
@@ -36,7 +39,8 @@ export const BillService = {
   async listFeatured(ids: string[]) {
     const projects = await db.bill.findMany({
       where: {
-        id: { in: ids }
+        id: { in: ids },
+        status: "approved" // Apenas votações aprovadas
       },
       select: { id: true, title: true, voteDate: true, description: true }
     });

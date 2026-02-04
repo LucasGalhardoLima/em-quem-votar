@@ -28,6 +28,7 @@ export function meta({ }: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const [recentBills, articles] = await Promise.all([
     db.bill.findMany({
+      where: { status: "approved" }, // Apenas votações aprovadas
       orderBy: { voteDate: "desc" },
       take: 4,
     }),

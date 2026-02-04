@@ -19,6 +19,7 @@ export async function loader({ request }: { request: Request }) {
 
     const bills = await db.bill.findMany({
         where: {
+            status: "approved", // Apenas votações aprovadas pelo admin
             OR: [
                 { title: { contains: q, mode: "insensitive" } },
                 { description: { contains: q, mode: "insensitive" } },
