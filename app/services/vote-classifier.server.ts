@@ -173,26 +173,25 @@ Retorne tags que sejam opostas e representem bem os dois lados do debate.`;
    * Gera título e descrição simplificados em linguagem acessível
    */
   async simplifyDescription(title: string, description: string | null): Promise<{ title: string; description: string }> {
-    const prompt = `Você é um jornalista político especializado em tornar leis e votações acessíveis ao cidadão comum.
+    const prompt = `Você é um redator que explica votações para cidadãos leigos.
 
-Transforme esta votação em um título e explicação claros:
+Transforme o conteúdo abaixo em texto claro, simples e factual:
 
-**Título original:** ${title}
-**Descrição técnica:** ${description || "Não disponível"}
+Título de entrada: ${title}
+Fatos disponíveis: ${description || "Não disponível"}
 
-Responda com:
-1. **Título simplificado:** Um título curto (máx 80 caracteres) que explique claramente do que se trata
-2. **Explicação:** 2-3 parágrafos curtos explicando:
-   - O que foi votado
-   - O que cada lado (SIM/NÃO) defendia  
-   - Resultado (se mencionado)
+Regras obrigatórias:
+- Use APENAS fatos explícitos no texto de entrada
+- NÃO invente contexto, intenção política, conflito ideológico ou resultado
+- Se faltarem informações, diga claramente "não informado"
+- Não afirme o que SIM e NÃO defendem sem evidência textual
+- Preserve números e placar exatamente como recebidos
+- Escreva em português simples, sem jargão jurídico
+- Não use markdown, listas ou emojis
 
-IMPORTANTE:
-- Use linguagem MUITO simples, como se estivesse explicando para alguém que não entende nada de política
-- Evite jargão jurídico, siglas complexas, ou termos técnicos
-- Seja objetivo e direto
-- NÃO use markdown, formatação ou emojis, apenas texto plano
-- Se o texto original não tiver informação suficiente, seja honesto`;
+Formato de saída:
+- title: até 100 caracteres, direto e específico
+- description: 3 a 5 frases curtas, em um único parágrafo`;
 
     let attempts = 0;
     const maxAttempts = 3;
@@ -202,7 +201,7 @@ IMPORTANTE:
         const { object } = await generateObject({
           model: openai("gpt-4o-mini"),
           schema: z.object({
-            title: z.string().describe("Título simplificado da votação (máx 80 chars)"),
+            title: z.string().describe("Título simplificado da votação (máx 100 chars)"),
             description: z.string().describe("Explicação simplificada da votação"),
           }),
           prompt,
