@@ -621,6 +621,26 @@ async function syncVotacoes() {
     const existing = await prisma.bill.findUnique({ where: { id: votacao.id } });
     if (existing) {
       console.log(`⏭️ Votação ${votacao.id} já existe, pulando...`);
+      console.log(`🏁 [${votacao.id}] ignorada | motivo: já existente`);
+      skippedCount++;
+      continue;
+    }
+
+    // Buscar votos primeiro para evitar trabalho desnecessário em votações com baixa participação
+    let votos: VotoAPI[] = [];
+    try {
+      votos = await getVotosForVotacao(votacao.id);
+    } catch (e) {
+      console.warn(`⚠️ Não foi possível obter votos de ${votacao.id}, pulando...`);
+      console.log(`🏁 [${votacao.id}] ignorada | motivo: erro ao buscar votos`);
+      skippedCount++;
+      continue;
+    }
+
+    // Filtrar votações com poucos votos
+    if (votos.length < MIN_VOTES) {
+      console.log(`⏭️ Votação ${votacao.id} tem apenas ${votos.length} votos, pulando...`);
+      console.log(`🏁 [${votacao.id}] ignorada | motivo: votos insuficientes (${votos.length})`);
       skippedCount++;
       continue;
     }
@@ -640,7 +660,7 @@ async function syncVotacoes() {
       ].filter((uri): uri is string => Boolean(uri));
 
       if (candidateUris.length > 0) {
-        console.log(`   🔎 Buscando contexto da proposição principal...`);
+        console.log(`   🔎 [${votacao.id}] Buscando contexto da proposição principal...`);
       }
 
       for (const uri of candidateUris) {
@@ -649,11 +669,11 @@ async function syncVotacoes() {
           if (prop.ementa) {
             contextText = `Ementa da Proposição: ${prop.ementa}`;
             proposicaoSummary = normalizePropositionSummary(prop.ementa);
-            console.log(`   📝 Ementa encontrada: ${prop.ementa.substring(0, 100)}...`);
+            console.log(`   📝 [${votacao.id}] Ementa encontrada: ${prop.ementa.substring(0, 100)}...`);
             break;
           }
         } catch (e) {
-          console.warn("   ⚠️ Erro ao buscar ementa da proposição.");
+          console.warn(`   ⚠️ [${votacao.id}] Erro ao buscar ementa da proposição.`);
         }
       }
     } catch (e) {
@@ -695,19 +715,10 @@ async function syncVotacoes() {
 
       if (similar) {
         console.log(`   ⏭️ Votação procedimental repetida (${proposicaoKey}) nos últimos ${DEDUPE_DAYS} dias, pulando...`);
+        console.log(`🏁 [${votacao.id}] ignorada | motivo: duplicada por proposição (${proposicaoKey})`);
         skippedCount++;
         continue;
       }
-    }
-
-    // Buscar votos
-    const votos = await getVotosForVotacao(votacao.id);
-
-    // Filtrar votações com poucos votos
-    if (votos.length < MIN_VOTES) {
-      console.log(`⏭️ Votação ${votacao.id} tem apenas ${votos.length} votos, pulando...`);
-      skippedCount++;
-      continue;
     }
 
     const aiContextParts = [
@@ -725,6 +736,7 @@ async function syncVotacoes() {
     let title = fichaAction || details.descricao || `Votação ${votacao.id}`;
     if (isIrrelevant(title)) {
       console.log(`   ⏭️ Votação irrelevante (burocrática), pulando...`);
+      console.log(`🏁 [${votacao.id}] ignorada | motivo: irrelevante/burocrática`);
       skippedCount++;
       continue;
     }
@@ -781,6 +793,7 @@ async function syncVotacoes() {
         // Filtro de relevância por IA: se for muito baixa, pular
         if (classification.relevance < 4) {
           console.log(`   ⏭️ Relevância baixa (${classification.relevance}/10), pulando...`);
+          console.log(`🏁 [${votacao.id}] ignorada | motivo: baixa relevância (${classification.relevance}/10)`);
           skippedCount++;
           continue;
         }
@@ -827,6 +840,7 @@ async function syncVotacoes() {
     }
 
     processedCount++;
+    console.log(`🏁 [${votacao.id}] processada | votos salvos: ${voteLogsToCreate.length}`);
 
     // Rate limiting
     await new Promise(r => setTimeout(r, 500));
