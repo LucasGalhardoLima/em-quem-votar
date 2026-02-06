@@ -356,6 +356,23 @@ function buildTopicLabel(proposicaoKey?: string | null, proposicaoSummary?: stri
   return "proposta em análise";
 }
 
+function buildThemeText(proposicaoSummary?: string | null) {
+  if (!proposicaoSummary) return "tema não informado";
+
+  let theme = proposicaoSummary.trim();
+  theme = theme.replace(/^(muda|cria regras sobre|cria|permite|define|estende)\s+/i, "");
+  theme = theme.replace(/^(que)\s+/i, "");
+  theme = theme.replace(/^(o|a|os|as)\s+/i, "");
+  theme = theme.charAt(0).toLowerCase() + theme.slice(1);
+  return theme;
+}
+
+function buildProjectTitle(proposicaoSummary?: string | null, proposicaoKey?: string | null) {
+  const theme = buildThemeText(proposicaoSummary);
+  const suffix = proposicaoKey ? ` (${proposicaoKey})` : "";
+  return truncateText(`Projeto sobre ${theme}${suffix}`, 100);
+}
+
 function buildTopicClause(proposicaoKey?: string | null, proposicaoSummary?: string | null) {
   if (proposicaoSummary) {
     const normalized = proposicaoSummary.charAt(0).toLowerCase() + proposicaoSummary.slice(1);
@@ -367,6 +384,49 @@ function buildTopicClause(proposicaoKey?: string | null, proposicaoSummary?: str
 
   if (proposicaoKey) return `sobre a proposta ${proposicaoKey}`;
   return "sobre a proposta em análise";
+}
+
+function parseMpFromText(text: string) {
+  const match = /Medida Provis[oó]ria\s*n[ºo]?\s*(\d{1,5})\s*de\s*(\d{4})/i.exec(text);
+  if (match) {
+    return { numero: match[1], ano: match[2] };
+  }
+
+  const mpShort = /\bMP\s*(\d{1,5})\/(\d{4})\b/i.exec(text);
+  if (mpShort) {
+    return { numero: mpShort[1], ano: mpShort[2] };
+  }
+
+  return null;
+}
+
+function buildOutcomeTitle(actionText: string, proposicaoSummary?: string | null) {
+  const mp = parseMpFromText(actionText);
+  const hasHighlights = /ressalvados os destaques/i.test(actionText);
+  const isApproved = /aprovad[ao]/i.test(actionText);
+  const isRejected = /rejeitad[ao]/i.test(actionText);
+
+  if (!mp || (!isApproved && !isRejected)) return null;
+
+  const mpKey = `MP ${mp.numero}/${mp.ano}`;
+  const title = buildProjectTitle(proposicaoSummary || actionText, mpKey);
+
+  const about = proposicaoSummary ? ` sobre ${proposicaoSummary}` : "";
+  const highlightNote = hasHighlights
+    ? "Ainda existem destaques (trechos separados) para votação."
+    : null;
+  const plvNote = /Projeto de Lei de Convers[aã]o/i.test(actionText)
+    ? "O texto aprovado foi a versão final apresentada na Câmara."
+    : null;
+
+  return {
+    title: hasHighlights ? truncateText(`${title} - com destaques`, 100) : title,
+    description: [
+      `A Câmara ${isApproved ? "aprovou" : "rejeitou"} a MP ${mp.numero}/${mp.ano}${about}.`,
+      plvNote,
+      highlightNote,
+    ].filter(Boolean).join(" "),
+  };
 }
 
 function buildResultSentence(counts: { sim: number; nao: number; total: number } | null, aprovacao: boolean) {
@@ -419,8 +479,16 @@ function buildCitizenSummary(params: {
     };
   }
 
+  const outcomeSummary = actionText ? buildOutcomeTitle(actionText, proposicaoSummary) : null;
+  if (outcomeSummary) {
+    return {
+      title: truncateText(outcomeSummary.title, 100),
+      description: [outcomeSummary.description, resultText].filter(Boolean).join(" "),
+    };
+  }
+
   return {
-    title: truncateText(`Votação sobre ${topicLabel}`, 100),
+    title: buildProjectTitle(proposicaoSummary || topicLabel, proposicaoKey),
     description: [
       `A Câmara votou uma proposta ${topicClause}.`,
       actionText ? `Nesta etapa, foi analisado: ${actionText}.` : null,
@@ -437,6 +505,9 @@ function shouldUseAiSummary(
 
   const description = aiSummary.description;
   const text = description.toLowerCase();
+  if (/sim:\s*\d+/i.test(aiSummary.title) || /n[ãa]o:\s*\d+/i.test(aiSummary.title)) return false;
+  if (/total:\s*\d+/i.test(aiSummary.title)) return false;
+  if (aiSummary.title.length > 100) return false;
   if (counts) {
     const hasAnyCount = [counts.sim, counts.nao, counts.total].some(value =>
       description.includes(String(value))
@@ -808,7 +879,7 @@ async function syncVotacoes() {
       data: {
         id: votacao.id,
         title: title,
-        description: citizenSummary.description,
+        description: simplified.description || citizenSummary.description,
         simplifiedTitle: simplified.title,
         simplifiedDescription: simplified.description,
         sourceUrl: sourceUrl,
