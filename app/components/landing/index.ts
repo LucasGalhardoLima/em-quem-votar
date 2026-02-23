@@ -6,3 +6,4 @@ export { SocialProof } from "./SocialProof";
 export { CTASection } from "./CTASection";
 export { RecentVotesSection } from "./RecentVotesSection";
 export { EducationSection } from "./EducationSection";
+export { FeaturedCandidates } from "./FeaturedCandidates";

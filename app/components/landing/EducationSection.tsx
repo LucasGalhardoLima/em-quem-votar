@@ -7,7 +7,7 @@ interface Article {
     excerpt: string;
     category: string;
     date: string;
-    readTime: string;
+    readTime?: string;
 }
 
 interface EducationSectionProps {

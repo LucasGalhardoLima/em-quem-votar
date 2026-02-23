@@ -8,3 +8,8 @@
 .vscode/
 .idea/
 *.swp
+*.tmp
+Thumbs.db
+.env*
+!.env.example
+coverage/

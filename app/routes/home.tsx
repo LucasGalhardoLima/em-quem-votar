@@ -11,16 +11,18 @@ import {
   RecentVotesSection,
   EducationSection,
 } from "~/components/landing";
+import { FeaturedCandidates } from "~/components/landing/FeaturedCandidates";
 import { db } from "~/utils/db.server";
 import { ArticleService } from "~/services/article.server";
+import { CandidateService } from "~/services/candidate.server";
 
-export function meta({ }: Route.MetaArgs) {
+export function meta({}: Route.MetaArgs) {
   return [
     { title: "Em Quem Votar? | Vote com consciência" },
     {
       name: "description",
       content:
-        "Descubra quais políticos realmente representam seus valores. Baseado em votos reais, não promessas.",
+        "Compare candidatos à presidência 2026 com base em posições reais, votações e gastos públicos. Sem viés, sem propaganda.",
     },
   ];
 }
@@ -28,25 +30,34 @@ export function meta({ }: Route.MetaArgs) {
 export async function loader({ request }: Route.LoaderArgs) {
   const [recentBills, articles] = await Promise.all([
     db.bill.findMany({
-      where: { status: "approved" }, // Apenas votações aprovadas
+      where: { status: "approved" },
       orderBy: { voteDate: "desc" },
       take: 4,
     }),
     ArticleService.list(),
   ]);
 
+  // Deferred: load candidates async for streaming
+  const featuredCandidatesPromise = CandidateService.list({
+    limit: 6,
+    offset: 0,
+  }).then((result) => result.items);
+
   return {
     recentBills,
-    articles: articles.slice(0, 3), // Top 3 apenas
+    articles: articles.slice(0, 3),
+    featuredCandidates: featuredCandidatesPromise,
   };
 }
 
 export default function Home() {
-  const { recentBills, articles } = useLoaderData<typeof loader>();
+  const { recentBills, articles, featuredCandidates } =
+    useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans selection:bg-brand-primary/20 selection:text-brand-primary overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-brand-primary/20 selection:text-brand-primary overflow-x-hidden">
       <HeroSection />
+      <FeaturedCandidates candidatesPromise={featuredCandidates} />
       <ProblemSection />
       <SolutionSection />
       <RecentVotesSection bills={recentBills} />

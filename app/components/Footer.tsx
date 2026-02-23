@@ -24,7 +24,7 @@ export function Footer() {
             <h4 className="font-semibold text-white mb-4">Navegação</h4>
             <ul className="space-y-3 md:space-y-2 text-sm text-white/70">
               <li><Link to="/" className="hover:text-brand-secondary transition-colors block py-1 md:py-0">Início</Link></li>
-              <li><Link to="/busca" className="hover:text-brand-secondary transition-colors block py-1 md:py-0">Buscar Políticos</Link></li>
+              <li><Link to="/candidatos" className="hover:text-brand-secondary transition-colors block py-1 md:py-0">Candidatos</Link></li>
               <li><Link to="/comparar" className="hover:text-brand-secondary transition-colors block py-1 md:py-0">Comparar</Link></li>
               <li><Link to="/quiz" className="hover:text-brand-secondary transition-colors block py-1 md:py-0">Quiz Político</Link></li>
             </ul>

@@ -1,5 +1,5 @@
 ---
-title: "Perguntas Frequentes | Em Quem Votar"
+title: "Perguntas Frequentes | Em Quem Votar?"
 description: "Tire suas dúvidas sobre a origem dos dados, classificações e transparência da plataforma."
 ---
 
@@ -7,135 +7,146 @@ import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { HelpCircle, Database, Tag, MousePointer2, Lock, MessageSquare } from "lucide-react";
 
-<div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
+<div className="min-h-screen bg-background flex flex-col">
   <Header breadcrumbItems={[{ label: "Perguntas Frequentes", active: true }]} />
 
-  <main className="flex-grow max-w-3xl mx-auto px-4 py-16 space-y-16">
+  <main className="flex-grow max-w-3xl mx-auto px-4 py-8 sm:py-12 space-y-10">
     {/* Page Header */}
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-primary-light rounded-2xl mb-2 text-brand-primary">
-        <HelpCircle size={32} />
+    <header className="text-center space-y-3">
+      <div className="inline-flex items-center justify-center p-3 bg-muted rounded-xl mb-2">
+        <HelpCircle size={24} className="text-muted-foreground" />
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-        Perguntas <span className="text-indigo-600">Frequentes</span>
+      <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+        Perguntas Frequentes
       </h1>
-      <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+      <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
         Tire suas dúvidas sobre o funcionamento da plataforma e a origem das informações.
       </p>
     </header>
 
-    <div className="space-y-12 pb-16">
-      
+    <div className="space-y-8">
+
       {/* Category: Dados */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
-           <Database size={20} />
-           <h2 className="text-xl m-0">Dados e Fontes</h2>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold border-b border-border pb-2">
+          <Database size={16} className="text-muted-foreground" />
+          <h2 className="text-sm">Dados e Fontes</h2>
         </div>
-        <div className="space-y-8">
-           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2">De onde vêm os dados?</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">
-                 Todas as informações vêm de fontes oficiais públicas: API da Câmara dos Deputados, Portal de Dados Abertos e registros oficiais de gastos (CEAP). O projeto é apenas uma camada de visualização em cima do que é público.
-              </p>
-           </div>
-           <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-2">Com que frequência os dados são atualizados?</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">
-                 Temos um robô (script automatizado) que roda diariamente às 03:00 da manhã para sincronizar votações recentes e despesas processadas no dia anterior.
-              </p>
-           </div>
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">De onde vêm os dados?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Todas as informações vêm de fontes oficiais públicas: API da Câmara dos Deputados, Portal de Dados Abertos, TSE e registros oficiais de gastos (CEAP). O projeto é apenas uma camada de visualização em cima do que é público.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Com que frequência os dados são atualizados?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Temos um robô (script automatizado) que roda diariamente às 03:00 da manhã para sincronizar votações recentes e despesas processadas no dia anterior.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Category: Classificações */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
-           <Tag size={20} />
-           <h2 className="text-xl m-0">Classificações e Tags</h2>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold border-b border-border pb-2">
+          <Tag size={16} className="text-muted-foreground" />
+          <h2 className="text-sm">Classificações e Posições</h2>
         </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Como as tags são geradas?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              Analisamos automaticamente votos em projetos decisivos. Por exemplo, um deputado que votou SIM na Reforma Tributária e no Arcabouço Fiscal recebe a tag "Reformista Econômico". O critério é puramente matemático baseado no voto nominal.
-           </p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Por que o deputado X tem/não tem a tag Y?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              As tags são baseadas em votos específicos. Se o deputado se ausentou ou obstruiu a pauta que define a tag, ele pode não recebê-la. Você pode visualizar o detalhamento de cada tag clicando nela na página do parlamentar.
-           </p>
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Como as posições dos candidatos são definidas?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              As posições são mapeadas a partir de múltiplas fontes: registros de votação, programas de governo, declarações públicas e entrevistas. Cada posição é classificada em uma escala de 5 pontos (Discorda Totalmente a Concorda Totalmente) e inclui a fonte e data da informação.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Como as tags são geradas?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              As tags são baseadas em padrões de votação e posições declaradas. Por exemplo, um candidato com posições consistentes a favor de reformas econômicas recebe a tag correspondente. O critério é baseado em dados verificáveis, não em opiniões editoriais.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Category: Uso */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
-           <MousePointer2 size={20} />
-           <h2 className="text-xl m-0">Uso da Plataforma</h2>
+      {/* Category: Quiz */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold border-b border-border pb-2">
+          <MousePointer2 size={16} className="text-muted-foreground" />
+          <h2 className="text-sm">Quiz e Comparação</h2>
         </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Posso salvar meus políticos favoritos?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              Ainda não temos contas de usuário. No entanto, você pode usar a ferramenta de "Comparação" para manter temporariamente uma lista de políticos em destaque enquanto navega.
-           </p>
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Como funciona o quiz de compatibilidade?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              O quiz apresenta 20 perguntas sobre temas políticos relevantes. Suas respostas geram um vetor de posições que é comparado com as posições mapeadas de cada candidato usando distância Euclidiana. Você também pode indicar quais eixos temáticos são mais importantes para ponderar os resultados.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Posso comparar candidatos lado a lado?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sim. Use a ferramenta de comparação para selecionar até 3 candidatos e ver suas posições lado a lado em cada tema político. A comparação mostra as posições em escala neutra, sem códigos de cor que sugiram "certo" ou "errado".
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Category: Privacidade */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
-           <Lock size={20} />
-           <h2 className="text-xl m-0">Privacidade</h2>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold border-b border-border pb-2">
+          <Lock size={16} className="text-muted-foreground" />
+          <h2 className="text-sm">Privacidade</h2>
         </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Vocês rastreiam meus dados?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              Não. Usamos o PostHog configurado apenas para capturar tendências agregadas (ex: quais filtros são mais populares). Não coletamos nomes, CPFs ou qualquer dado identificável do cidadão.
-           </p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Preciso criar conta para usar?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Vocês rastreiam meus dados?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Não coletamos dados pessoais identificáveis. Usamos apenas análise agregada para entender tendências de uso da plataforma (ex: quais filtros são mais populares).
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Preciso criar conta para usar?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
               Não. O acesso é totalmente livre e gratuito, sem necessidade de login ou cadastro. Acreditamos que a informação pública deve ser livre de barreiras.
-           </p>
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Category: Metodologia e Erros */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-3 text-indigo-700 font-bold border-b border-indigo-100 pb-2">
-           <Database size={20} />
-           <h2 className="text-xl m-0">Metodologia e Erros</h2>
+      {/* Category: Erros */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2 text-foreground font-semibold border-b border-border pb-2">
+          <Database size={16} className="text-muted-foreground" />
+          <h2 className="text-sm">Metodologia e Erros</h2>
         </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Encontrei um erro. O que fazer?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              No final de cada perfile de político, há um link para reportar erros. Você também pode nos contatar pelo e-mail oficial. Verificaremos a fonte oficial e corrigiremos o mais rápido possível.
-           </p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Por que faltam alguns deputados?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              No momento, cobrimos os 513 deputados federais em exercício. Suplentes que assumiram por curtos períodos podem não aparecer se não tiverem participado das votações chave que monitoramos.
-           </p>
-        </div>
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-           <h3 className="font-bold text-gray-900 mb-2">Como é calculado o gasto mensal?</h3>
-           <p className="text-gray-600 leading-relaxed text-sm">
-              Somamos todas as despesas reembolsadas da Cota Parlamentar no mês vigente e calculamos a média. O valor de referência é aprox. R$ 45.000,00, mas varia por estado devido ao valor das passagens aéreas. Simplificamos para uma régua de R$ 20k-60k para facilitar a visualização.
-           </p>
+        <div className="space-y-3">
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Encontrei um erro. O que fazer?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Você pode nos contatar pelo e-mail oficial. Verificaremos a fonte oficial e corrigiremos o mais rápido possível.
+            </p>
+          </div>
+          <div className="rounded-lg border bg-card p-4">
+            <h3 className="text-sm font-medium text-foreground mb-1.5">Por que um candidato tem poucas posições mapeadas?</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              A completude dos dados depende da disponibilidade de fontes verificáveis. Candidatos com menos histórico legislativo ou público tendem a ter menos posições mapeadas. Cada perfil mostra a completude dos dados disponíveis.
+            </p>
+          </div>
         </div>
       </section>
 
       {/* Final Message */}
-      <section className="text-center pt-8">
-        <div className="inline-flex items-center gap-2 text-brand-primary bg-brand-primary-light px-4 py-2 rounded-full text-sm font-semibold mb-4">
-           <MessageSquare size={16} />
-           Ainda tem alguma dúvida?
+      <section className="text-center pt-4 border-t border-border">
+        <div className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-2">
+          <MessageSquare size={14} />
+          Ainda tem alguma dúvida?
         </div>
-        <p className="text-gray-500 text-sm">
-           Mande um e-mail para <a href="mailto:contato@emquemvotar.app" className="font-bold hover:underline">contato@emquemvotar.app</a>
+        <p className="text-xs text-muted-foreground">
+          Mande um e-mail para{" "}
+          <a href="mailto:contato@emquemvotar.app" className="font-medium text-foreground hover:underline">
+            contato@emquemvotar.app
+          </a>
         </p>
       </section>
 

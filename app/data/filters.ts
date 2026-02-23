@@ -1,75 +1,68 @@
-
-
 export const FILTER_GROUPS = [
   {
-    title: "Economia & Política",
+    title: "Economia & Fiscal",
     filters: [
       { label: "Reformista Econômico", slug: "reformista-economico" },
       { label: "Conservador Econômico", slug: "conservador-economico" },
-      { label: "Governista", slug: "governista-flexivel" },
-      { label: "Oposição", slug: "oposicao-rigoroso" }, // Keep for backwards compat if needed, or replace with oposicao-governo
-      { label: "Base do Governo (Lula)", slug: "base-governo" },
-      { label: "Oposição ao Governo", slug: "oposicao-governo" },
-      { label: "Liberal (Eletrobras)", slug: "liberal" },
-      { label: "Estatista (Eletrobras)", slug: "estatista" },
-    ]
-  },
-  {
-    title: "Pauta Verde",
-    filters: [
-      { label: "Ruralista", slug: "ruralista" },
-      { label: "Ambientalista", slug: "ambientalista" },
-    ]
+      { label: "Liberal", slug: "liberal" },
+      { label: "Estatista", slug: "estatista" },
+    ],
   },
   {
     title: "Segurança Pública",
     filters: [
       { label: "Rigoroso", slug: "rigoroso" },
       { label: "Garantista", slug: "garantista" },
-    ]
+    ],
   },
   {
-    title: "Tecnologia & Comunicação",
+    title: "Meio Ambiente & Agro",
     filters: [
-      { label: "Regulação Digital", slug: "regulacao-digital" },
-      { label: "Liberdade Digital", slug: "liberdade-digital" },
-    ]
+      { label: "Ambientalista", slug: "ambientalista" },
+      { label: "Ruralista", slug: "ruralista" },
+    ],
   },
   {
-    title: "Costumes",
+    title: "Direitos & Costumes",
     filters: [
       { label: "Conservador", slug: "conservador-costumes" },
       { label: "Progressista", slug: "progressista-costumes" },
-    ]
+    ],
   },
   {
-    title: "Uso de Verba",
+    title: "Democracia & Institucional",
     filters: [
-      { label: "Baixo Custo", slug: "baixo-custo" },
-      { label: "Alto Custo", slug: "gastao" },
-    ]
+      { label: "Regulação Digital", slug: "regulacao-digital" },
+      { label: "Liberdade Digital", slug: "liberdade-digital" },
+    ],
   },
   {
-    title: "Assiduidade",
+    title: "Perfil Político",
     filters: [
-      { label: "Assíduo", slug: "assiduo" },
-      { label: "Ausente", slug: "ausente" },
-    ]
+      { label: "Base do Governo", slug: "base-governo" },
+      { label: "Oposição", slug: "oposicao-governo" },
+      { label: "Governista", slug: "governista-flexivel" },
+    ],
   },
-  {
-    title: "Perfil",
-    filters: [
-      { label: "Novato", slug: "novato" },
-      { label: "Veterano", slug: "veterano" },
-    ]
-  }
 ];
 
-// Helper for Home Page (Hero Section) - picking key popular filters
 export const FEATURED_FILTERS = [
   { label: "Reformista", slug: "reformista-economico" },
-  { label: "Ruralista", slug: "ruralista" },
+  { label: "Ambientalista", slug: "ambientalista" },
   { label: "Rigoroso", slug: "rigoroso" },
-  { label: "Baixo Custo", slug: "baixo-custo" },
-  { label: "Novato", slug: "novato" },
+  { label: "Progressista", slug: "progressista-costumes" },
+  { label: "Liberal", slug: "liberal" },
 ];
+
+export const TOPIC_CATEGORIES = [
+  "Economia e Fiscal",
+  "Segurança Pública",
+  "Meio Ambiente e Agro",
+  "Direitos e Costumes",
+  "Democracia e Institucional",
+] as const;
+
+export const STANCE_OPTIONS = [
+  { value: "favor", label: "A favor" },
+  { value: "contra", label: "Contra" },
+] as const;
