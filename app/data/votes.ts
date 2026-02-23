@@ -1,3 +1,5 @@
+// Featured vote IDs for the home page "Votações Recentes" section
+// These are key bills relevant to the 2026 presidential election context
 export const FEATURED_VOTE_IDS = [
   "2196833-326", // Reforma Tributária
   "345311-270",  // Marco Temporal
@@ -5,5 +7,5 @@ export const FEATURED_VOTE_IDS = [
   "2423268-40",  // Prisão Chiquinho Brazão
   "2194899-103", // PEC da Transição
   "2310837-8",   // PL Fake News
-  "2270789-73"   // Eletrobras
+  "2270789-73",  // Eletrobras
 ];

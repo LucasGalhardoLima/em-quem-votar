@@ -1,4 +1,4 @@
-import { PoliticianService } from "~/services/politician.server";
+import { CandidateService } from "~/services/candidate.server";
 import type { Route } from "./+types/resources.og.$id";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
@@ -8,13 +8,12 @@ export async function loader({ params }: Route.LoaderArgs) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const politician = await PoliticianService.getById(params.id);
+  const candidate = await CandidateService.getById(params.id);
 
-  if (!politician) {
+  if (!candidate) {
     return new Response("Not Found", { status: 404 });
   }
 
-  // Fetch font data
   const fontData = await fetch(
     "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Bold.ttf"
   ).then((res) => res.arrayBuffer());
@@ -22,7 +21,6 @@ export async function loader({ params }: Route.LoaderArgs) {
   const regularFontData = await fetch(
     "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Regular.ttf"
   ).then((res) => res.arrayBuffer());
-
 
   const svg = await satori(
     <div
@@ -33,7 +31,7 @@ export async function loader({ params }: Route.LoaderArgs) {
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "column",
-        backgroundImage: 'linear-gradient(to bottom right, #DFDFDF, #e8eaf6)',
+        backgroundImage: "linear-gradient(to bottom right, #DFDFDF, #e8eaf6)",
         fontFamily: '"Roboto Slab"',
         padding: "40px",
       }}
@@ -53,9 +51,9 @@ export async function loader({ params }: Route.LoaderArgs) {
       >
         {/* Photo */}
         <div style={{ display: "flex" }}>
-          {politician.photoUrl ? (
+          {candidate.photoUrl ? (
             <img
-              src={politician.photoUrl}
+              src={candidate.photoUrl}
               width={400}
               height={400}
               style={{
@@ -75,7 +73,7 @@ export async function loader({ params }: Route.LoaderArgs) {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "150px",
-                color: "#5a5a5a"
+                color: "#5a5a5a",
               }}
             >
               ?
@@ -83,33 +81,85 @@ export async function loader({ params }: Route.LoaderArgs) {
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px", flex: 1 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "20px",
+            flex: 1,
+          }}
+        >
           {/* Header */}
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: "32px", color: "#5a5a5a", fontWeight: 400, marginBottom: "8px" }}>
+            <div
+              style={{
+                fontSize: "32px",
+                color: "#5a5a5a",
+                fontWeight: 400,
+                marginBottom: "8px",
+              }}
+            >
               Em Quem Votar?
             </div>
-            <div style={{ fontSize: "70px", color: "#343434", fontWeight: 700, lineHeight: 1 }}>
-              {politician.name}
+            <div
+              style={{
+                fontSize: "70px",
+                color: "#343434",
+                fontWeight: 700,
+                lineHeight: 1,
+              }}
+            >
+              {candidate.displayName}
             </div>
-            <div style={{ fontSize: "40px", color: "#0E34A0", fontWeight: 400, marginTop: "10px" }}>
-              {politician.party} • {politician.state}
+            <div
+              style={{
+                fontSize: "40px",
+                color: "#0E34A0",
+                fontWeight: 400,
+                marginTop: "10px",
+              }}
+            >
+              {candidate.party}
+              {candidate.coalition && ` · ${candidate.coalition}`}
             </div>
           </div>
 
           {/* Divider */}
-          <div style={{ width: "100%", height: "4px", backgroundColor: "#DFDFDF", margin: "20px 0" }}></div>
+          <div
+            style={{
+              width: "100%",
+              height: "4px",
+              backgroundColor: "#DFDFDF",
+              margin: "20px 0",
+            }}
+          ></div>
 
           {/* Tags */}
-          {politician.tags.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <div style={{ fontSize: "24px", color: "#5a5a5a", textTransform: "uppercase", letterSpacing: "2px", fontWeight: 700 }}>
-                Principais Pautas
+          {candidate.tags.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "24px",
+                  color: "#5a5a5a",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  fontWeight: 700,
+                }}
+              >
+                Posicionamentos
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}>
-                {politician.tags.map(pt => (
+              <div
+                style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}
+              >
+                {candidate.tags.slice(0, 5).map((tag: any) => (
                   <div
-                    key={pt.tag.id}
+                    key={tag.slug}
                     style={{
                       display: "flex",
                       backgroundColor: "#2F3061",
@@ -117,10 +167,10 @@ export async function loader({ params }: Route.LoaderArgs) {
                       fontSize: "30px",
                       padding: "12px 30px",
                       borderRadius: "20px",
-                      fontWeight: 700
+                      fontWeight: 700,
                     }}
                   >
-                    {pt.tag.name}
+                    {tag.name}
                   </div>
                 ))}
               </div>
@@ -153,11 +203,6 @@ export async function loader({ params }: Route.LoaderArgs) {
   const pngData = resvg.render();
   const pngBuffer = pngData.asPng();
 
-  /* 
-   * Casting to any because the Buffer type from @resvg/resvg-js (Node Buffer) 
-   * matches what the runtime expects for a Response body, even if the strict 
-   * web types definitions in this project context don't fully align.
-   */
   return new Response(pngBuffer as any, {
     headers: {
       "Content-Type": "image/png",

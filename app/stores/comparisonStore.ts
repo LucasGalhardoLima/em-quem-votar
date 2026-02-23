@@ -17,10 +17,7 @@ export const useComparisonStore = create<ComparisonStore>()(
         if (selectedIds.includes(id)) {
           set({ selectedIds: selectedIds.filter((i) => i !== id) });
         } else {
-          if (selectedIds.length >= 3) {
-            alert("Você pode comparar no máximo 3 políticos.");
-            return;
-          }
+          if (selectedIds.length >= 3) return;
           set({ selectedIds: [...selectedIds, id] });
         }
       },

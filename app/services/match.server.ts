@@ -1,183 +1,273 @@
-import { PoliticianService } from "./politician.server";
-import { TAG_DEFINITIONS } from "~/data/tag-definitions";
+import { CandidateService } from "./candidate.server";
 import {
-    calculateArchetype,
-    calculateMatchStrength,
-    getDominantCategories,
-    type Archetype
+  calculateArchetype,
+  calculateCompassPosition,
+  calculateMatchStrength,
+  getCategoryName,
+  type Archetype,
 } from "~/data/archetypes";
+import type { ImportanceLevel } from "~/components/quiz/ImportanceWeighting";
 
-export interface TagMatchInfo {
-    slug: string;
+// ============================================================
+// Types
+// ============================================================
+
+export interface MatchedPosition {
+  topicName: string;
+  userStance: number;
+  candidateStance: number;
+  agreement: boolean;
+}
+
+export interface CategoryScore {
+  category: string;
+  score: number;
+}
+
+export interface CandidateMatchResult {
+  candidate: {
+    id: string;
     name: string;
-    score: number;
-    reasonText: string;
-}
-
-export interface MatchResult {
-    politician: {
-        id: string;
-        name: string;
-        party: string;
-        photoUrl: string | null;
-    };
-    score: number;
-    percentage: number;
-    matchedTags: TagMatchInfo[];
-    categoryScores: { subject: string; user: number; politician: number; fullMark: number }[];
-}
-
-export interface PartyResult {
+    displayName: string;
     party: string;
-    score: number;
-    percentage: number;
-    count: number;
+    photoUrl: string | null;
+    coalition: string | null;
+    registrationStatus: string;
+    positionCount: number;
+    tags: { name: string; slug: string; category: string }[];
+  };
+  matchPercentage: number;
+  matchedPositions: MatchedPosition[];
+  categoryScores: CategoryScore[];
 }
 
 export interface MatchMetadata {
-    archetype: Archetype;
-    dominantCategories: string[];
-    matchStrength: "strong" | "moderate" | "weak";
+  archetype: Archetype;
+  matchStrength: "strong" | "moderate" | "weak";
+  dominantCategories: string[];
+  totalCandidatesEvaluated: number;
 }
 
-// Cache simples em memória para otimizar performance
-let cachedPoliticians: Awaited<ReturnType<typeof PoliticianService.findAllForMatch>> | null = null;
+// ============================================================
+// Constants
+// ============================================================
+
+/** Penalty applied per missing position (uncertainty discount) */
+const UNCERTAINTY_PENALTY = 0.4;
+
+/** Maximum possible squared difference per topic on the Likert scale: (5-1)^2 = 16 */
+const MAX_SQUARED_DIFF = 16;
+
+// ============================================================
+// Importance weight multipliers
+// ============================================================
+
+const IMPORTANCE_MULTIPLIERS: Record<ImportanceLevel, number> = {
+  high: 1.5,
+  medium: 1.0,
+  low: 0.5,
+};
+
+// ============================================================
+// Cache
+// ============================================================
+
+let cachedCandidates: Awaited<
+  ReturnType<typeof CandidateService.findAllForMatch>
+> | null = null;
 let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+const CACHE_TTL = 5 * 60 * 1000;
+
+// ============================================================
+// Service
+// ============================================================
 
 export const MatchService = {
-    async calculate(userScores: Record<string, number>): Promise<{
-        topPoliticians: MatchResult[],
-        topParties: PartyResult[],
-        userScores: Record<string, number>,
-        metadata: MatchMetadata
-    }> {
-        // Usar cache se disponível e válido
-        const now = Date.now();
-        let politicians;
-        
-        if (cachedPoliticians && (now - cacheTimestamp) < CACHE_TTL) {
-            console.log('[MatchService] Using cached politicians data');
-            politicians = cachedPoliticians;
+  /**
+   * Calculate candidate matches using Euclidean distance in topic-stance space.
+   *
+   * @param userVector - Record<topicSlug, stanceValue (1-5)>
+   * @param axisWeights - Optional per-axis importance weights
+   */
+  async calculate(
+    userVector: Record<string, number>,
+    axisWeights?: Record<string, ImportanceLevel>
+  ): Promise<{
+    topCandidates: CandidateMatchResult[];
+    archetype: Archetype;
+    metadata: MatchMetadata;
+  }> {
+    // Fetch candidates with cache
+    const now = Date.now();
+    let candidates;
+
+    if (cachedCandidates && now - cacheTimestamp < CACHE_TTL) {
+      candidates = cachedCandidates;
+    } else {
+      candidates = await CandidateService.findAllForMatch();
+      cachedCandidates = candidates;
+      cacheTimestamp = now;
+    }
+
+    const userTopicSlugs = Object.keys(userVector);
+    const totalTopics = userTopicSlugs.length;
+
+    if (totalTopics === 0) {
+      const archetype = calculateArchetype({});
+      return {
+        topCandidates: [],
+        archetype,
+        metadata: {
+          archetype,
+          matchStrength: "weak",
+          dominantCategories: [],
+          totalCandidatesEvaluated: candidates.length,
+        },
+      };
+    }
+
+    // Build category lookup from candidate data
+    const topicCategoryMap: Record<string, string> = {};
+    for (const c of candidates) {
+      if (c.positionCategories) {
+        for (const [slug, cat] of Object.entries(c.positionCategories)) {
+          topicCategoryMap[slug] = cat;
+        }
+      }
+    }
+
+    // Calculate matches per candidate
+    const results: CandidateMatchResult[] = candidates.map((candidate) => {
+      let weightedSquaredDistanceSum = 0;
+      let totalWeight = 0;
+      const matchedPositions: MatchedPosition[] = [];
+      const categoryAccum: Record<string, { sum: number; count: number }> = {};
+
+      for (const topicSlug of userTopicSlugs) {
+        const userStance = userVector[topicSlug];
+        const candidateStance = candidate.positions[topicSlug];
+        const category =
+          topicCategoryMap[topicSlug] ||
+          candidate.positionCategories?.[topicSlug] ||
+          "Geral";
+
+        // Determine importance weight for this topic's category
+        const importanceLevel = axisWeights?.[category] ?? "medium";
+        const weight = IMPORTANCE_MULTIPLIERS[importanceLevel];
+
+        if (candidateStance && candidateStance > 0) {
+          // Both have positions: compute squared difference
+          const diff = userStance - candidateStance;
+          const squaredDiff = diff * diff;
+          weightedSquaredDistanceSum += squaredDiff * weight;
+
+          const agreement = Math.abs(diff) <= 1;
+          matchedPositions.push({
+            topicName: topicSlug, // Will be resolved with proper names
+            userStance,
+            candidateStance,
+            agreement,
+          });
+
+          // Category accumulation for per-axis scoring
+          if (!categoryAccum[category]) {
+            categoryAccum[category] = { sum: 0, count: 0 };
+          }
+          const topicScore = 1 - squaredDiff / MAX_SQUARED_DIFF;
+          categoryAccum[category].sum += topicScore;
+          categoryAccum[category].count += 1;
         } else {
-            console.log('[MatchService] Fetching fresh politicians data from database');
-            politicians = await PoliticianService.findAllForMatch();
-            cachedPoliticians = politicians;
-            cacheTimestamp = now;
+          // Missing position: apply uncertainty penalty
+          weightedSquaredDistanceSum +=
+            MAX_SQUARED_DIFF * UNCERTAINTY_PENALTY * weight;
         }
 
-        // Helper to get category for a slug
-        const tagCategoryMap: Record<string, string> = {};
-        politicians.forEach(p => p.tags.forEach(pt => {
-            tagCategoryMap[pt.tag.slug] = pt.tag.category;
-        }));
+        totalWeight += weight;
+      }
 
-        const userCategoryScores: Record<string, number> = {};
+      // Normalize: convert weighted distance sum to 0-100 percentage
+      // maxPossibleDistance = totalWeight * MAX_SQUARED_DIFF
+      const maxPossible = totalWeight * MAX_SQUARED_DIFF;
+      const normalizedDistance =
+        maxPossible > 0 ? weightedSquaredDistanceSum / maxPossible : 1;
+      const matchPercentage = Math.round((1 - normalizedDistance) * 100);
 
-        // Calculate user max scores per category
-        Object.entries(userScores).forEach(([slug, score]) => {
-            const cat = tagCategoryMap[slug] || "Geral";
-            if (!userCategoryScores[cat]) userCategoryScores[cat] = 0;
-            userCategoryScores[cat] += Math.abs(score);
-        });
+      // Category scores as percentages
+      const categoryScores: CategoryScore[] = Object.entries(categoryAccum)
+        .map(([category, { sum, count }]) => ({
+          category: getCategoryName(category) || category,
+          score: count > 0 ? (sum / count) * 100 : 0,
+        }))
+        .sort((a, b) => b.score - a.score);
 
-        // Calculate Matches
-        const politicianMatches: MatchResult[] = politicians.map(politician => {
-            let totalPossibleScore = 0;
-            let earnedScore = 0;
-            const matchedTags: TagMatchInfo[] = [];
-            const polCategoryScores: Record<string, number> = {};
+      return {
+        candidate: {
+          id: candidate.id,
+          name: candidate.name,
+          displayName: candidate.displayName,
+          party: candidate.party,
+          photoUrl: candidate.photoUrl,
+          coalition: candidate.coalition,
+          registrationStatus: candidate.registrationStatus,
+          positionCount: candidate.positionCount,
+          tags: candidate.tags,
+        },
+        matchPercentage: Math.max(0, Math.min(100, matchPercentage)),
+        matchedPositions,
+        categoryScores,
+      };
+    });
 
-            // Reset pol category scores
-            Object.keys(userCategoryScores).forEach(cat => polCategoryScores[cat] = 0);
+    // Sort by match percentage descending
+    results.sort((a, b) => b.matchPercentage - a.matchPercentage);
+    const topCandidates = results.slice(0, 10);
 
-            Object.entries(userScores).forEach(([tagSlug, weight]) => {
-                totalPossibleScore += Math.abs(weight);
-                const cat = tagCategoryMap[tagSlug] || "Geral";
-
-                const politicianTag = politician.tags.find(t => t.tag.slug === tagSlug);
-
-                if (politicianTag) {
-                    earnedScore += weight;
-                    if (!polCategoryScores[cat]) polCategoryScores[cat] = 0;
-                    polCategoryScores[cat] += weight;
-
-                    const def = TAG_DEFINITIONS[tagSlug];
-                    matchedTags.push({
-                        slug: tagSlug,
-                        name: politicianTag.tag.name,
-                        score: weight,
-                        reasonText: def ? def.reasonText : `Vocês convergem em ${politicianTag.tag.name}`
-                    });
-                }
-            });
-
-            matchedTags.sort((a, b) => b.score - a.score);
-
-            const percentage = totalPossibleScore > 0
-                ? Math.max(0, Math.min(100, (earnedScore / totalPossibleScore) * 100))
-                : 0;
-
-            // Prepare Radar Data
-            const categoryData = Object.keys(userCategoryScores).map(cat => ({
-                subject: cat,
-                user: 100,
-                politician: userCategoryScores[cat] > 0
-                    ? Math.max(0, (polCategoryScores[cat] / userCategoryScores[cat]) * 100)
-                    : 0,
-                fullMark: 100
-            }));
-
-            return {
-                politician: {
-                    id: politician.id,
-                    name: politician.name,
-                    party: politician.party,
-                    photoUrl: politician.photoUrl,
-                },
-                score: earnedScore,
-                percentage: Math.round(percentage),
-                matchedTags,
-                categoryScores: categoryData
-            };
-        });
-
-        const topPoliticians = politicianMatches
-            .sort((a, b) => b.percentage - a.percentage)
-            .slice(0, 6);
-
-        // Calculate Party Averages
-        const partyMap: Record<string, { totalPercentage: number; count: number }> = {};
-        politicianMatches.forEach(match => {
-            if (!partyMap[match.politician.party]) {
-                partyMap[match.politician.party] = { totalPercentage: 0, count: 0 };
-            }
-            partyMap[match.politician.party].totalPercentage += match.percentage;
-            partyMap[match.politician.party].count += 1;
-        });
-
-        const topParties: PartyResult[] = Object.entries(partyMap)
-            .map(([party, data]) => ({
-                party,
-                score: 0,
-                percentage: Math.round(data.totalPercentage / data.count),
-                count: data.count
-            }))
-            .sort((a, b) => b.percentage - a.percentage)
-            .slice(0, 5);
-
-        // Calculate metadata for the result page
-        const archetype = calculateArchetype(userScores);
-        const topMatch = topPoliticians[0];
-        const matchStrength = topMatch ? calculateMatchStrength(topMatch.percentage) : "weak";
-        const dominantCategories = topMatch ? getDominantCategories(topMatch.categoryScores) : [];
-
-        const metadata: MatchMetadata = {
-            archetype,
-            dominantCategories,
-            matchStrength
-        };
-
-        return { topPoliticians, topParties, userScores, metadata };
+    // Calculate user archetype from compass position
+    // Convert userVector to category-level scores for the compass
+    const categoryLevelScores: Record<string, number> = {};
+    const categoryCounts: Record<string, number> = {};
+    for (const [slug, stance] of Object.entries(userVector)) {
+      const cat = topicCategoryMap[slug];
+      if (cat) {
+        const catSlug = cat
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
+        if (!categoryLevelScores[catSlug]) {
+          categoryLevelScores[catSlug] = 0;
+          categoryCounts[catSlug] = 0;
+        }
+        categoryLevelScores[catSlug] += stance;
+        categoryCounts[catSlug] += 1;
+      }
     }
+
+    // Average per category to feed into compass
+    const compassInput: Record<string, number> = {};
+    for (const [catSlug, sum] of Object.entries(categoryLevelScores)) {
+      compassInput[catSlug] = sum / categoryCounts[catSlug];
+    }
+
+    const archetype = calculateArchetype(compassInput);
+    const topMatch = topCandidates[0];
+    const matchStrength = topMatch
+      ? calculateMatchStrength(topMatch.matchPercentage)
+      : "weak";
+    const dominantCategories = topMatch
+      ? topMatch.categoryScores.slice(0, 3).map((cs) => cs.category)
+      : [];
+
+    return {
+      topCandidates,
+      archetype,
+      metadata: {
+        archetype,
+        matchStrength,
+        dominantCategories,
+        totalCandidatesEvaluated: candidates.length,
+      },
+    };
+  },
 };

@@ -7,10 +7,14 @@
     "dev": "react-router dev",
     "start": "react-router-serve ./build/server/index.js",
     "typecheck": "react-router typegen && tsc",
+    "pm:discovery": "node --experimental-strip-types scripts/pm-discovery-agent.ts",
     "postinstall": "prisma generate",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.25",

@@ -1,12 +1,16 @@
 export interface TagDefinition {
   slug: string;
-  sourceBillId: string;
-  triggerVote: "SIM" | "NÃO";
-  billTitle: string;
+  sourceBillId?: string;
+  triggerVote?: "SIM" | "NÃO";
+  billTitle?: string;
   reasonText: string;
 }
 
 export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
+  // ============================================================
+  // TAGS DE DEPUTADOS (baseadas em votações específicas)
+  // ============================================================
+
   // Reforma Tributária
   "reformista-economico": {
     slug: "reformista-economico",
@@ -47,7 +51,6 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
     billTitle: "Arcabouço Fiscal",
     reasonText: "Votou A FAVOR do Arcabouço Fiscal (PLP 93/2023), alinhando-se à pauta econômica do governo."
   },
-
   "oposicao-rigoroso": {
     slug: "oposicao-rigoroso",
     sourceBillId: "2357053-47",
@@ -138,28 +141,28 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
   "baixo-custo": {
     slug: "baixo-custo",
     sourceBillId: "metrics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Análise de Gastos (CEAP)",
     reasonText: "Gastou menos de 80% da média de gastos parlamentares nos últimos 12 meses."
   },
   "gastao": {
     slug: "gastao",
     sourceBillId: "metrics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Análise de Gastos (CEAP)",
     reasonText: "Gastou acima de 120% da média de gastos parlamentares nos últimos 12 meses."
   },
   "ausente": {
     slug: "ausente",
     sourceBillId: "metrics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Assiduidade em Plenário",
     reasonText: "Esteve presente em menos de 80% das sessões deliberativas."
   },
   "assiduo": {
     slug: "assiduo",
     sourceBillId: "metrics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Assiduidade em Plenário",
     reasonText: "Esteve presente em mais de 95% das sessões deliberativas."
   },
@@ -168,15 +171,90 @@ export const TAG_DEFINITIONS: Record<string, TagDefinition> = {
   "novato": {
     slug: "novato",
     sourceBillId: "demographics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Histórico Eleitoral",
-    reasonText: "Exercendo seu primeiro mandato na Câmara Federal. (Anteriormente 'Jovem')"
+    reasonText: "Exercendo seu primeiro mandato na Câmara Federal."
   },
   "veterano": {
     slug: "veterano",
     sourceBillId: "demographics",
-    triggerVote: "SIM", // Virtual
+    triggerVote: "SIM",
     billTitle: "Histórico Eleitoral",
     reasonText: "Parlamentar reeleito, com experiência prévia na casa."
+  },
+
+  // ============================================================
+  // TAGS PRESIDENCIAIS - Eleições 2026
+  // Organizadas por eixos temáticos
+  // ============================================================
+
+  // --- Eixo 1: Economia e Fiscal ---
+  "privatista": {
+    slug: "privatista",
+    reasonText: "Defende a privatização de empresas estatais como estratégia para reduzir o tamanho do Estado e aumentar a eficiência econômica."
+  },
+  "estatizante": {
+    slug: "estatizante",
+    reasonText: "Defende a manutenção e expansão de empresas estatais em setores estratégicos, priorizando o controle público sobre a economia."
+  },
+  "reformista-fiscal": {
+    slug: "reformista-fiscal",
+    reasonText: "Defende reformas fiscais e tributárias amplas para simplificar o sistema de impostos e equilibrar as contas públicas."
+  },
+  "protecionista": {
+    slug: "protecionista",
+    reasonText: "Defende medidas de proteção da indústria nacional, como barreiras tarifárias e incentivos à produção local."
+  },
+
+  // --- Eixo 2: Segurança Pública ---
+  "armamentista": {
+    slug: "armamentista",
+    reasonText: "Defende a flexibilização do porte e posse de armas de fogo para cidadãos, como forma de autodefesa."
+  },
+  "desarmamentista": {
+    slug: "desarmamentista",
+    reasonText: "Defende a restrição ao porte e posse de armas de fogo, priorizando políticas públicas de segurança e desarmamento."
+  },
+  "punitivista": {
+    slug: "punitivista",
+    reasonText: "Defende o endurecimento das penas e maior rigor no sistema penal como resposta à criminalidade."
+  },
+  "garantista-penal": {
+    slug: "garantista-penal",
+    reasonText: "Defende os direitos processuais dos acusados e penas alternativas, priorizando a ressocialização sobre a punição."
+  },
+
+  // --- Eixo 3: Meio Ambiente e Agro ---
+  "ambientalista-radical": {
+    slug: "ambientalista-radical",
+    reasonText: "Prioriza a preservação ambiental sobre o desenvolvimento econômico, defendendo políticas rigorosas de proteção de biomas e combate ao desmatamento."
+  },
+  "desenvolvimentista": {
+    slug: "desenvolvimentista",
+    reasonText: "Prioriza o desenvolvimento econômico e a geração de empregos, mesmo que isso implique flexibilização de normas ambientais."
+  },
+  "agro-business": {
+    slug: "agro-business",
+    reasonText: "Defende os interesses do setor agropecuário, incluindo expansão de áreas produtivas e desburocratização para o agronegócio."
+  },
+
+  // --- Eixo 4: Direitos e Costumes ---
+  "conservador-social": {
+    slug: "conservador-social",
+    reasonText: "Adota posições tradicionais em pautas de costumes, defendendo valores familiares e religiosos nas políticas públicas."
+  },
+  "progressista-social": {
+    slug: "progressista-social",
+    reasonText: "Defende avanços em direitos individuais e de minorias, incluindo políticas de inclusão, igualdade de gênero e diversidade."
+  },
+
+  // --- Eixo 5: Democracia e Institucional ---
+  "institucionalista": {
+    slug: "institucionalista",
+    reasonText: "Defende o fortalecimento das instituições democráticas, a independência dos poderes e o respeito ao Estado de Direito."
+  },
+  "anti-establishment": {
+    slug: "anti-establishment",
+    reasonText: "Adota postura crítica ao sistema político vigente, propondo mudanças estruturais na forma de governar e renovação da classe política."
   }
 };

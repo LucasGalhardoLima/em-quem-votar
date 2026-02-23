@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router";
-import { ArrowLeft, ChevronRight, Home } from "lucide-react";
+import { ArrowLeft, ChevronRight, Home, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { Button } from "~/components/ui/button";
+import { useState } from "react";
 
 export interface BreadcrumbItem {
   label: string;
@@ -13,11 +14,19 @@ interface HeaderProps {
   breadcrumbItems?: BreadcrumbItem[];
 }
 
+const NAV_LINKS = [
+  { label: "Candidatos", href: "/candidatos" },
+  { label: "Quiz", href: "/quiz" },
+  { label: "Votações", href: "/votacoes" },
+  { label: "Educação", href: "/educacao" },
+  { label: "Sobre", href: "/sobre" },
+];
+
 export function Header({ breadcrumbItems = [] }: HeaderProps) {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // On Home, we don't show the header (handled by home.tsx)
   if (isHome) return null;
 
   return (
@@ -26,7 +35,6 @@ export function Header({ breadcrumbItems = [] }: HeaderProps) {
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-6 flex items-center justify-between">
           {/* Left Side: Breadcrumbs (Desktop) or Back (Mobile) */}
           <div className="flex items-center">
-            {/* Mobile Only: Simple Back link */}
             {/* Mobile Only: Back link + context */}
             <div className="md:hidden flex items-center gap-1">
               <Link to="/">
@@ -79,15 +87,65 @@ export function Header({ breadcrumbItems = [] }: HeaderProps) {
             </nav>
           </div>
 
-          {/* Right Side: Site Name/Logo */}
+          {/* Center: Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-1">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                className={clsx(
+                  "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+                  location.pathname.startsWith(link.href)
+                    ? "text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right Side: Site Name/Logo + Mobile Menu */}
           <div className="flex items-center gap-2">
             <Link to="/" className="flex items-center gap-1 group">
               <span className="text-sm md:text-lg font-black tracking-tighter text-brand-text group-hover:text-brand-primary transition-colors">
                 <span className="md:inline">EM QUEM</span> <span className="text-brand-primary group-hover:text-brand-text">VOTAR?</span>
               </span>
             </Link>
+
+            {/* Mobile Menu Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="md:hidden h-11 w-11"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <span className="sr-only">Menu</span>
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-border/40 px-4 py-3 space-y-1">
+            {NAV_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                to={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={clsx(
+                  "block px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  location.pathname.startsWith(link.href)
+                    ? "text-foreground bg-muted"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </div>
     </>
   );

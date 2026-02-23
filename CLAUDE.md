@@ -104,3 +104,9 @@ app/
 - Server data must be serializable (no Date objects, use ISO strings)
 - Mobile-first responsive design using Tailwind breakpoints
 - Use `<Suspense>` with skeleton loaders for deferred content
+
+## Active Technologies
+- TypeScript 5.x (strict mode) + React Router v7.10, React 19, Prisma 5.x, Shadcn/ui, Zustand 5.x, Framer Motion 12.x (001-platform-rebuild-2026)
+
+## Recent Changes
+- 001-platform-rebuild-2026: Added TypeScript 5.x (strict mode) + React Router v7.10, React 19, Prisma 5.x, Shadcn/ui, Zustand 5.x, Framer Motion 12.x

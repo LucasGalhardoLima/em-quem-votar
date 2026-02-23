@@ -1,128 +1,350 @@
 import { Header } from "~/components/Header";
-import { Scale, DollarSign, Calendar, Tag, ShieldCheck, Database } from "lucide-react";
+import { Footer } from "~/components/Footer";
+import {
+  Scale,
+  Database,
+  ShieldCheck,
+  Ruler,
+  Layers,
+  Weight,
+  Eye,
+  FileSearch,
+} from "lucide-react";
 
 export function meta() {
   return [
-    { title: "Metodologia | Em Quem Votar" },
-    { name: "description", content: "Entenda como calculamos os gastos, assiduidade e as tags dos parlamentares." },
+    { title: "Metodologia | Em Quem Votar?" },
+    {
+      name: "description",
+      content:
+        "Entenda como calculamos a compatibilidade entre eleitor e candidato usando distância Euclidiana, escala Likert e fontes verificáveis.",
+    },
   ];
 }
 
 export default function Methodology() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+    <div className="min-h-screen bg-background">
       <Header breadcrumbItems={[{ label: "Metodologia", active: true }]} />
 
-      <main className="max-w-4xl mx-auto px-4 py-12 space-y-16">
-        {/* Hero Section */}
-        <section className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-            Nossa <span className="text-brand-primary">Metodologia</span>
+      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-10">
+        {/* Header */}
+        <section className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center p-3 bg-muted rounded-xl">
+            <Scale className="w-6 h-6 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
+            Nossa Metodologia
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Transparência é a base da nossa plataforma. Entenda os critérios técnicos por trás de cada índice e classificação.
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Transparência é a base da nossa plataforma. Entenda os critérios
+            técnicos por trás de cada índice e classificação.
           </p>
         </section>
 
-        {/* Core Pillars */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 space-y-4">
-            <div className="w-12 h-12 bg-brand-primary-light rounded-2xl flex items-center justify-center">
-              <DollarSign className="text-brand-primary w-6 h-6" />
+        {/* Likert Scale */}
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <Ruler className="w-4 h-4 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Gasto Mensal (Cota)</h2>
-            <p className="text-gray-600 leading-relaxed">
-              Calculamos a média mensal de despesas da Cota para Exercício da Atividade Parlamentar (CEAP) no ano corrente.
-            </p>
-            <ul className="space-y-2 text-sm text-gray-500">
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-brand-success rounded-full"></span>
-                <strong>Baixo Custo:</strong> Gastos até 20% abaixo da média global.
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-brand-alert rounded-full"></span>
-                <strong>Gastão:</strong> Gastos 20% acima da média global.
-              </li>
-            </ul>
+            <h2 className="text-lg font-semibold text-foreground">
+              Escala Likert de 5 Pontos
+            </h2>
           </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Cada posição política é mapeada em uma escala de 5 pontos que captura
+            a intensidade do posicionamento:
+          </p>
+          <div className="grid grid-cols-5 gap-2">
+            {[
+              { value: 1, label: "Discorda Totalmente" },
+              { value: 2, label: "Discorda" },
+              { value: 3, label: "Neutro" },
+              { value: 4, label: "Concorda" },
+              { value: 5, label: "Concorda Totalmente" },
+            ].map((item) => (
+              <div
+                key={item.value}
+                className="rounded-md border bg-muted/30 p-2.5 text-center"
+              >
+                <p className="text-lg font-bold text-foreground tabular-nums">
+                  {item.value}
+                </p>
+                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            O quiz do eleitor e as posições dos candidatos utilizam a mesma escala,
+            permitindo comparação direta.
+          </p>
+        </section>
 
-          <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-            <div className="w-12 h-12 bg-brand-primary-light rounded-2xl flex items-center justify-center">
-              <Calendar className="text-brand-primary w-6 h-6" />
+        {/* Euclidean Distance */}
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <Layers className="w-4 h-4 text-muted-foreground" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Assiduidade</h2>
-            <p className="text-gray-600 leading-relaxed">
-              Mapeamos a presença do parlamentar em sessões deliberativas. Consideramos "Falta" quando não há registro de presença ou justificativa oficial.
-            </p>
-            <p className="text-sm text-gray-500 italic">
-              * Atualmente em fase de atualização diária via API da Câmara.
+            <h2 className="text-lg font-semibold text-foreground">
+              Algoritmo de Distância Euclidiana
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Para calcular a compatibilidade entre eleitor e candidato, utilizamos
+            a distância Euclidiana ponderada. Este método mede a "distância" entre
+            os vetores de posições políticas:
+          </p>
+          <div className="rounded-md border bg-muted/30 p-4">
+            <p className="text-xs font-mono text-foreground/80 text-center">
+              distância = |posição_eleitor - posição_candidato| / distância_máxima
             </p>
           </div>
-        </div>
-
-        {/* Tags Section */}
-        <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 space-y-8">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-brand-secondary/10 rounded-2xl flex items-center justify-center shrink-0">
-              <Tag className="text-brand-secondary w-6 h-6" />
-            </div>
-            <h2 className="text-3xl font-bold text-gray-900">Como as Tags são geradas?</h2>
-          </div>
-
-          <div className="space-y-6 text-gray-600 leading-relaxed">
+          <div className="space-y-2 text-xs text-muted-foreground">
             <p>
-              As tags não são opiniões editoriais. Elas são atribuídas automaticamente com base no histórico de votações nominais em pautas decisivas.
+              <strong className="text-foreground">Por que Euclidiana?</strong>{" "}
+              A distância Euclidiana produz resultados mais intuitivos do que
+              alternativas como similaridade por cosseno, especialmente quando
+              muitas posições estão próximas do centro — situação comum na
+              política brasileira.
             </p>
+            <p>
+              <strong className="text-foreground">Posições ausentes:</strong>{" "}
+              Quando um candidato não tem posição mapeada em um tema, aplicamos
+              uma penalidade de incerteza (0.4 na escala de 0 a 1). O candidato
+              não recebe crédito total por parecer "neutro" — mas também não é
+              penalizado ao máximo. Cada resultado mostra a completude dos dados
+              (ex: "Baseado em 15 de 20 perguntas").
+            </p>
+          </div>
+        </section>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900">Mapeamento de Votos</h3>
-                <p className="text-sm">
-                  Cada projeto de lei relevante (ex: Reforma Tributária) possui um "voto-chave".
-                  Se o parlamentar votou "Sim", ele recebe a tag correspondente àquele posicionamento.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-bold text-gray-900">Atualização Automática</h3>
-                <p className="text-sm">
-                  Nossos robôs analisam diariamente novas votações. Se o comportamento de um parlamentar muda consistentemente, as tags são reavaliadas.
-                </p>
-              </div>
+        {/* Importance Weighting */}
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <Weight className="w-4 h-4 text-muted-foreground" />
             </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Ponderação por Importância
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            O quiz permite que o eleitor indique quais eixos temáticos são mais
+            importantes para sua decisão. Cada eixo recebe um multiplicador:
+          </p>
+          <div className="grid sm:grid-cols-3 gap-2">
+            {[
+              { label: "Muito importante", weight: "1.5x" },
+              { label: "Importante", weight: "1.0x" },
+              { label: "Pouco importante", weight: "0.5x" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-md border bg-muted/30 p-3 text-center"
+              >
+                <p className="text-sm font-bold text-foreground tabular-nums">
+                  {item.weight}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Os 5 eixos temáticos são: Economia e Fiscal, Segurança Pública,
+            Meio Ambiente e Agro, Direitos e Costumes, Democracia e Institucional.
+          </p>
+        </section>
+
+        {/* Source Hierarchy */}
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <FileSearch className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Hierarquia de Fontes
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            As posições dos candidatos são mapeadas a partir de múltiplas fontes,
+            priorizadas por confiabilidade:
+          </p>
+          <div className="space-y-1.5">
+            {[
+              {
+                priority: 1,
+                source: "Registro de votação",
+                description: "Votos nominais em projetos de lei — maior confiabilidade",
+              },
+              {
+                priority: 2,
+                source: "Programa de governo",
+                description: "Documento oficial registrado no TSE",
+              },
+              {
+                priority: 3,
+                source: "Declaração pública",
+                description: "Posicionamentos em entrevistas, debates e redes sociais",
+              },
+              {
+                priority: 4,
+                source: "Entrevista",
+                description: "Declarações em veículos de imprensa",
+              },
+              {
+                priority: 5,
+                source: "Análise editorial",
+                description: "Classificação baseada em análise de padrões — menor confiabilidade",
+              },
+            ].map((item) => (
+              <div
+                key={item.priority}
+                className="flex items-start gap-3 rounded-md border bg-muted/30 p-3"
+              >
+                <span className="shrink-0 w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center text-[10px] font-bold text-foreground tabular-nums">
+                  {item.priority}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">
+                    {item.source}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cada posição na plataforma inclui a fonte e a data, permitindo que o
+            eleitor avalie a confiabilidade por conta própria.
+          </p>
+        </section>
+
+        {/* Bias Mitigation */}
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <Eye className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Mitigação de Viés
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Adotamos princípios rigorosos para evitar viés na apresentação dos
+            dados:
+          </p>
+          <div className="space-y-2">
+            {[
+              {
+                title: "Sem cores indicativas",
+                description:
+                  "Posições não usam verde/vermelho para concordar/discordar. A visualização é neutra para todas as posições.",
+              },
+              {
+                title: "Ordem aleatória",
+                description:
+                  "A ordem padrão dos candidatos é aleatorizada, não alfabética — evitando favorecimento por nome.",
+              },
+              {
+                title: "Atribuição de fonte obrigatória",
+                description:
+                  "Toda posição exibida inclui a fonte verificável e a data da informação.",
+              },
+              {
+                title: "Perguntas neutras",
+                description:
+                  "As perguntas do quiz apresentam ambos os lados igualmente, sem linguagem direcionada.",
+              },
+              {
+                title: "Peso visual igual",
+                description:
+                  "Todas as posições na escala recebem o mesmo peso visual, sem destaque para extremos.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-md border bg-muted/30 p-3">
+                <p className="text-xs font-medium text-foreground">
+                  {item.title}
+                </p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  {item.description}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* Data Sources */}
-        <section className="bg-brand-tertiary text-white p-8 md:p-12 rounded-3xl shadow-xl space-y-8">
-          <div className="flex items-center gap-4">
-            <Database className="text-brand-primary w-8 h-8" />
-            <h2 className="text-3xl font-bold">Fontes de Dados</h2>
+        <section className="rounded-lg border bg-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-md bg-muted shrink-0">
+              <Database className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Fontes de Dados
+            </h2>
           </div>
-          <p className="text-gray-400 leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Consumimos exclusivamente dados oficiais de canais públicos:
           </p>
-          <div className="flex flex-wrap gap-4">
-            <a href="https://dadosabertos.camara.leg.br/" target="_blank" rel="noreferrer" className="bg-gray-800 hover:bg-gray-700 px-6 py-3 rounded-xl border border-gray-700 transition-colors">
-              Portal de Dados Abertos - Câmara dos Deputados
-            </a>
+          <div className="flex flex-wrap gap-2">
+            {[
+              {
+                label: "Portal de Dados Abertos — Câmara dos Deputados",
+                url: "https://dadosabertos.camara.leg.br/",
+              },
+              {
+                label: "Portal de Dados Abertos — Senado Federal",
+                url: "https://www12.senado.leg.br/dados-abertos",
+              },
+              {
+                label: "Tribunal Superior Eleitoral (TSE)",
+                url: "https://dadosabertos.tse.jus.br/",
+              },
+            ].map((source) => (
+              <a
+                key={source.url}
+                href={source.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs rounded-md border bg-muted/30 px-3 py-2 text-foreground/80 hover:bg-muted transition-colors"
+              >
+                {source.label}
+              </a>
+            ))}
           </div>
-          <div className="pt-8 border-t border-slate-800 flex items-start gap-4 text-sm text-slate-400 italic">
-            <ShieldCheck className="shrink-0 w-5 h-5 text-brand-success" />
-            <p>
-              O "Em Quem Votar" é um projeto independente e não possui vínculo com órgãos governamentais ou partidos políticos.
-              Nossa missão é puramente informativa.
+          <div className="flex items-start gap-3 pt-3 border-t border-border/50">
+            <ShieldCheck className="shrink-0 w-4 h-4 text-muted-foreground mt-0.5" />
+            <p className="text-xs text-muted-foreground italic">
+              O "Em Quem Votar?" é um projeto independente e não possui vínculo
+              com órgãos governamentais ou partidos políticos. Nossa missão é
+              puramente informativa.
             </p>
           </div>
         </section>
 
-        {/* Contact/Support */}
-        <div className="text-center pt-12">
-          <p className="text-gray-500 mb-4">Dúvidas ou sugestões sobre nossos critérios?</p>
-          <a href="mailto:contato@emquemvotar.app" className="text-brand-primary font-bold hover:underline">
+        {/* Contact */}
+        <div className="text-center pt-4">
+          <p className="text-xs text-muted-foreground mb-2">
+            Dúvidas ou sugestões sobre nossos critérios?
+          </p>
+          <a
+            href="mailto:contato@emquemvotar.app"
+            className="text-xs font-medium text-foreground hover:underline"
+          >
             Fale com nossa equipe técnica
           </a>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

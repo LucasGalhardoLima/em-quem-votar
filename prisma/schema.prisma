@@ -8,20 +8,22 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ============================================================
+// Legacy models (kept temporarily for backwards compatibility)
+// ============================================================
+
 model Politician {
   id        String   @id @default(uuid())
   name      String
-  party     String   // Sigla do partido
-  state     String   // UF
+  party     String
+  state     String
   photoUrl  String?
-  
-  // Métricas do "Produto"
-  attendanceRate Float?   // Assiduidade (0-100)
-  spending       Decimal? // Gasto total
-  
-  // Relacionamentos
+
+  attendanceRate Float?
+  spending       Decimal?
+
   votes     VoteLog[]
-  tags      PoliticianTag[] // Tags atribuídas (ex: "Liberal", "Conservador")
+  tags      PoliticianTag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,24 +31,13 @@ model Politician {
   @@index([name])
   @@index([party])
   @@index([state])
-  @@index([state, party]) // Optimization for combined filters
+  @@index([state, party])
 }
 
-// As "Categorias" do seu e-commerce
-model Tag {
-  id          String   @id @default(uuid())
-  name        String   // Ex: "A favor do Aborto"
-  category    String   // Ex: "Costumes", "Economia"
-  slug        String   @unique // Para usar na URL
-  
-  politicians PoliticianTag[]
-}
-
-// Tabela Pivô (Many-to-Many explícito para poder adicionar metadados se precisar)
 model PoliticianTag {
   politicianId String
   tagId        String
-  
+
   politician   Politician @relation(fields: [politicianId], references: [id])
   tag          Tag        @relation(fields: [tagId], references: [id])
 
@@ -55,43 +46,11 @@ model PoliticianTag {
   @@index([politicianId])
 }
 
-// Histórico de Votações (A fonte da verdade)
-model Bill {
-  id          String   @id // ID da API da Camara
-  title       String
-  description String?
-  voteSimDetails String?
-  voteNaoDetails String?
-  voteDate    DateTime
-  
-  // Campos para workflow de aprovação
-  status          String   @default("pending") // pending, approved, rejected
-  aiConfidence    Float?   // 0-100, confiança da classificação
-  suggestedTagSim String?  // Tag sugerida pela IA para voto SIM
-  suggestedTagNao String?  // Tag sugerida pela IA para voto NÃO
-  suggestedCategory String? // Categoria sugerida
-  approvedAt      DateTime?
-  lastSyncAt      DateTime?
-  
-  // Linguagem simplificada gerada por IA
-  simplifiedTitle       String? // Título em linguagem clara
-  simplifiedDescription String? @db.Text // Explicação em linguagem acessível
-  
-  // Link para fonte original
-  sourceUrl             String? // URL da votação na Câmara
-  
-  voteLogs    VoteLog[]
-
-  @@index([voteDate])
-  @@index([status])
-  @@unique([id])
-}
-
 model VoteLog {
   id           String @id @default(uuid())
   politicianId String
   billId       String
-  voteType     String // "Sim", "Não", "Obstrução", "Abstenção"
+  voteType     String
 
   politician   Politician @relation(fields: [politicianId], references: [id])
   bill         Bill       @relation(fields: [billId], references: [id])
@@ -101,6 +60,232 @@ model VoteLog {
   @@unique([politicianId, billId])
 }
 
+// ============================================================
+// New models for 2026 Presidential Platform
+// ============================================================
+
+enum RegistrationStatus {
+  PRE_CANDIDATE
+  REGISTERED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum PositionSourceType {
+  PLATFORM
+  PUBLIC_STATEMENT
+  VOTE_RECORD
+  INTERVIEW
+  MANUAL
+}
+
+enum LegislativeSource {
+  CAMARA
+  SENADO
+}
+
+enum SpendingType {
+  CEAP
+  CAMPAIGN
+  DECLARED_ASSETS
+}
+
+model Candidate {
+  id                 String             @id @default(uuid())
+  name               String
+  displayName        String
+  party              String
+  coalition          String?
+  photoUrl           String?
+  biography          String?            @db.Text
+  registrationStatus RegistrationStatus @default(PRE_CANDIDATE)
+  tseId              String?            @unique
+  electionType       String             @default("presidential")
+  number             Int?
+
+  positions       CandidatePosition[]
+  tags            CandidateTag[]
+  legislativeLink CandidateLegislativeLink?
+  spendingRecords SpendingRecord[]
+  votes           VoteRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([party])
+  @@index([registrationStatus])
+  @@index([electionType])
+}
+
+model PoliticalTopic {
+  id          String  @id @default(uuid())
+  name        String
+  category    String
+  slug        String  @unique
+  description String?
+  order       Int     @default(0)
+
+  positions     CandidatePosition[]
+  quizQuestions QuizQuestion[]
+}
+
+model CandidatePosition {
+  id          String             @id @default(uuid())
+  candidateId String
+  topicId     String
+  stance      Int                @default(0) // 0=unknown, 1-5 Likert scale
+  description String?            @db.Text
+  sourceType  PositionSourceType
+  sourceUrl   String?
+  sourceDate  DateTime?
+  confidence  Float?
+  approvedAt  DateTime?
+
+  candidate Candidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  topic     PoliticalTopic @relation(fields: [topicId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([candidateId, topicId])
+  @@index([topicId])
+}
+
+model Tag {
+  id          String @id @default(uuid())
+  name        String
+  category    String
+  slug        String @unique
+  description String?
+
+  politicians  PoliticianTag[]
+  candidates   CandidateTag[]
+}
+
+model CandidateTag {
+  candidateId String
+  tagId       String
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  tag       Tag       @relation(fields: [tagId], references: [id])
+
+  @@id([candidateId, tagId])
+  @@index([tagId])
+  @@index([candidateId])
+}
+
+model CandidateLegislativeLink {
+  id                String            @id @default(uuid())
+  candidateId       String            @unique
+  sourceType        LegislativeSource
+  sourceId          String
+  legislaturePeriod String?
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceType, sourceId])
+}
+
+model Bill {
+  id          String   @id
+  title       String
+  description String?
+  voteSimDetails String?
+  voteNaoDetails String?
+  voteDate    DateTime
+
+  status          String   @default("pending")
+  aiConfidence    Float?
+  suggestedTagSim String?
+  suggestedTagNao String?
+  suggestedCategory String?
+  approvedAt      DateTime?
+  lastSyncAt      DateTime?
+
+  simplifiedTitle       String?
+  simplifiedDescription String? @db.Text
+
+  sourceUrl  String?
+  sourceType String  @default("camara") // "camara" | "senado"
+
+  voteLogs    VoteLog[]
+  voteRecords VoteRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([voteDate])
+  @@index([status])
+  @@index([sourceType])
+}
+
+model VoteRecord {
+  id          String @id @default(uuid())
+  candidateId String
+  billId      String
+  voteType    String // "Sim", "Não", "Abstenção", "Obstrução"
+  sourceType  String @default("camara") // "camara" | "senado"
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  bill      Bill      @relation(fields: [billId], references: [id])
+
+  @@unique([candidateId, billId])
+  @@index([candidateId])
+  @@index([billId])
+}
+
+model SpendingRecord {
+  id          String       @id @default(uuid())
+  candidateId String
+  type        SpendingType
+  amount      Decimal
+  periodStart DateTime
+  periodEnd   DateTime
+  category    String?
+  source      String
+  sourceUrl   String?
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([candidateId, type])
+}
+
+model QuizQuestion {
+  id       String  @id @default(uuid())
+  text     String
+  topicId  String
+  order    Int     @default(0)
+  isActive Boolean @default(true)
+
+  topic   PoliticalTopic @relation(fields: [topicId], references: [id])
+  options QuizOption[]
+
+  @@index([topicId])
+  @@index([order])
+}
+
+model QuizOption {
+  id          String  @id @default(uuid())
+  questionId  String
+  label       String
+  description String?
+  stanceValue Int     // 1-5 Likert scale
+  order       Int     @default(0)
+  icon        String?
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+// ============================================================
+// Preserved models
+// ============================================================
+
 model Subscriber {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -108,15 +293,14 @@ model Subscriber {
 }
 
 model UserProfile {
-  id              String   @id @default(uuid()) // Linked to Supabase Auth ID
+  id              String   @id @default(uuid())
   email           String   @unique
   name            String?
   photoUrl        String?
-  
-  // Perfil Político
-  quizAnswers     Json?    // Respostas cruas do quiz
-  politicalVector Json?    // Vetor calculado de afinidade
-  
+
+  quizAnswers     Json?
+  politicalVector Json?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

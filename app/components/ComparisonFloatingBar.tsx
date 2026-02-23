@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useComparisonStore } from "~/stores/comparisonStore";
 import { ArrowRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -8,14 +8,13 @@ import { cn } from "~/lib/utils";
 
 export function ComparisonFloatingBar() {
   const { selectedIds, clear } = useComparisonStore();
-  const navigate = useNavigate();
 
   if (selectedIds.length === 0) return null;
 
   const handleCompare = (e: React.MouseEvent) => {
     if (selectedIds.length < 2) {
       e.preventDefault();
-      toast.info("Selecione pelo menos 2 políticos para comparar");
+      toast.info("Selecione pelo menos 2 candidatos para comparar");
     }
   };
 
@@ -31,7 +30,7 @@ export function ComparisonFloatingBar() {
               Para comparar
             </span>
             <span className="text-[10px] text-muted-foreground hidden sm:inline">
-              Máximo de 3 políticos
+              Máximo de 3 candidatos
             </span>
           </div>
         </div>
@@ -49,8 +48,11 @@ export function ComparisonFloatingBar() {
           <Button
             asChild
             disabled={selectedIds.length < 2}
-            className={cn("rounded-full h-10 pl-5 pr-4 font-bold shadow-lg transition-all",
-              selectedIds.length >= 2 ? "shadow-primary/25 hover:shadow-primary/40" : "opacity-50 cursor-not-allowed"
+            className={cn(
+              "rounded-full h-10 pl-5 pr-4 font-bold shadow-lg transition-all",
+              selectedIds.length >= 2
+                ? "shadow-primary/25 hover:shadow-primary/40"
+                : "opacity-50 cursor-not-allowed"
             )}
           >
             <Link
