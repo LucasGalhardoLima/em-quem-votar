@@ -2,143 +2,144 @@
 title: "Sobre o Projeto | Em Quem Votar?"
 description: "Nossa missão é democratizar o acesso à informação política com dados reais e apartidários."
 ---
+import { Github, Mail } from "lucide-react";
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Info, Target, Users, BookOpen, Shield, Code, Cpu, BarChart3, AlertTriangle, Github, Mail } from "lucide-react";
-
-<div className="min-h-screen bg-background flex flex-col">
-  <Header breadcrumbItems={[{ label: "Sobre o Projeto", active: true }]} />
-
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-10">
-    {/* Page Header */}
-    <header className="text-center space-y-3">
-      <div className="inline-flex items-center justify-center p-3 bg-muted rounded-xl mb-2">
-        <Info size={24} className="text-muted-foreground" />
-      </div>
-      <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-        Sobre o Em Quem Votar?
-      </h1>
-      <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-        Uma iniciativa cívica para trazer luz e clareza ao labirinto legislativo brasileiro através de dados.
-      </p>
-    </header>
-
-    <div className="space-y-8">
-
-      {/* Mission */}
-      <section className="rounded-lg border bg-card p-6">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 rounded-md bg-muted shrink-0">
-            <Target className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <h2 className="text-lg font-semibold text-foreground">Nossa Missão</h2>
-        </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Democratizar o acesso à informação política, permitindo que qualquer brasileiro
-          possa tomar decisões eleitorais informadas baseadas em dados reais e objetivos.
-          Acreditamos que a transparência é o melhor antídoto contra a polarização e as notícias falsas.
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Sobre o projeto
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          Sobre o Em Quem Votar?
+        </h1>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Uma iniciativa cívica para trazer luz e clareza ao labirinto legislativo brasileiro através de dados.
         </p>
+      </header>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Nossa Missão
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Democratizar o acesso à informação política, permitindo que qualquer brasileiro
+            possa tomar decisões eleitorais informadas baseadas em dados reais e objetivos.
+            Acreditamos que a transparência é o melhor antídoto contra a polarização e as notícias falsas.
+          </p>
+        </div>
       </section>
-
-      {/* How it works */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground text-center">Como Funciona</h2>
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-lg border bg-card p-5 space-y-3">
-            <div className="p-2 rounded-md bg-muted w-fit">
-              <Cpu className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">1. Coleta Automatizada</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Como Funciona
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">1. Coleta Automatizada</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
               Todos os dados vêm de fontes oficiais:
             </p>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-foreground/40 shrink-0"></span>
-                <span><strong className="text-foreground">Dados Biográficos:</strong> API da Câmara e TSE.</span>
+            <ul className="mt-3 grid gap-2 text-[13px] leading-relaxed text-slate-500">
+              <li className="flex items-start gap-2.5">
+                <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+                <span><strong className="font-semibold text-slate-800">Dados Biográficos:</strong> API da Câmara e TSE.</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-foreground/40 shrink-0"></span>
-                <span><strong className="text-foreground">Votações:</strong> Portal de Dados Abertos.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+                <span><strong className="font-semibold text-slate-800">Votações:</strong> Portal de Dados Abertos.</span>
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1 h-1 rounded-full bg-foreground/40 shrink-0"></span>
-                <span><strong className="text-foreground">Gastos:</strong> Portal da Transparência (CEAP) e TSE.</span>
+              <li className="flex items-start gap-2.5">
+                <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+                <span><strong className="font-semibold text-slate-800">Gastos:</strong> Portal da Transparência (CEAP) e TSE.</span>
               </li>
             </ul>
           </div>
-
-          <div className="rounded-lg border bg-card p-5 space-y-3">
-            <div className="p-2 rounded-md bg-muted w-fit">
-              <BarChart3 className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h3 className="text-sm font-semibold text-foreground">2. Mapeamento de Posições</h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              O algoritmo analisa votos em projetos decisivos, programas de governo e declarações públicas.
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">2. Mapeamento de Posições</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              O algoritmo compara suas respostas com posições documentadas — propostas de governo protocoladas no TSE e votações nominais da Câmara e do Senado.
               As posições refletem posicionamentos verificáveis, não opiniões editoriais.
             </p>
           </div>
         </div>
       </section>
-
-      {/* What we don't do */}
-      <section className="rounded-lg border bg-card p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <Shield className="w-5 h-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold text-foreground">O Que NÃO Fazemos</h2>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-foreground">Sem Dinheiro Político</p>
-            <p className="text-xs text-muted-foreground">Não recebemos financiamento de partidos ou parlamentares.</p>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> O Que NÃO Fazemos
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <p className="text-[14px] font-bold text-slate-800">Sem Dinheiro Político</p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Não recebemos financiamento de partidos ou parlamentares.
+            </p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-foreground">Sem Juízo de Valor</p>
-            <p className="text-xs text-muted-foreground">Não dizemos se um voto é "certo" ou "errado". Mostramos o fato.</p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <p className="text-[14px] font-bold text-slate-800">Sem Juízo de Valor</p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Não dizemos se um voto é "certo" ou "errado". Mostramos o fato.
+            </p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs font-semibold text-foreground">Sem Manipulação</p>
-            <p className="text-xs text-muted-foreground">Os algoritmos são públicos e auditáveis. Não há interferência manual.</p>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <p className="text-[14px] font-bold text-slate-800">Sem Manipulação</p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Os algoritmos são públicos e auditáveis. Não há interferência manual.
+            </p>
           </div>
         </div>
       </section>
-
-      {/* Limitations */}
-      <section className="rounded-lg border border-border bg-muted/30 p-6">
-        <div className="flex items-center gap-2 mb-3">
-          <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-          <h3 className="text-sm font-semibold text-foreground">Limitações Importantes</h3>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> Limitações Importantes
+        </h2>
+        <div className="mt-3 rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Os dados refletem informações oficiais de 2023 a 2026.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Posições são simplificações para facilitar a comparação e podem não captar todas as nuances.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Cobertura: candidatos presidenciais registrados e deputados federais em exercício.</span>
+            </li>
+          </ul>
         </div>
-        <ul className="space-y-1.5 text-xs text-muted-foreground leading-relaxed">
-          <li>Os dados refletem informações oficiais de 2023 a 2026.</li>
-          <li>Posições são simplificações para facilitar a comparação e podem não captar todas as nuances.</li>
-          <li>Cobertura: candidatos presidenciais registrados e deputados federais em exercício.</li>
-        </ul>
       </section>
-
-      {/* Who we are */}
-      <section className="text-center pt-4 border-t border-border">
-        <h2 className="text-lg font-semibold text-foreground mb-2">Quem Somos</h2>
-        <p className="text-xs text-muted-foreground mb-6 max-w-xl mx-auto">
-          Desenvolvido por Lucas Galhardo e entusiastas da transparência pública.
-          Este é um projeto de código aberto dedicado à cidadania digital.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="https://github.com/LucasGalhardoLima/em-quem-votar" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
-            <Github size={14} />
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">5.</span> Quem Somos
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Desenvolvido por Lucas Galhardo e entusiastas da transparência pública.
+            Este é um projeto de código aberto dedicado à cidadania digital.
+          </p>
+        </div>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          <a
+            href="https://github.com/LucasGalhardoLima/em-quem-votar"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[13.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
+          >
+            <Github className="size-4" aria-hidden="true" />
             Ver no GitHub
           </a>
-          <a href="mailto:contato@emquemvotar.app" className="inline-flex items-center justify-center gap-2 rounded-lg border bg-card px-4 py-2.5 text-xs font-medium text-foreground hover:bg-muted transition-colors">
-            <Mail size={14} />
+          <a
+            href="mailto:contato@emquemvotar.app"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[13.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
+          >
+            <Mail className="size-4" aria-hidden="true" />
             Falar com a equipe
           </a>
         </div>
       </section>
-
     </div>
-  </main>
-
-  <Footer />
-</div>
+  </Container>
+</main>

@@ -1,109 +1,92 @@
 import { Link } from "react-router";
-import { Card, CardContent } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { User, MapPin } from "lucide-react";
-import { cn } from "~/lib/utils";
+import type { RegistrationStatus } from "~/lib/candidate-status";
+import { CandidateAvatar } from "./CandidateAvatar";
+import { CompareToggle } from "./CompareToggle";
+import { StatusBadge } from "./StatusBadge";
 
-interface CandidateCardProps {
+export interface CandidateCardData {
   id: string;
   name: string;
   displayName: string;
   party: string;
   coalition: string | null;
   photoUrl: string | null;
-  registrationStatus: string;
-  tags: { name: string; slug: string; category: string }[];
+  registrationStatus: RegistrationStatus;
+  tseStatusLabel: string | null;
+  number: number | null;
+  viceName: string | null;
+  viceParty: string | null;
   positionCount: number;
 }
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-  PRE_CANDIDATE: { label: "Pré-candidato", variant: "secondary" },
-  REGISTERED: { label: "Registrado", variant: "outline" },
-  APPROVED: { label: "Aprovado", variant: "default" },
-  REJECTED: { label: "Indeferido", variant: "secondary" },
-  WITHDRAWN: { label: "Desistiu", variant: "secondary" },
-};
-
+/**
+ * Card da listagem. Peso visual idêntico para toda candidatura: mesmo
+ * tamanho, mesma tipografia, sem cor partidária e sem destaque para quem
+ * tem mais dados. A única diferença admitida é a situação de registro,
+ * porque ela é um fato do TSE.
+ */
 export function CandidateCard({
-  id,
-  displayName,
-  party,
-  coalition,
-  photoUrl,
-  registrationStatus,
-  tags,
-  positionCount,
-}: CandidateCardProps) {
-  const status = STATUS_LABELS[registrationStatus] ?? STATUS_LABELS.PRE_CANDIDATE;
+  candidate,
+  selected,
+  onToggleCompare,
+}: {
+  candidate: CandidateCardData;
+  selected: boolean;
+  onToggleCompare: () => void;
+}) {
+  const subtitle = [
+    candidate.party,
+    candidate.number != null ? `nº ${candidate.number}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <Link to={`/candidato/${id}`} prefetch="intent" className="group block">
-      <Card className="h-full transition-all duration-200 group-hover:shadow-md group-hover:-translate-y-0.5 group-hover:border-brand-primary/20">
-        <CardContent className="p-5">
-          <div className="flex items-start gap-4">
-            {/* Photo */}
-            <div className="shrink-0">
-              {photoUrl ? (
-                <img
-                  src={photoUrl}
-                  alt={displayName}
-                  className="w-16 h-16 rounded-full object-cover bg-muted"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <User className="w-7 h-7 text-muted-foreground" />
-                </div>
-              )}
-            </div>
+    <article className="group relative flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-[18px] transition-colors focus-within:border-indigo-300 hover:border-indigo-300">
+      <div className="flex items-center gap-3">
+        <CandidateAvatar
+          name={candidate.displayName}
+          photoUrl={candidate.photoUrl}
+          size="md"
+        />
+        <div className="min-w-0">
+          <h3 className="truncate text-[15px] font-bold text-slate-800">
+            <Link
+              to={`/candidato/${candidate.id}`}
+              prefetch="intent"
+              className="after:absolute after:inset-0 after:content-['']"
+            >
+              {candidate.displayName}
+            </Link>
+          </h3>
+          <p className="mt-px truncate text-[12.5px] text-slate-500">{subtitle}</p>
+        </div>
+      </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-semibold text-foreground truncate group-hover:text-brand-primary transition-colors">
-                    {displayName}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {party}
-                    {coalition && <span className="text-xs"> / {coalition}</span>}
-                  </p>
-                </div>
-                <Badge variant={status.variant} className="shrink-0 text-[10px]">
-                  {status.label}
-                </Badge>
-              </div>
+      <StatusBadge
+        status={candidate.registrationStatus}
+        tseStatusLabel={candidate.tseStatusLabel}
+      />
 
-              {/* Position count */}
-              <p className="text-xs text-muted-foreground mt-2">
-                {positionCount > 0
-                  ? `${positionCount} posições mapeadas`
-                  : "Sem posições mapeadas"}
-              </p>
+      {candidate.viceName && (
+        <p className="truncate text-[12px] text-slate-400">
+          Vice: {candidate.viceName}
+          {candidate.viceParty ? ` (${candidate.viceParty})` : ""}
+        </p>
+      )}
 
-              {/* Tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {tags.slice(0, 4).map((tag) => (
-                    <Badge
-                      key={tag.slug}
-                      variant="outline"
-                      className="text-[10px] font-normal"
-                    >
-                      {tag.name}
-                    </Badge>
-                  ))}
-                  {tags.length > 4 && (
-                    <span className="text-[10px] text-muted-foreground self-center">
-                      +{tags.length - 4}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+      <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-2.5">
+        <span className="text-[12.5px] font-semibold text-indigo-600">
+          Ver perfil →
+        </span>
+        <span className="relative z-10">
+          <CompareToggle
+            selected={selected}
+            onToggle={onToggleCompare}
+            candidateName={candidate.displayName}
+          />
+        </span>
+      </div>
+    </article>
   );
 }

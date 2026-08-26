@@ -13,17 +13,17 @@ datasource db {
 // ============================================================
 
 model Politician {
-  id        String   @id @default(uuid())
-  name      String
-  party     String
-  state     String
-  photoUrl  String?
+  id       String  @id @default(uuid())
+  name     String
+  party    String
+  state    String
+  photoUrl String?
 
   attendanceRate Float?
   spending       Decimal?
 
-  votes     VoteLog[]
-  tags      PoliticianTag[]
+  votes VoteLog[]
+  tags  PoliticianTag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -38,8 +38,8 @@ model PoliticianTag {
   politicianId String
   tagId        String
 
-  politician   Politician @relation(fields: [politicianId], references: [id])
-  tag          Tag        @relation(fields: [tagId], references: [id])
+  politician Politician @relation(fields: [politicianId], references: [id])
+  tag        Tag        @relation(fields: [tagId], references: [id])
 
   @@id([politicianId, tagId])
   @@index([tagId])
@@ -52,12 +52,12 @@ model VoteLog {
   billId       String
   voteType     String
 
-  politician   Politician @relation(fields: [politicianId], references: [id])
-  bill         Bill       @relation(fields: [billId], references: [id])
+  politician Politician @relation(fields: [politicianId], references: [id])
+  bill       Bill       @relation(fields: [billId], references: [id])
 
+  @@unique([politicianId, billId])
   @@index([politicianId])
   @@index([billId])
-  @@unique([politicianId, billId])
 }
 
 // ============================================================
@@ -67,9 +67,12 @@ model VoteLog {
 enum RegistrationStatus {
   PRE_CANDIDATE
   REGISTERED
+  PENDING_JUDGMENT
+  SUB_JUDICE
   APPROVED
   REJECTED
   WITHDRAWN
+  CANCELLED
 }
 
 enum PositionSourceType {
@@ -100,9 +103,38 @@ model Candidate {
   photoUrl           String?
   biography          String?            @db.Text
   registrationStatus RegistrationStatus @default(PRE_CANDIDATE)
+  /// Texto literal da situação conforme o TSE (DS_SITUACAO_CANDIDATO).
+  /// Exibido no badge sem reescrita — ver app/lib/candidate-status.ts.
+  tseStatusLabel     String?
+  tseStatusDetail    String?
   tseId              String?            @unique
+  /// Cargo em disputa: "presidential" | "governor".
+  /// Só esses dois: são os únicos cargos desta eleição para os quais a Lei
+  /// 9.504/97 (art. 11, §1º, IX) obriga o registro de proposta de governo —
+  /// e sem documento arquivado não há como sustentar uma posição com fonte.
   electionType       String             @default("presidential")
+  /// UF da disputa. `null` para Presidente, que é de âmbito nacional.
+  /// Para governador é obrigatória: o número de urna se repete entre estados,
+  /// então (electionType, uf, number) é o que identifica a chapa, não o número.
+  uf                 String?
   number             Int?
+
+  // Chapa
+  viceName         String?
+  viceParty        String?
+  coalitionParties String[] @default([])
+
+  // Documentos oficiais
+  governmentPlanUrl String?
+  officialSiteUrl   String?
+  socialLinks       Json?
+
+  // Procedência do registro: "tse" | "press" | "manual".
+  // Enquanto o sync do TSE não roda, "press" sinaliza dado apurado em
+  // fonte jornalística e obriga a exibição de sourceUrl na interface.
+  dataSource   String    @default("manual")
+  sourceUrl    String?
+  lastSyncedAt DateTime?
 
   positions       CandidatePosition[]
   tags            CandidateTag[]
@@ -117,6 +149,9 @@ model Candidate {
   @@index([party])
   @@index([registrationStatus])
   @@index([electionType])
+  @@index([electionType, registrationStatus])
+  @@index([electionType, uf])
+  @@index([uf])
 }
 
 model PoliticalTopic {
@@ -132,16 +167,22 @@ model PoliticalTopic {
 }
 
 model CandidatePosition {
-  id          String             @id @default(uuid())
-  candidateId String
-  topicId     String
-  stance      Int                @default(0) // 0=unknown, 1-5 Likert scale
-  description String?            @db.Text
-  sourceType  PositionSourceType
-  sourceUrl   String?
-  sourceDate  DateTime?
-  confidence  Float?
-  approvedAt  DateTime?
+  id             String             @id @default(uuid())
+  candidateId    String
+  topicId        String
+  stance         Int                @default(0) // 0=unknown, 1-5 Likert scale
+  description    String?            @db.Text
+  sourceType     PositionSourceType
+  sourceUrl      String?
+  sourceDate     DateTime?
+  /// Nome do documento citado, ex.: "Proposta de governo — TSE".
+  sourceDocument String?
+  /// Página do PDF onde o trecho aparece. Obrigatória para sourceType PLATFORM.
+  sourcePage     Int?
+  /// Citação literal que sustenta a posição. Nunca parafraseada.
+  sourceQuote    String?            @db.Text
+  confidence     Float?
+  approvedAt     DateTime?
 
   candidate Candidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   topic     PoliticalTopic @relation(fields: [topicId], references: [id])
@@ -154,14 +195,14 @@ model CandidatePosition {
 }
 
 model Tag {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   category    String
-  slug        String @unique
+  slug        String  @unique
   description String?
 
-  politicians  PoliticianTag[]
-  candidates   CandidateTag[]
+  politicians PoliticianTag[]
+  candidates  CandidateTag[]
 }
 
 model CandidateTag {
@@ -189,20 +230,20 @@ model CandidateLegislativeLink {
 }
 
 model Bill {
-  id          String   @id
-  title       String
-  description String?
+  id             String   @id
+  title          String
+  description    String?
   voteSimDetails String?
   voteNaoDetails String?
-  voteDate    DateTime
+  voteDate       DateTime
 
-  status          String   @default("pending")
-  aiConfidence    Float?
-  suggestedTagSim String?
-  suggestedTagNao String?
+  status            String    @default("pending")
+  aiConfidence      Float?
+  suggestedTagSim   String?
+  suggestedTagNao   String?
   suggestedCategory String?
-  approvedAt      DateTime?
-  lastSyncAt      DateTime?
+  approvedAt        DateTime?
+  lastSyncAt        DateTime?
 
   simplifiedTitle       String?
   simplifiedDescription String? @db.Text
@@ -273,7 +314,7 @@ model QuizOption {
   questionId  String
   label       String
   description String?
-  stanceValue Int     // 1-5 Likert scale
+  stanceValue Int // 1-5 Likert scale
   order       Int     @default(0)
   icon        String?
 
@@ -293,14 +334,14 @@ model Subscriber {
 }
 
 model UserProfile {
-  id              String   @id @default(uuid())
-  email           String   @unique
-  name            String?
-  photoUrl        String?
+  id       String  @id @default(uuid())
+  email    String  @unique
+  name     String?
+  photoUrl String?
 
   quizAnswers     Json?
   politicalVector Json?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

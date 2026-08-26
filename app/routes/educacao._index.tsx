@@ -1,9 +1,6 @@
 import { useLoaderData, Link } from "react-router";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { Badge } from "~/components/ui/badge";
-import { BookOpen, Calendar, Clock, ArrowRight } from "lucide-react";
 import { ArticleService } from "~/services/article.server";
+import { Container } from "~/components/layout";
 
 export function meta() {
   return [
@@ -21,94 +18,71 @@ export async function loader() {
   return { articles };
 }
 
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+});
+
 export default function ContentHub() {
   const { articles } = useLoaderData<typeof loader>();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header
-        breadcrumbItems={[{ label: "Educação Política", active: true }]}
-      />
+    <main className="flex-1">
+      <Container className="pt-9 pb-3">
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
+          Educação Política
+        </h1>
+        <p className="mt-1.5 text-[14.5px] text-pretty text-slate-500">
+          Textos curtos e sem lado sobre como o voto funciona, para você
+          entender a eleição antes de escolher.
+        </p>
+      </Container>
 
-      <main className="flex-grow">
-        {/* Header */}
-        <section className="border-b bg-card py-12 sm:py-16">
-          <div className="max-w-4xl mx-auto px-4 text-center space-y-4">
-            <div className="inline-flex items-center justify-center p-3 bg-muted rounded-xl">
-              <BookOpen className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Educação Política
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-              Informação isenta e didática para você entender o cenário político
-              e votar com consciência.
+      <Container className="pt-5 pb-12">
+        {articles.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+            <p className="text-base font-bold text-slate-600">
+              Nenhum artigo disponível no momento
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+              Novos textos são publicados conforme a campanha avança.
             </p>
           </div>
-        </section>
-
-        {/* Articles Grid */}
-        <section className="max-w-4xl mx-auto px-4 py-8">
-          {articles.length === 0 ? (
-            <div className="text-center py-16 rounded-lg border bg-card">
-              <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <p className="text-sm text-muted-foreground">
-                Nenhum artigo disponível no momento.
-              </p>
-            </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {articles.map((article) => (
-                <Link
-                  key={article.slug}
-                  to={`/${article.slug}`}
-                  className="group rounded-lg border bg-card p-5 hover:border-foreground/20 transition-colors flex flex-col h-full"
-                >
-                  <div className="flex-grow space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="p-2 rounded-md bg-muted">
-                        <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-normal"
-                      >
-                        {article.category}
-                      </Badge>
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-semibold text-foreground group-hover:text-foreground/80 transition-colors leading-snug mb-1.5">
-                        {article.title}
-                      </h2>
-                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
-                        {article.excerpt}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
-                    <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-0.5">
-                        <Calendar className="w-2.5 h-2.5" />
-                        {new Date(article.date).toLocaleDateString("pt-BR")}
-                      </span>
-                      {article.readTime && (
-                        <span className="inline-flex items-center gap-0.5">
-                          <Clock className="w-2.5 h-2.5" />
-                          {article.readTime}
-                        </span>
-                      )}
-                    </div>
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-
-      <Footer />
-    </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {articles.map((article) => (
+              <Link
+                key={article.slug}
+                to={`/${article.slug}`}
+                prefetch="intent"
+                className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-indigo-300"
+              >
+                <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+                  {article.category}
+                </span>
+                <span className="text-[15px] leading-snug font-bold text-pretty text-slate-800">
+                  {article.title}
+                </span>
+                <span className="line-clamp-3 text-[13px] leading-relaxed text-slate-500">
+                  {article.excerpt}
+                </span>
+                <span className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-[12px] text-slate-400">
+                  <time dateTime={article.date}>
+                    {dateFormatter.format(new Date(article.date))}
+                  </time>
+                  {article.readTime && (
+                    <>
+                      <span aria-hidden="true">·</span>
+                      <span>{article.readTime} de leitura</span>
+                    </>
+                  )}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </Container>
+    </main>
   );
 }

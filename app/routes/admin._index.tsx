@@ -1,23 +1,30 @@
 import { useLoaderData, Link } from "react-router";
-import type { Route } from "./+types/admin._index";
-import { db } from "~/utils/db.server";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { Badge } from "~/components/ui/badge";
 import {
-  Shield,
-  Users,
-  FileText,
+  CheckCircle2,
   ChevronRight,
   Clock,
-  CheckCircle2,
+  FileText,
+  TriangleAlert,
+  Users,
 } from "lucide-react";
 
+import type { Route } from "./+types/admin._index";
+import { db } from "~/utils/db.server";
+import { requireAdmin } from "~/utils/admin-auth.server";
+import { approvalBlocker } from "~/services/position.server";
+import { Container } from "~/components/layout";
+import { CANDIDATE_STANCE_LABELS, NO_POSITION_LABEL } from "~/lib/stance";
+import { cn } from "~/lib/utils";
+
 export function meta() {
-  return [{ title: "Admin Dashboard | Em Quem Votar?" }];
+  return [
+    { title: "Admin · Painel | Em Quem Votar?" },
+    { name: "robots", content: "noindex,nofollow" },
+  ];
 }
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  requireAdmin(request);
   const [
     totalCandidates,
     positionsApproved,
@@ -70,189 +77,203 @@ export async function loader() {
       createdAt: p.createdAt.toISOString(),
       candidate: p.candidate,
       topic: p.topic,
+      /** Bloqueio de fonte, mesma regra do aprovar — sinalizado já na fila. */
+      approvalBlocker: approvalBlocker(p),
     })),
     pendingBills: pendingBills.map((b) => ({
       ...b,
       voteDate: b.voteDate.toISOString(),
+      aiConfidence: b.aiConfidence === null ? null : Number(b.aiConfidence),
     })),
   };
 }
+
+const CARD = "rounded-2xl border border-slate-200 bg-white";
+const CHIP =
+  "rounded-full border px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap";
 
 export default function AdminIndex() {
   const { stats, pendingPositions, pendingBills } =
     useLoaderData<typeof loader>();
 
+  const blockedPositions = pendingPositions.filter(
+    (p) => p.approvalBlocker !== null
+  ).length;
+
+  const statCards = [
+    { label: "Candidatos", value: stats.totalCandidates, icon: Users },
+    {
+      label: "Posições aprovadas",
+      value: stats.positionsApproved,
+      icon: CheckCircle2,
+    },
+    {
+      label: "Posições pendentes",
+      value: stats.positionsPending,
+      icon: Clock,
+    },
+    {
+      label: "Votações aprovadas",
+      value: stats.billsApproved,
+      icon: CheckCircle2,
+    },
+    { label: "Votações pendentes", value: stats.billsPending, icon: Clock },
+  ];
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header
-        breadcrumbItems={[{ label: "Admin Dashboard", active: true }]}
-      />
+    <main className="flex-1">
+      <Container className="pt-9 pb-16">
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
+          Painel editorial
+        </h1>
+        <p className="mt-1.5 text-[14.5px] text-slate-500">
+          Aprovação de posições e votações. Nada vai ao ar sem documento,
+          página e trecho citados.
+        </p>
 
-      <main className="flex-grow max-w-5xl mx-auto w-full px-4 py-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-md bg-muted">
-            <Shield className="w-5 h-5 text-muted-foreground" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-foreground">
-              Dashboard Admin
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Gerencie candidatos, posições e votações
-            </p>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {[
-            {
-              label: "Candidatos",
-              value: stats.totalCandidates,
-              icon: Users,
-            },
-            {
-              label: "Posições Aprovadas",
-              value: stats.positionsApproved,
-              icon: CheckCircle2,
-            },
-            {
-              label: "Posições Pendentes",
-              value: stats.positionsPending,
-              icon: Clock,
-            },
-            {
-              label: "Votações Aprovadas",
-              value: stats.billsApproved,
-              icon: CheckCircle2,
-            },
-            {
-              label: "Votações Pendentes",
-              value: stats.billsPending,
-              icon: Clock,
-            },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-lg border bg-card p-4 text-center"
-            >
-              <stat.icon className="w-4 h-4 text-muted-foreground mx-auto mb-1" />
-              <p className="text-2xl font-bold text-foreground tabular-nums">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {statCards.map((stat) => (
+            <div key={stat.label} className={cn(CARD, "px-4 py-4 text-center")}>
+              <stat.icon
+                className="mx-auto mb-1.5 size-4 text-slate-400"
+                aria-hidden="true"
+              />
+              <p className="font-heading text-[26px] font-bold tabular-nums text-slate-800">
                 {stat.value}
               </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              <p className="mt-0.5 text-[10.5px] tracking-[0.06em] text-slate-400 uppercase">
                 {stat.label}
               </p>
             </div>
           ))}
         </div>
 
-        {/* Pending Positions */}
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            Posições Pendentes de Aprovação ({stats.positionsPending})
+        {blockedPositions > 0 && (
+          <p className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-800">
+            <TriangleAlert className="mt-0.5 size-4 flex-none" aria-hidden="true" />
+            <span>
+              {blockedPositions} de {pendingPositions.length} posições da fila
+              não podem ser aprovadas: falta o link do documento ou a página do
+              PDF na fonte da proposta de governo.
+            </span>
+          </p>
+        )}
+
+        <section className="mt-8">
+          <h2 className="flex items-center gap-2 font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+            <Clock className="size-4 text-slate-400" aria-hidden="true" />
+            Posições pendentes ({stats.positionsPending})
           </h2>
 
           {pendingPositions.length === 0 ? (
-            <div className="rounded-lg border bg-card p-6 text-center">
-              <CheckCircle2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">
-                Nenhuma posição pendente!
-              </p>
-            </div>
+            <EmptyState label="Nenhuma posição pendente." />
           ) : (
-            <div className="space-y-1.5">
+            <div className="mt-3 space-y-2">
               {pendingPositions.map((pos) => (
                 <Link
                   key={pos.id}
                   to={`/admin/candidato/${pos.candidate.id}`}
-                  className="group flex items-center justify-between rounded-lg border bg-card p-3 hover:border-foreground/20 transition-colors"
+                  className={cn(
+                    CARD,
+                    "group flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-slate-300"
+                  )}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-medium text-foreground truncate">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[13.5px] font-semibold text-slate-800">
                         {pos.candidate.displayName}
                       </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-normal"
+                      <span
+                        className={cn(CHIP, "border-slate-200 text-slate-500")}
                       >
                         {pos.candidate.party}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground">
-                        {pos.topic.category} &middot; {pos.topic.name}
                       </span>
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] font-normal"
-                      >
-                        Stance: {pos.stance}
-                      </Badge>
+                      {pos.approvalBlocker && (
+                        <span
+                          className={cn(
+                            CHIP,
+                            "border-amber-200 bg-amber-50 font-semibold text-amber-800"
+                          )}
+                          title={pos.approvalBlocker}
+                        >
+                          Fonte incompleta
+                        </span>
+                      )}
                     </div>
+                    <p className="mt-0.5 truncate text-[12.5px] text-slate-500">
+                      {pos.topic.category} · {pos.topic.name} ·{" "}
+                      {CANDIDATE_STANCE_LABELS[pos.stance] ?? NO_POSITION_LABEL}
+                    </p>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <ChevronRight
+                    className="size-4 flex-none text-slate-300 transition-colors group-hover:text-slate-500"
+                    aria-hidden="true"
+                  />
                 </Link>
               ))}
             </div>
           )}
         </section>
 
-        {/* Pending Bills */}
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <FileText className="w-4 h-4 text-muted-foreground" />
-            Votações Pendentes ({stats.billsPending})
+        <section className="mt-8">
+          <h2 className="flex items-center gap-2 font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+            <FileText className="size-4 text-slate-400" aria-hidden="true" />
+            Votações pendentes ({stats.billsPending})
           </h2>
 
           {pendingBills.length === 0 ? (
-            <div className="rounded-lg border bg-card p-6 text-center">
-              <CheckCircle2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground">
-                Nenhuma votação pendente!
-              </p>
-            </div>
+            <EmptyState label="Nenhuma votação pendente." />
           ) : (
-            <div className="space-y-1.5">
+            <div className="mt-3 space-y-2">
               {pendingBills.map((bill) => (
                 <Link
                   key={bill.id}
                   to={`/admin/votacao/${bill.id}`}
-                  className="group flex items-center justify-between rounded-lg border bg-card p-3 hover:border-foreground/20 transition-colors"
+                  className={cn(
+                    CARD,
+                    "group flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-slate-300"
+                  )}
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-foreground truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13.5px] font-semibold text-slate-800">
                       {bill.simplifiedTitle || bill.title}
                     </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-muted-foreground">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[12.5px] text-slate-500">
+                      <span>
                         {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
                       </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-normal"
+                      <span
+                        className={cn(CHIP, "border-slate-200 text-slate-500")}
                       >
                         {bill.sourceType === "senado" ? "Senado" : "Câmara"}
-                      </Badge>
-                      {bill.aiConfidence && (
-                        <span className="text-[10px] text-muted-foreground">
-                          IA: {Number(bill.aiConfidence).toFixed(0)}%
-                        </span>
+                      </span>
+                      {bill.aiConfidence !== null && (
+                        <span>IA: {bill.aiConfidence.toFixed(0)}%</span>
                       )}
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0" />
+                  <ChevronRight
+                    className="size-4 flex-none text-slate-300 transition-colors group-hover:text-slate-500"
+                    aria-hidden="true"
+                  />
                 </Link>
               ))}
             </div>
           )}
         </section>
-      </main>
+      </Container>
+    </main>
+  );
+}
 
-      <Footer />
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
+      <CheckCircle2
+        className="mx-auto mb-2 size-6 text-slate-300"
+        aria-hidden="true"
+      />
+      <p className="text-[13.5px] text-slate-400">{label}</p>
     </div>
   );
 }

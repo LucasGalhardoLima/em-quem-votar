@@ -5,87 +5,96 @@ image: "/images/funcoes-vereador.jpg"
 date: "2025-10-03"
 category: "Educação Política"
 ---
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Gavel, Building2, Eye, MessageSquare, AlertCircle, CheckCircle2, ScrollText, Ban } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[
-    { label: "Educação Política", href: "/educacao" },
-    { label: "Funções do Vereador", active: true }
-  ]} />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
-        <Building2 size={32} />
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Educação Política
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          O Que Faz um Vereador?
+        </h1>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Muitos desconhecem as funções reais de um vereador. Saiba o que cobrar do seu representante.
+        </p>
+      </header>
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <p>
+          O vereador é o elo mais próximo entre o cidadão e o poder público. Mas você sabe exatamente o que ele deve fazer?
+        </p>
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-        O Que Faz um <span className="text-brand-primary">Vereador?</span>
-      </h1>
-      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-        Muitos desconhecem as funções reais de um vereador. Saiba o que cobrar do seu representante.
-      </p>
-    </header>
-
-    <div className="max-w-3xl mx-auto text-center mb-12">
-        <p className="text-lg text-slate-600 leading-relaxed">
-            O vereador é o elo mais próximo entre o cidadão e o poder público. Mas você sabe exatamente o que ele deve fazer?
-        </p>
-    </div>
-
-    <div className="grid md:grid-cols-2 gap-8">
-        {/* Function 1 */}
-        <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col h-full">
-            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
-                <ScrollText size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">1. Legislar</h2>
-            <p className="text-slate-600 mb-4 flex-grow">
-                O vereador propõe, debate e vota leis que afetam o dia a dia da cidade.
-            </p>
-            <ul className="space-y-2 text-sm text-slate-500">
-                <li className="flex items-start gap-2"><span className="text-blue-500">•</span> Plano Diretor (Crescimento urbano)</li>
-                <li className="flex items-start gap-2"><span className="text-blue-500">•</span> Lei Orçamentária (Gastos)</li>
-                <li className="flex items-start gap-2"><span className="text-blue-500">•</span> Regras de trânsito</li>
-            </ul>
-        </section>
-
-        {/* Function 2 */}
-        <section className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col h-full">
-            <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center text-green-600 mb-6">
-                <Eye size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-4">2. Fiscalizar</h2>
-            <p className="text-slate-600 mb-4 flex-grow">
-                Talvez a função mais importante. O vereador deve ser o "Fiscal do Povo" e vigiar o Prefeito.
-            </p>
-             <ul className="space-y-2 text-sm text-slate-500">
-                <li className="flex items-start gap-2"><span className="text-green-500">•</span> Qualidade da merenda escolar</li>
-                <li className="flex items-start gap-2"><span className="text-green-500">•</span> Prazos de obras públicas</li>
-                <li className="flex items-start gap-2"><span className="text-green-500">•</span> Regularidade de contratos</li>
-            </ul>
-        </section>
-    </div>
-
-    {/* What They DONT Do */}
-    <section className="bg-red-50 p-8 md:p-12 rounded-3xl border border-red-100">
-        <div className="flex items-center gap-4 mb-6">
-            <div className="bg-white p-3 rounded-full text-red-600 shadow-sm">
-                <Ban size={24} />
-            </div>
-            <h2 className="text-2xl font-bold text-red-900 m-0">O Que o Vereador NÃO Faz</h2>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Legislar
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O vereador propõe, debate e vota leis que afetam o dia a dia da cidade.
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Plano Diretor (Crescimento urbano)</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Lei Orçamentária (Gastos)</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Regras de trânsito</span>
+            </li>
+          </ul>
         </div>
-        <p className="text-red-900/80 mb-6 text-lg">
-            É crucial saber que o vereador <strong>não tem poder de execução</strong>. Se um candidato prometer isso, ele está mentindo.
-        </p>
-        <div className="grid sm:grid-cols-3 gap-4">
-             <div className="bg-white/60 p-4 rounded-xl text-center text-red-800 text-sm font-medium">Não asfalta ruas</div>
-             <div className="bg-white/60 p-4 rounded-xl text-center text-red-800 text-sm font-medium">Não contrata médicos</div>
-             <div className="bg-white/60 p-4 rounded-xl text-center text-red-800 text-sm font-medium">Não perdoa dívidas</div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Fiscalizar
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Talvez a função mais importante. O vereador deve ser o "Fiscal do Povo" e vigiar o Prefeito.
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Qualidade da merenda escolar</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Prazos de obras públicas</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Regularidade de contratos</span>
+            </li>
+          </ul>
         </div>
-    </section>
-
-  </main>
-  <Footer />
-</div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> O Que o Vereador NÃO Faz
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            É crucial saber que o vereador <strong className="font-semibold text-slate-800">não tem poder de execução</strong>. Se um candidato prometer isso, ele está mentindo.
+          </p>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-[13px] font-semibold text-slate-600">
+            Não asfalta ruas
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-[13px] font-semibold text-slate-600">
+            Não contrata médicos
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-[13px] font-semibold text-slate-600">
+            Não perdoa dívidas
+          </div>
+        </div>
+      </section>
+    </div>
+  </Container>
+</main>

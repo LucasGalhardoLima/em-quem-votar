@@ -28,8 +28,20 @@ Prisma commands:
 ```bash
 npx prisma generate  # Regenerate client after schema changes
 npx prisma migrate dev --name <name>  # Create migration
+npx prisma migrate deploy             # Apply pending migrations (CI/prod)
 npx prisma studio    # Database GUI
+npx prisma db seed   # Idempotent seed (topics, tags, quiz, 13 candidacies)
 ```
+
+Data pipeline:
+```bash
+npm run sync:tse                  # Sync the 13 presidential candidacies from TSE
+npm run sync:tse -- --dry-run     # Show the diff, write nothing
+npm run sync:tse -- --from-file <path>   # Parse an already-downloaded CSV/ZIP
+npm run sync:tse -- --photos      # Also fetch official ballot photos
+```
+The TSE hosts block some networks (Akamai edge). If the sync returns 403/404,
+download `consulta_cand_2026_BR.zip` manually and use `--from-file`.
 
 ## Architecture
 
@@ -67,46 +79,137 @@ Services handle Prisma serialization (convert Dates to ISO strings, Decimals to 
 
 ### Routing
 Routes defined in `app/routes.ts` using React Router config API:
-- Dynamic routes: `politico/:id`, `votacao/:id`, `artigos/:slug`
-- MDX routes: `educacao/*.mdx` for static articles
-- API routes: `api/newsletter` (resource routes without UI)
+- Main flow: `/`, `/candidatos`, `/candidato/:id`, `/comparar`, `/quiz`,
+  `/resultado`, `/metodologia`
+- Voting records: `/votacoes`, `/votacao/:id`
+- MDX routes: `educacao/*.mdx` for static articles, plus `/sobre`, `/faq`,
+  `/privacidade`, `/termos`
+- Admin: `/admin/login`, `/admin`, `/admin/candidato/:id`,
+  `/admin/votacao/:id`
+- Resource routes (no UI): `api/newsletter`, `resources/og/:id`, `sitemap.xml`
+- Legacy 301 redirects kept for SEO: `/busca`, `/politico/:id`,
+  `/artigos/:slug`
 
 ### State Management
-Zustand stores in `app/stores/`:
-- `filterStore.ts` - Tag filter state (client-only)
-- `comparisonStore.ts` - Politician comparison (persisted to localStorage, max 3)
+Zustand stores in `app/stores/`, both persisted to localStorage with
+`skipHydration: true`. The SSR pass always renders the empty state; the
+store is rehydrated after mount via `useQuizHydration()` /
+`useComparisonHydration()`. Read that flag before rendering anything that
+depends on stored state, or you reintroduce a hydration mismatch.
+- `quizStore.ts` - Quiz answers (topicSlug -> 1..5) and per-axis weights
+- `comparisonStore.ts` - Candidate comparison (max 3, `MAX_COMPARISON`)
+
+### Quiz answers never reach the server
+`/resultado` and the candidate profile compute compatibility **in the
+browser** with the pure module `app/lib/match.ts`. The loader ships only
+public data (candidate positions); answers stay in localStorage. This is a
+promise made explicitly on `/metodologia` §5 — do not "simplify" it by
+moving matching into a loader or serialising answers into the URL.
+
+### Core domain vocabulary (`app/lib/`)
+- `stance.ts` - Likert labels, `agreementFor()`, importance multipliers.
+  Stance `0` means "sem posição registrada" and is NEVER treated as neutral.
+- `match.ts` - the compatibility algorithm. A topic counts only when BOTH
+  sides exist; topics without a documented position are excluded from the
+  numerator AND the denominator. `matchPercentage` is `null` (never `0`)
+  when nothing is comparable.
+- `candidate-status.ts` - TSE registration status. The badge shows
+  `tseStatusLabel` (the TSE's literal wording) when present; the enum is
+  only for filtering. Never paraphrase a candidacy's situation.
+- `election.ts` - 2026 calendar and countdown.
+
+### Admin is behind a signed-cookie session
+Every `/admin` loader AND action calls `requireAdmin(request)` from
+`app/utils/admin-auth.server.ts`, which redirects to `/admin/login` when
+there is no valid session. Configure `ADMIN_PASSWORD` (and optionally
+`ADMIN_USER`) — see `.env.example`. In production a missing password fails
+**closed** (503); in development it warns and allows.
+
+The session is a stateless HMAC token (8h, `HttpOnly`, `SameSite=Lax`,
+`Path=/admin`) signed with `ADMIN_PASSWORD` — so **changing the password
+revokes every open session**. `?next=` is validated by `safeNextPath()` to
+prevent an open redirect.
+
+Do NOT switch this to HTTP Basic: React Router drops the headers of a
+`Response` thrown from a loader, so `WWW-Authenticate` never reaches the
+browser and nobody — including the editor — can log in. This was tried and
+verified. If you add an admin route, guard both its loader and its action;
+`noindex` is not access control.
+
+### Neutrality rules (non-negotiable)
+These are product requirements, not style preferences:
+- Identical visual weight for every candidacy; no party colours anywhere.
+- `/candidatos` order is randomised per request (`shuffleSeed`).
+- Votes (`Sim`/`Não`) are shown in neutral chips — colouring a vote is a
+  value judgement about the person who cast it.
+- Every displayed position cites document, page and link via
+  `SourceCite.tsx`. Missing data is rendered as missing, never inferred.
 
 ### Database Schema
 Core models in `prisma/schema.prisma`:
-- **Politician**: Name, party, state, attendance, spending, tags
-- **Tag**: Political stances with category and slug
-- **PoliticianTag**: Many-to-many join
-- **Bill**: Voting records from Câmara API
-- **VoteLog**: Individual politician votes
+- **Candidate**: the 2026 presidential candidacies. TSE identity
+  (`tseId`, `number`, `tseStatusLabel`), chapa (`viceName`, `coalition`,
+  `coalitionParties`), official documents (`governmentPlanUrl`), and
+  provenance (`dataSource`: `tse` | `press` | `manual`, `sourceUrl`,
+  `lastSyncedAt`). `tseId` is the upsert key used by the sync script.
+- **PoliticalTopic**: the 20 themes, grouped into 5 thematic categories
+- **CandidatePosition**: stance 1-5 per (candidate, topic), plus the source
+  trail (`sourceType`, `sourceUrl`, `sourceDocument`, `sourcePage`,
+  `sourceQuote`). Only rows with `approvedAt != null` are ever shown.
+- **QuizQuestion** / **QuizOption**: one question per topic, 5-point Likert
+- **Bill** / **VoteRecord**: nominal votes from Câmara and Senado
+- **SpendingRecord**: CEAP, campaign spending and declared assets
+
+Legacy, still present for the older vote pages: **Politician**,
+**PoliticianTag**, **VoteLog**, **Tag**.
 
 ## Key Directories
 
 ```
 app/
 ├── routes/          # Page components with loaders
-├── components/      # Reusable UI (Header, Footer, Cards, etc.)
+├── components/
+│   ├── layout/      # SiteHeader, SiteFooter, Container, CountdownBanner
+│   ├── candidate/   # Avatar, Card, StatusBadge, SourceCite, PositionsByTopic
 │   └── ui/          # Shadcn base components
 ├── services/        # Server-side business logic
 ├── stores/          # Zustand state management
-├── data/            # Static data (filters, quiz questions, tags)
+├── data/            # Static data (archetypes, filters, tag definitions)
 ├── hooks/           # React hooks (useMediaQuery)
-└── lib/             # Utilities (cn for class merging)
+└── lib/             # Domain vocabulary + utilities (see above)
+
+prisma/
+├── schema.prisma
+├── seed.ts          # Idempotent
+└── data/
+    ├── reference.ts        # 20 topics, 15 tags, 20 quiz questions
+    └── candidates-2026.ts  # The 13 real candidacies, each with sourceUrl
 ```
 
 ## Conventions
 
-- Components use Shadcn/ui patterns with `cn()` for conditional classes
+- Components use `cn()` from `~/lib/utils` for conditional classes. The
+  Shadcn primitives in `app/components/ui/` are still installed but are
+  currently unused — the 2026 screens build on semantic HTML plus Tailwind
+  utilities, which keeps the markup accessible without a wrapper layer. Add
+  a primitive back with the Shadcn CLI if a component genuinely needs one
+  (focus management, portals), not by default.
+- Palette is Tailwind `slate` + `indigo-600`. Do not reintroduce the
+  `brand-*` or Shadcn CSS-variable tokens (`bg-card`, `text-muted-foreground`,
+  …) — they were fully purged from routes and components.
 - Server data must be serializable (no Date objects, use ISO strings)
 - Mobile-first responsive design using Tailwind breakpoints
 - Use `<Suspense>` with skeleton loaders for deferred content
 
 ## Active Technologies
-- TypeScript 5.x (strict mode) + React Router v7.10, React 19, Prisma 5.x, Shadcn/ui, Zustand 5.x, Framer Motion 12.x (001-platform-rebuild-2026)
+- TypeScript 5.x (strict mode) + React Router v7.10, React 19, Prisma 5.x, TailwindCSS v4, Shadcn/ui, Zustand 5.x
 
 ## Recent Changes
+- 002-eleicao-real-2026: Full UI refactor to the approved 2026 prototype.
+  Global layout moved into `app/root.tsx` (`SiteHeader`/`SiteFooter`) —
+  routes no longer render their own chrome. Client-side quiz matching.
+  Real TSE-sourced candidacies + `scripts/sync-tse-2026.ts`.
+  Removed: `politician.server.ts`, `match.server.ts`, `app/store/`,
+  `filterStore`, the `landing/` and `quiz/` component folders, and the
+  duplicate article system in `app/data/articles.ts`.
 - 001-platform-rebuild-2026: Added TypeScript 5.x (strict mode) + React Router v7.10, React 19, Prisma 5.x, Shadcn/ui, Zustand 5.x, Framer Motion 12.x

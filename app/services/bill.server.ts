@@ -121,6 +121,7 @@ export const BillService = {
         voteDate: true,
         status: true,
         sourceType: true,
+        sourceUrl: true,
       },
       orderBy: { voteDate: "desc" },
       take: limit,

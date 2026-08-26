@@ -1,350 +1,483 @@
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import {
-  Scale,
-  Database,
-  ShieldCheck,
-  Ruler,
-  Layers,
-  Weight,
-  Eye,
-  FileSearch,
-} from "lucide-react";
+import type { Route } from "./+types/metodologia";
+import { useEffect, useState, type ReactNode } from "react";
+import { useLoaderData } from "react-router";
+import { Container } from "~/components/layout";
+import { cn } from "~/lib/utils";
 
-export function meta() {
+export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Metodologia | Em Quem Votar?" },
+    { title: "Metodologia — Em Quem Votar?" },
     {
       name: "description",
       content:
-        "Entenda como calculamos a compatibilidade entre eleitor e candidato usando distância Euclidiana, escala Likert e fontes verificáveis.",
+        "Como a plataforma coleta dados oficiais do TSE, da Câmara e do Senado, extrai posições com documento e página citados, calcula a compatibilidade do quiz e protege a neutralidade e a privacidade de quem responde.",
     },
+    { name: "robots", content: "index,follow" },
   ];
 }
 
-export default function Methodology() {
+export async function loader(): Promise<{ updatedAt: string; version: string }> {
+  return {
+    version: "2.1",
+    // Data da última revisão desta metodologia (ISO 8601).
+    updatedAt: "2026-08-25",
+  };
+}
+
+// ============================================================
+// Conteúdo
+// ============================================================
+
+type MethodologySection = {
+  /** Âncora usada no menu lateral e no hash da URL */
+  id: string;
+  /** Número exibido antes do título */
+  number: string;
+  /** Rótulo curto na trilha lateral */
+  navLabel: string;
+  /** Título completo da seção */
+  title: string;
+  body: ReactNode;
+};
+
+const SECTIONS: MethodologySection[] = [
+  {
+    id: "fontes",
+    number: "1",
+    navLabel: "Fontes de dados",
+    title: "Fontes de dados",
+    body: (
+      <>
+        <p>
+          A plataforma se alimenta exclusivamente de documentos oficiais e
+          públicos. São quatro fontes: as{" "}
+          <strong className="font-semibold text-slate-800">
+            propostas de governo protocoladas no TSE
+          </strong>{" "}
+          no registro de candidatura; as{" "}
+          <strong className="font-semibold text-slate-800">
+            votações nominais da Câmara dos Deputados e do Senado Federal
+          </strong>
+          , pelos portais de dados abertos de cada casa; as{" "}
+          <strong className="font-semibold text-slate-800">
+            declarações de bens
+          </strong>{" "}
+          entregues junto ao pedido de registro; e o{" "}
+          <strong className="font-semibold text-slate-800">
+            DivulgaCandContas
+          </strong>
+          , de onde vêm receitas e despesas de campanha.
+        </p>
+        <p>
+          O que não entra é tão importante quanto o que entra. Pesquisa de
+          intenção de voto, artigo de opinião, post em rede social, boato de
+          bastidor e declaração sem registro verificável não são usados como
+          base de nenhuma posição exibida aqui. Se não existe documento público
+          para citar, a informação não é publicada.
+        </p>
+        <p>
+          O Portal de Dados Abertos do TSE republica o cadastro de candidaturas
+          quatro vezes por dia, e nossa sincronização acompanha essa cadência,
+          gravando um snapshot local — nenhuma página depende de uma chamada
+          externa no momento em que você a abre. Como a frequência de um robô
+          não é algo que você possa verificar de fora, não pedimos que acredite
+          nela: cada candidatura exibe a data da sua própria última
+          sincronização, e é esse carimbo, não a nossa promessa, que diz se o
+          dado está fresco.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "extracao",
+    number: "2",
+    navLabel: "Extração de posições",
+    title: "Extração de posições",
+    body: (
+      <>
+        <p>
+          Cada posição atribuída a uma candidatura aponta para{" "}
+          <strong className="font-semibold text-slate-800">
+            documento, página e trecho
+          </strong>
+          . Não há posição sem rastro: o leitor consegue abrir a fonte, achar a
+          página e conferir se a leitura que fizemos se sustenta. A extração é
+          trabalho editorial — ler o PDF, marcar o trecho, classificar o tema e
+          submeter à revisão antes de publicar.
+        </p>
+        <p>
+          Quando não existe registro documental de uma candidatura sobre um
+          tema, a plataforma mostra{" "}
+          <strong className="font-semibold text-slate-800">
+            “sem posição registrada”
+          </strong>{" "}
+          e para por aí. Não inferimos a partir do partido, de aliados, de
+          votações vizinhas, de entrevistas informais ou de proximidade
+          ideológica. O silêncio documental é informação legítima e é exibido
+          como tal, sem preenchimento.
+        </p>
+        <p>
+          Existe uma única exceção, e ela é declarada: quando a candidatura não
+          tem proposta própria sobre o tema mas o partido tem programa
+          registrado, a posição pode entrar rotulada como{" "}
+          <strong className="font-semibold text-slate-800">
+            programa do partido
+          </strong>
+          , com aviso explícito na própria ficha e link para o documento
+          partidário. Esse conteúdo nunca é apresentado como palavra da
+          candidatura, aparece visualmente separado das posições próprias e você
+          sempre sabe qual dos dois está lendo.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "calculo",
+    number: "3",
+    navLabel: "Cálculo de compatibilidade",
+    title: "Cálculo de compatibilidade",
+    body: (
+      <>
+        <p>
+          Suas respostas no quiz usam uma escala Likert de cinco pontos, de
+          “discordo totalmente” (1) a “concordo totalmente” (5). As posições
+          documentadas das candidaturas são classificadas na mesma escala, o que
+          torna os dois lados diretamente comparáveis. A comparação é uma{" "}
+          <strong className="font-semibold text-slate-800">
+            distância euclidiana quadrática ponderada
+          </strong>
+          : para cada tema, elevamos ao quadrado a diferença entre a sua
+          resposta e a posição documentada, multiplicamos pelo peso do eixo e
+          somamos.
+        </p>
+        <p>
+          O peso vem de você. No fim do quiz, cada eixo temático recebe a
+          importância que você atribuiu, com multiplicador{" "}
+          <strong className="font-semibold text-slate-800">alta = 1,5</strong>,{" "}
+          <strong className="font-semibold text-slate-800">média = 1,0</strong>{" "}
+          e <strong className="font-semibold text-slate-800">baixa = 0,5</strong>
+          . A soma ponderada é então normalizada pela distância máxima possível,
+          já que a maior diferença ao quadrado na escala é (5 − 1)² = 16:
+        </p>
+        <p className="rounded-lg border border-slate-200 bg-white px-3.5 py-3 font-mono text-[12.5px] leading-[1.55] text-slate-700">
+          matchPercentage = round((1 − somaPonderada / (pesoTotal × 16)) × 100)
+        </p>
+        <p>
+          Temas sem posição documentada{" "}
+          <strong className="font-semibold text-slate-800">
+            ficam fora do denominador
+          </strong>
+          . A candidatura não ganha nem perde pontos por um silêncio: o tema
+          simplesmente não entra na conta. É por isso que o número de temas
+          comparáveis muda de candidatura para candidatura, e é por isso que
+          todo resultado mostra em quantas perguntas ele se baseia. Um
+          percentual alto apoiado em 6 temas não vale o mesmo que um percentual
+          alto apoiado em 20 — e a plataforma diz isso na cara do resultado, em
+          vez de esconder.
+        </p>
+        <p>
+          O algoritmo é aberto e auditável. Não há ajuste manual, curadoria de
+          resultado nem regra especial para nenhuma candidatura: as mesmas
+          respostas produzem sempre o mesmo resultado, e o código que faz esse
+          cálculo é público.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "neutralidade",
+    number: "4",
+    navLabel: "Neutralidade",
+    title: "Neutralidade",
+    body: (
+      <>
+        <p>
+          As{" "}
+          <strong className="font-semibold text-slate-800">
+            13 candidaturas
+          </strong>{" "}
+          à Presidência recebem peso visual idêntico: mesmo tamanho de card,
+          mesmo tratamento de foto, mesma tipografia, mesma profundidade de
+          ficha. Nenhuma recebe destaque de layout, selo de relevância ou
+          posição privilegiada.
+        </p>
+        <p>
+          A ordem das listagens é{" "}
+          <strong className="font-semibold text-slate-800">
+            aleatorizada a cada visita
+          </strong>
+          . Não é alfabética (o que favoreceria nomes no início do alfabeto),
+          não é por intenção de voto e não é por qualquer noção de
+          “relevância”. Duas pessoas abrindo a mesma página ao mesmo tempo veem
+          ordens diferentes.
+        </p>
+        <p>
+          A situação do registro é exibida{" "}
+          <strong className="font-semibold text-slate-800">
+            na redação do próprio TSE
+          </strong>{" "}
+          — deferido, deferido com recurso, sub judice, indeferido —, sem
+          paráfrase, sem adjetivo nosso e sem interpretação sobre o que aquilo
+          significa para a viabilidade da candidatura. Mudanças de situação
+          chegam pelo sync do TSE, não por decisão editorial.
+        </p>
+        <p>
+          Não há cores partidárias em lugar nenhum da interface. A paleta é uma
+          só para todo mundo, e concordância e discordância não são pintadas de
+          verde e vermelho, para que nenhuma posição pareça, pelo desenho, certa
+          ou errada. Também não existe ranking editorial, “melhor candidato”,
+          nota de qualidade ou endosso — nem explícito, nem por sugestão de
+          layout. A plataforma não recebe recursos de campanhas, partidos ou
+          coligações.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "privacidade",
+    number: "5",
+    navLabel: "Privacidade",
+    title: "Privacidade",
+    body: (
+      <>
+        <p>
+          O quiz roda{" "}
+          <strong className="font-semibold text-slate-800">
+            inteiramente no seu navegador
+          </strong>
+          . Suas respostas ficam no dispositivo, no armazenamento local
+          (localStorage), e não são enviadas ao servidor em momento algum. Não
+          existe banco de respostas para vazar, ser intimado ou ser vendido,
+          porque ele não é criado.
+        </p>
+        <p>
+          Não é preciso criar conta, informar e-mail ou fazer login para
+          responder ao quiz e ver o resultado. Se você quiser apagar tudo, basta
+          limpar os dados do site no navegador — não há cópia nossa para pedir
+          exclusão.
+        </p>
+        <p>
+          Se você compartilhar seu resultado, o link carrega{" "}
+          <strong className="font-semibold text-slate-800">
+            apenas os percentuais de compatibilidade
+          </strong>
+          , nunca as respostas. Quem abrir o link vê o placar, e não consegue
+          reconstruir o que você respondeu em cada pergunta.
+        </p>
+        <p>
+          Coletamos apenas métricas agregadas de audiência (quantas pessoas
+          visitaram cada página e o desempenho de carregamento), sem
+          identificação pessoal e sem qualquer ligação com respostas de quiz.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "limitacoes",
+    number: "6",
+    navLabel: "Limitações e correções",
+    title: "Limitações e correções",
+    body: (
+      <>
+        <p>
+          Extrair posições de PDFs de campanha é trabalho editorial, não uma
+          operação automática e infalível.{" "}
+          <strong className="font-semibold text-slate-800">
+            Pode conter erro
+          </strong>
+          : um trecho pode ser lido fora de contexto, uma proposta deliberadamente
+          ambígua pode ser classificada de um jeito que outra leitura razoável
+          contestaria, uma revisão pode deixar passar uma contradição interna do
+          documento. Assumimos isso na frente, e não atrás.
+        </p>
+        <p>
+          A cobertura é desigual entre candidaturas. As maiores tendem a ter
+          propostas de governo longas e detalhadas, além de histórico
+          legislativo com votações nominais; várias candidaturas menores têm
+          documentos curtos, genéricos ou apenas o programa do partido. O
+          resultado prático é que elas aparecem com menos temas comparáveis.
+          Isso é uma limitação de fonte, não um juízo de valor sobre a
+          candidatura.
+        </p>
+        <p>
+          A plataforma{" "}
+          <strong className="font-semibold text-slate-800">
+            não é uma recomendação de voto
+          </strong>
+          . O percentual mede a proximidade entre suas respostas e o que está
+          documentado — não mede capacidade de governo, viabilidade das
+          propostas, coerência entre discurso e prática, histórico pessoal ou
+          honestidade. Um percentual alto é um ponto de partida para pesquisar,
+          não uma conclusão.
+        </p>
+        <p>
+          Toda posição exibida tem um caminho de{" "}
+          <strong className="font-semibold text-slate-800">reportar</strong>. As
+          correções aceitas entram em um registro público com data, o que
+          mudou e a justificativa da mudança. Erros não são apagados em
+          silêncio: o histórico fica visível, inclusive o desta metodologia.
+        </p>
+      </>
+    ),
+  },
+];
+
+// ============================================================
+// Data
+// ============================================================
+
+const MONTHS = [
+  "janeiro",
+  "fevereiro",
+  "março",
+  "abril",
+  "maio",
+  "junho",
+  "julho",
+  "agosto",
+  "setembro",
+  "outubro",
+  "novembro",
+  "dezembro",
+];
+
+/** Formata uma data ISO sem depender de fuso ou locale do runtime. */
+function formatUpdatedAt(iso: string): string {
+  const [year, month, day] = iso.split("T")[0].split("-").map(Number);
+  const monthName = MONTHS[(month ?? 1) - 1] ?? "";
+  return `${day} de ${monthName} de ${year}`;
+}
+
+// ============================================================
+// Page
+// ============================================================
+
+export default function Metodologia() {
+  const { updatedAt, version } = useLoaderData<typeof loader>();
+  const [activeId, setActiveId] = useState<string>(SECTIONS[0].id);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (typeof IntersectionObserver === "undefined") return;
+
+    const nodes = SECTIONS.map((section) =>
+      document.getElementById(section.id)
+    ).filter((node): node is HTMLElement => node !== null);
+
+    if (nodes.length === 0) return;
+
+    const visible = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            visible.add(entry.target.id);
+          } else {
+            visible.delete(entry.target.id);
+          }
+        }
+
+        // A seção ativa é a primeira (em ordem de documento) ainda visível
+        // dentro da faixa de leitura definida pelo rootMargin.
+        const current = SECTIONS.find((section) => visible.has(section.id));
+        if (current) setActiveId(current.id);
+      },
+      { rootMargin: "-96px 0px -55% 0px", threshold: 0 }
+    );
+
+    nodes.forEach((node) => observer.observe(node));
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background">
-      <Header breadcrumbItems={[{ label: "Metodologia", active: true }]} />
-
-      <main className="max-w-4xl mx-auto px-4 py-8 sm:py-12 space-y-10">
-        {/* Header */}
-        <section className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center p-3 bg-muted rounded-xl">
-            <Scale className="w-6 h-6 text-muted-foreground" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Nossa Metodologia
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Transparência é a base da nossa plataforma. Entenda os critérios
-            técnicos por trás de cada índice e classificação.
-          </p>
-        </section>
-
-        {/* Likert Scale */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <Ruler className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Escala Likert de 5 Pontos
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Cada posição política é mapeada em uma escala de 5 pontos que captura
-            a intensidade do posicionamento:
-          </p>
-          <div className="grid grid-cols-5 gap-2">
-            {[
-              { value: 1, label: "Discorda Totalmente" },
-              { value: 2, label: "Discorda" },
-              { value: 3, label: "Neutro" },
-              { value: 4, label: "Concorda" },
-              { value: 5, label: "Concorda Totalmente" },
-            ].map((item) => (
-              <div
-                key={item.value}
-                className="rounded-md border bg-muted/30 p-2.5 text-center"
-              >
-                <p className="text-lg font-bold text-foreground tabular-nums">
-                  {item.value}
-                </p>
-                <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            O quiz do eleitor e as posições dos candidatos utilizam a mesma escala,
-            permitindo comparação direta.
-          </p>
-        </section>
-
-        {/* Euclidean Distance */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <Layers className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Algoritmo de Distância Euclidiana
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Para calcular a compatibilidade entre eleitor e candidato, utilizamos
-            a distância Euclidiana ponderada. Este método mede a "distância" entre
-            os vetores de posições políticas:
-          </p>
-          <div className="rounded-md border bg-muted/30 p-4">
-            <p className="text-xs font-mono text-foreground/80 text-center">
-              distância = |posição_eleitor - posição_candidato| / distância_máxima
-            </p>
-          </div>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p>
-              <strong className="text-foreground">Por que Euclidiana?</strong>{" "}
-              A distância Euclidiana produz resultados mais intuitivos do que
-              alternativas como similaridade por cosseno, especialmente quando
-              muitas posições estão próximas do centro — situação comum na
-              política brasileira.
-            </p>
-            <p>
-              <strong className="text-foreground">Posições ausentes:</strong>{" "}
-              Quando um candidato não tem posição mapeada em um tema, aplicamos
-              uma penalidade de incerteza (0.4 na escala de 0 a 1). O candidato
-              não recebe crédito total por parecer "neutro" — mas também não é
-              penalizado ao máximo. Cada resultado mostra a completude dos dados
-              (ex: "Baseado em 15 de 20 perguntas").
-            </p>
-          </div>
-        </section>
-
-        {/* Importance Weighting */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <Weight className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Ponderação por Importância
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            O quiz permite que o eleitor indique quais eixos temáticos são mais
-            importantes para sua decisão. Cada eixo recebe um multiplicador:
-          </p>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {[
-              { label: "Muito importante", weight: "1.5x" },
-              { label: "Importante", weight: "1.0x" },
-              { label: "Pouco importante", weight: "0.5x" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-md border bg-muted/30 p-3 text-center"
-              >
-                <p className="text-sm font-bold text-foreground tabular-nums">
-                  {item.weight}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {item.label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Os 5 eixos temáticos são: Economia e Fiscal, Segurança Pública,
-            Meio Ambiente e Agro, Direitos e Costumes, Democracia e Institucional.
-          </p>
-        </section>
-
-        {/* Source Hierarchy */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <FileSearch className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Hierarquia de Fontes
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            As posições dos candidatos são mapeadas a partir de múltiplas fontes,
-            priorizadas por confiabilidade:
-          </p>
-          <div className="space-y-1.5">
-            {[
-              {
-                priority: 1,
-                source: "Registro de votação",
-                description: "Votos nominais em projetos de lei — maior confiabilidade",
-              },
-              {
-                priority: 2,
-                source: "Programa de governo",
-                description: "Documento oficial registrado no TSE",
-              },
-              {
-                priority: 3,
-                source: "Declaração pública",
-                description: "Posicionamentos em entrevistas, debates e redes sociais",
-              },
-              {
-                priority: 4,
-                source: "Entrevista",
-                description: "Declarações em veículos de imprensa",
-              },
-              {
-                priority: 5,
-                source: "Análise editorial",
-                description: "Classificação baseada em análise de padrões — menor confiabilidade",
-              },
-            ].map((item) => (
-              <div
-                key={item.priority}
-                className="flex items-start gap-3 rounded-md border bg-muted/30 p-3"
-              >
-                <span className="shrink-0 w-5 h-5 rounded-full bg-foreground/10 flex items-center justify-center text-[10px] font-bold text-foreground tabular-nums">
-                  {item.priority}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">
-                    {item.source}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {item.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Cada posição na plataforma inclui a fonte e a data, permitindo que o
-            eleitor avalie a confiabilidade por conta própria.
-          </p>
-        </section>
-
-        {/* Bias Mitigation */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <Eye className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Mitigação de Viés
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Adotamos princípios rigorosos para evitar viés na apresentação dos
-            dados:
-          </p>
-          <div className="space-y-2">
-            {[
-              {
-                title: "Sem cores indicativas",
-                description:
-                  "Posições não usam verde/vermelho para concordar/discordar. A visualização é neutra para todas as posições.",
-              },
-              {
-                title: "Ordem aleatória",
-                description:
-                  "A ordem padrão dos candidatos é aleatorizada, não alfabética — evitando favorecimento por nome.",
-              },
-              {
-                title: "Atribuição de fonte obrigatória",
-                description:
-                  "Toda posição exibida inclui a fonte verificável e a data da informação.",
-              },
-              {
-                title: "Perguntas neutras",
-                description:
-                  "As perguntas do quiz apresentam ambos os lados igualmente, sem linguagem direcionada.",
-              },
-              {
-                title: "Peso visual igual",
-                description:
-                  "Todas as posições na escala recebem o mesmo peso visual, sem destaque para extremos.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-md border bg-muted/30 p-3">
-                <p className="text-xs font-medium text-foreground">
-                  {item.title}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  {item.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Data Sources */}
-        <section className="rounded-lg border bg-card p-6 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted shrink-0">
-              <Database className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Fontes de Dados
-            </h2>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Consumimos exclusivamente dados oficiais de canais públicos:
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              {
-                label: "Portal de Dados Abertos — Câmara dos Deputados",
-                url: "https://dadosabertos.camara.leg.br/",
-              },
-              {
-                label: "Portal de Dados Abertos — Senado Federal",
-                url: "https://www12.senado.leg.br/dados-abertos",
-              },
-              {
-                label: "Tribunal Superior Eleitoral (TSE)",
-                url: "https://dadosabertos.tse.jus.br/",
-              },
-            ].map((source) => (
-              <a
-                key={source.url}
-                href={source.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs rounded-md border bg-muted/30 px-3 py-2 text-foreground/80 hover:bg-muted transition-colors"
-              >
-                {source.label}
-              </a>
-            ))}
-          </div>
-          <div className="flex items-start gap-3 pt-3 border-t border-border/50">
-            <ShieldCheck className="shrink-0 w-4 h-4 text-muted-foreground mt-0.5" />
-            <p className="text-xs text-muted-foreground italic">
-              O "Em Quem Votar?" é um projeto independente e não possui vínculo
-              com órgãos governamentais ou partidos políticos. Nossa missão é
-              puramente informativa.
-            </p>
-          </div>
-        </section>
-
-        {/* Contact */}
-        <div className="text-center pt-4">
-          <p className="text-xs text-muted-foreground mb-2">
-            Dúvidas ou sugestões sobre nossos critérios?
-          </p>
-          <a
-            href="mailto:contato@emquemvotar.app"
-            className="text-xs font-medium text-foreground hover:underline"
+    <main>
+      <Container className="py-10">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[240px_1fr]">
+          {/* Trilha lateral */}
+          <nav
+            aria-label="Nesta página"
+            className="hidden content-start gap-2.5 lg:sticky lg:top-24 lg:grid lg:self-start"
           >
-            Fale com nossa equipe técnica
-          </a>
-        </div>
-      </main>
+            <span className="text-[11px] font-bold tracking-[0.06em] text-slate-400">
+              NESTA PÁGINA
+            </span>
+            {SECTIONS.map((section) => {
+              const isActive = section.id === activeId;
+              return (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  aria-current={isActive ? "true" : undefined}
+                  className={cn(
+                    "text-[13px] transition-colors",
+                    isActive
+                      ? "font-semibold text-indigo-600"
+                      : "text-slate-500 hover:text-slate-800"
+                  )}
+                >
+                  {section.navLabel}
+                </a>
+              );
+            })}
+          </nav>
 
-      <Footer />
-    </div>
+          {/* Conteúdo */}
+          <div className="grid max-w-[720px] gap-[26px]">
+            <header className="grid gap-2">
+              <h1 className="font-heading text-[32px] font-bold tracking-[-0.02em] text-slate-800">
+                Metodologia
+              </h1>
+              <p className="text-[14px] text-slate-500">
+                Versão {version} · atualizada em {formatUpdatedAt(updatedAt)} ·
+                histórico de mudanças público
+              </p>
+              <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+                Esta página é o contrato público da plataforma. Ela descreve, sem
+                atalhos, de onde vem cada dado, como uma posição vira um ponto na
+                escala, como a compatibilidade é calculada, o que fazemos para
+                não colocar o dedo na balança e onde a plataforma reconhece que
+                pode errar. Se algo aqui não for cumprido no produto, é bug — e
+                pode ser cobrado.
+              </p>
+            </header>
+
+            {SECTIONS.map((section) => (
+              <section key={section.id} id={section.id} className="scroll-mt-24">
+                <h2 className="text-[17px] font-bold text-slate-800">
+                  <span className="text-indigo-600">{section.number}.</span>{" "}
+                  {section.title}
+                </h2>
+                <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+                  {section.body}
+                </div>
+              </section>
+            ))}
+
+            <aside className="rounded-2xl border border-slate-200 bg-white p-[18px_22px] text-[13.5px] leading-[1.65] text-slate-600">
+              <p>
+                <strong className="font-semibold text-slate-800">
+                  Achou um erro?
+                </strong>{" "}
+                Toda posição tem um caminho de reportar, e você também pode
+                escrever para{" "}
+                <a
+                  href="mailto:contato@emquemvotar.app"
+                  className="font-medium text-indigo-600 underline underline-offset-2"
+                >
+                  contato@emquemvotar.app
+                </a>
+                . Correções apontando trecho e documento são analisadas primeiro.
+                O que for confirmado é corrigido na fonte do dado e registrado no
+                log público de correções, com data, descrição da mudança e
+                justificativa — inclusive quando o erro foi nosso. Nada é
+                alterado em silêncio, e esta metodologia segue a mesma regra.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </Container>
+    </main>
   );
 }

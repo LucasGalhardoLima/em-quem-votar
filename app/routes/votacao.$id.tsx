@@ -1,27 +1,17 @@
 import type { Route } from "./+types/votacao.$id";
 import { useLoaderData, Link, Await } from "react-router";
 import { BillService } from "~/services/bill.server";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { Badge } from "~/components/ui/badge";
-import {
-  ExternalLink,
-  Search,
-  Calendar,
-  ThumbsUp,
-  ThumbsDown,
-  User,
-} from "lucide-react";
+import { ExternalLink, Search, User } from "lucide-react";
 import { useState, Suspense } from "react";
+import { Container } from "~/components/layout";
 import { VoteDetailsSkeleton } from "~/components/SkeletonLoader";
 
-export function meta({ data }: Route.MetaArgs) {
+export function meta() {
   return [
     { title: "Votação | Em Quem Votar?" },
     {
       name: "description",
-      content:
-        "Veja quem votou a favor e contra nesta votação importante.",
+      content: "Veja como cada parlamentar votou nesta votação nominal.",
     },
   ];
 }
@@ -36,6 +26,13 @@ export async function loader({ params }: Route.LoaderArgs) {
 
 type BillData = NonNullable<Awaited<ReturnType<typeof BillService.getById>>>;
 
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
 export default function VotacaoRoute() {
   const { bill } = useLoaderData<typeof loader>();
 
@@ -45,26 +42,25 @@ export default function VotacaoRoute() {
         {(resolvedBill) => {
           if (!resolvedBill)
             return (
-              <div className="min-h-screen bg-background">
-                <Header
-                  breadcrumbItems={[
-                    { label: "Votações", href: "/votacoes" },
-                    { label: "Não encontrada", active: true },
-                  ]}
-                />
-                <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-                  <p className="text-muted-foreground">
-                    Votação não encontrada.
-                  </p>
-                  <Link
-                    to="/votacoes"
-                    className="text-sm text-brand-primary hover:underline mt-2 inline-block"
-                  >
-                    Voltar para votações
-                  </Link>
-                </div>
-                <Footer />
-              </div>
+              <main className="flex-1">
+                <Container className="py-16">
+                  <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+                    <p className="text-base font-bold text-slate-600">
+                      Votação não encontrada
+                    </p>
+                    <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+                      O endereço pode estar incorreto ou a votação ainda não foi
+                      publicada.
+                    </p>
+                    <Link
+                      to="/votacoes"
+                      className="mt-4 inline-block rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900"
+                    >
+                      Ver todas as votações
+                    </Link>
+                  </div>
+                </Container>
+              </main>
             );
           return <VoteDetailsContent bill={resolvedBill} />;
         }}
@@ -77,6 +73,8 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
   const [filter, setFilter] = useState("");
 
   const filterText = filter.toLowerCase();
+  const title = bill.simplifiedTitle || bill.title;
+  const sourceLabel = bill.sourceType === "senado" ? "Senado" : "Câmara";
 
   // Candidate votes (new system)
   const candidateSim = bill.candidateVotes.filter(
@@ -119,87 +117,101 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        breadcrumbItems={[
-          { label: "Votações", href: "/votacoes" },
-          { label: "Detalhes", active: true },
-        ]}
-      />
+    <main className="flex-1">
+      <Container className="pt-9 pb-3">
+        <nav
+          className="flex items-center gap-2 text-[12.5px]"
+          aria-label="Trilha de navegação"
+        >
+          <Link
+            to="/votacoes"
+            className="flex-none font-semibold text-indigo-600 hover:text-indigo-700"
+          >
+            ← Votações
+          </Link>
+          <span className="flex-none text-slate-300" aria-hidden="true">
+            /
+          </span>
+          <span className="truncate text-slate-500">{title}</span>
+        </nav>
 
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        {/* Title */}
-        <div className="space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            {bill.simplifiedTitle || bill.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
-            </span>
-            <Badge variant="outline" className="text-[10px] font-normal">
-              {bill.sourceType === "senado" ? "Senado" : "Câmara"}
-            </Badge>
-            {bill.sourceUrl && (
-              <a
-                href={bill.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[10px] text-brand-primary hover:underline inline-flex items-center gap-0.5"
-              >
-                Fonte oficial <ExternalLink className="w-2.5 h-2.5" />
-              </a>
-            )}
-          </div>
+        <h1 className="mt-3 font-heading text-[28px] font-bold tracking-[-0.02em] text-pretty text-slate-800 sm:text-[34px]">
+          {title}
+        </h1>
+
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-slate-500">
+          <time dateTime={bill.voteDate}>
+            {dateFormatter.format(new Date(bill.voteDate))}
+          </time>
+          <span className="text-slate-300" aria-hidden="true">
+            ·
+          </span>
+          {/*
+            A origem sempre aparece. Quando não há sourceUrl registrado, o nome
+            da casa legislativa fica como texto simples — nunca escondemos a
+            procedência do dado.
+          */}
+          {bill.sourceUrl ? (
+            <a
+              href={bill.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-700"
+            >
+              Fonte oficial · {sourceLabel}
+              <ExternalLink className="size-3" aria-hidden="true" />
+            </a>
+          ) : (
+            <span>Fonte: {sourceLabel}</span>
+          )}
         </div>
+      </Container>
 
+      <Container className="flex flex-col gap-4 pt-5 pb-12">
         {/* Description */}
         {(bill.simplifiedDescription || bill.description) && (
-          <section className="rounded-lg border bg-card p-4">
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              Sobre a Votação
+          <section className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              Sobre a votação
             </h2>
-            <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
+            <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-line text-slate-600">
               {bill.simplifiedDescription || bill.description}
             </p>
           </section>
         )}
 
-        {/* Sim / Não explanation */}
+        {/* O que cada voto significa — descrição factual, sem juízo de valor */}
         {(bill.voteSimDetails || bill.voteNaoDetails) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {bill.voteSimDetails && (
-              <div className="rounded-lg border bg-card p-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <ThumbsUp className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Votar Sim significa
-                  </span>
-                </div>
-                <p className="text-xs text-foreground/80 leading-relaxed">
+              <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                  Votar Sim significa
+                </h2>
+                <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
                   {bill.voteSimDetails}
                 </p>
-              </div>
+              </section>
             )}
             {bill.voteNaoDetails && (
-              <div className="rounded-lg border bg-card p-4">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <ThumbsDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                    Votar Não significa
-                  </span>
-                </div>
-                <p className="text-xs text-foreground/80 leading-relaxed">
+              <section className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                  Votar Não significa
+                </h2>
+                <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
                   {bill.voteNaoDetails}
                 </p>
-              </div>
+              </section>
             )}
           </div>
         )}
 
-        {/* Summary counters */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {/*
+          Placar em tons neutros de propósito: Sim, Não, Abstenção e Obstrução
+          são registros do voto, não acerto ou erro. Colorir Sim de verde e Não
+          de vermelho embutiria um juízo de valor que a plataforma não emite.
+        */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { label: "Sim", count: bill.summary.sim },
             { label: "Não", count: bill.summary.nao },
@@ -208,12 +220,12 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           ].map((item) => (
             <div
               key={item.label}
-              className="rounded-lg border bg-card p-3 text-center"
+              className="rounded-2xl border border-slate-200 bg-white p-4 text-center"
             >
-              <p className="text-xl font-bold text-foreground tabular-nums">
+              <p className="text-[22px] font-bold text-slate-800 tabular-nums">
                 {item.count}
               </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+              <p className="mt-0.5 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                 {item.label}
               </p>
             </div>
@@ -222,25 +234,27 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
 
         {/* Filter */}
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="w-4 h-4 text-muted-foreground" />
-          </div>
+          <Search
+            className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
           <input
-            type="text"
-            placeholder="Filtrar por nome ou partido..."
+            type="search"
+            placeholder="Filtrar por nome ou partido…"
+            aria-label="Filtrar votos por nome ou partido"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full pl-10 pr-3 py-2.5 border border-border rounded-lg bg-card text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
+            className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
           />
         </div>
 
         {/* Candidate votes (new system) */}
         {bill.candidateVotes.length > 0 && (
-          <>
-            <h3 className="text-sm font-semibold text-foreground">
-              Votos dos Candidatos
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
+          <section className="flex flex-col gap-4">
+            <h2 className="font-heading text-2xl font-bold tracking-[-0.02em] text-slate-800">
+              Votos dos candidatos
+            </h2>
+            <div className="grid gap-3 md:grid-cols-2">
               <VoteColumn
                 title="Sim"
                 entries={candidateSim.map((v) => ({
@@ -263,33 +277,34 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
               />
             </div>
             {candidateOther.length > 0 && (
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5">
+                <h3 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Abstenção / Obstrução
-                </h4>
-                <div className="flex flex-wrap gap-2">
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
                   {candidateOther.map((v) => (
                     <Link
                       key={v.candidateId}
                       to={`/candidato/${v.candidateId}`}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      prefetch="intent"
+                      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition-colors hover:border-indigo-300"
                     >
-                      {v.candidateName} ({v.voteType})
+                      {v.candidateName} · {v.voteType}
                     </Link>
                   ))}
                 </div>
               </div>
             )}
-          </>
+          </section>
         )}
 
         {/* Legacy votes (old politician system) */}
         {bill.legacyVotes.length > 0 && (
-          <>
-            <h3 className="text-sm font-semibold text-foreground">
-              Votos dos Deputados
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
+          <section className="flex flex-col gap-4">
+            <h2 className="font-heading text-2xl font-bold tracking-[-0.02em] text-slate-800">
+              Votos dos deputados
+            </h2>
+            <div className="grid gap-3 md:grid-cols-2">
               <VoteColumn
                 title="Sim"
                 entries={legacySim.map((v) => ({
@@ -311,12 +326,10 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
                 }))}
               />
             </div>
-          </>
+          </section>
         )}
-      </main>
-
-      <Footer />
-    </div>
+      </Container>
+    </main>
   );
 }
 
@@ -336,44 +349,55 @@ function VoteColumn({
   entries: VoteColumnEntry[];
 }) {
   return (
-    <div className="space-y-2">
-      <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-1 border-b border-border">
-        {title} ({entries.length})
-      </h4>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      {/* Chip neutro: o rótulo do voto não recebe cor de aprovação/reprovação. */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+          {title}
+        </span>
+        <span className="text-[12px] text-slate-400 tabular-nums">
+          {entries.length}{" "}
+          {entries.length === 1 ? "parlamentar" : "parlamentares"}
+        </span>
+      </div>
+
       {entries.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic py-2">
-          Nenhum voto encontrado.
+        <p className="pt-4 text-[13px] text-slate-400">
+          Nenhum voto correspondente ao filtro.
         </p>
       ) : (
-        <div className="space-y-1">
+        <ul className="mt-2 flex flex-col">
           {entries.map((entry) => (
-            <Link
-              key={entry.id}
-              to={entry.linkTo}
-              className="flex items-center gap-2.5 p-2 rounded-md hover:bg-muted/50 transition-colors group"
-            >
-              <div className="w-8 h-8 rounded-full bg-muted overflow-hidden shrink-0 flex items-center justify-center">
-                {entry.photoUrl ? (
-                  <img
-                    src={entry.photoUrl}
-                    alt={entry.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-4 h-4 text-muted-foreground" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground group-hover:text-foreground/80 truncate">
-                  {entry.name}
-                </p>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {entry.subtitle}
-                </p>
-              </div>
-            </Link>
+            <li key={entry.id}>
+              <Link
+                to={entry.linkTo}
+                prefetch="intent"
+                className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-slate-50"
+              >
+                <span className="flex size-9 flex-none items-center justify-center overflow-hidden rounded-full bg-slate-100">
+                  {entry.photoUrl ? (
+                    <img
+                      src={entry.photoUrl}
+                      alt=""
+                      loading="lazy"
+                      className="size-full object-cover"
+                    />
+                  ) : (
+                    <User className="size-4 text-slate-400" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[13.5px] font-semibold text-slate-800">
+                    {entry.name}
+                  </span>
+                  <span className="block truncate text-[12px] text-slate-500">
+                    {entry.subtitle}
+                  </span>
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

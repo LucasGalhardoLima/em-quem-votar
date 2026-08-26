@@ -13,117 +13,100 @@ export const meta = () => {
     { name: "description", content: "Entenda o que é o Centrão, como ele opera e seu impacto na governabilidade." },
   ];
 };
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Briefcase, Boxes, RefreshCcw, DollarSign, Scale, HelpCircle } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[
-    { label: "Educação Política", href: "/educacao" },
-    { label: "O Que é o Centrão?", active: true }
-  ]} />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
-        <Briefcase size={32} />
-      </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-        O Que é o <span className="text-brand-primary">Centrão?</span>
-      </h1>
-      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-        Eles não são de esquerda nem de direita. Entenda como funciona o grupo mais poderoso (e polêmico) do Congresso.
-      </p>
-    </header>
-
-     {/* Intro Subtitle */}
-    <div className="max-w-3xl mx-auto text-center mb-12">
-      <p className="text-xl text-slate-700 leading-relaxed font-medium">
-        Você ouve falar neles todo dia no jornal: "O governo negociou com o Centrão", "O Centrão ganhou ministérios". Mas afinal, quem são eles?
-      </p>
-    </div>
-
-    {/* Definition Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center shrink-0">
-          <Boxes className="text-purple-600 w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 m-0">Definição</h2>
-      </div>
-      <div className="prose prose-lg prose-slate text-slate-600">
-        <p>O "Centrão" não é um partido único. É um <strong>bloco informal de partidos médios e grandes</strong> que, historicamente, não possuem uma ideologia clara (nem esquerda, nem direita) e priorizam o acesso a:</p>
-        <ul className="grid md:grid-cols-2 gap-4 list-none pl-0">
-          <li className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3 m-0">
-            <DollarSign className="w-5 h-5 text-green-600 mt-1" />
-            <div>
-              <strong className="block text-slate-900">Orçamento</strong>
-              <span className="text-sm">Verbas para suas bases eleitorais.</span>
-            </div>
-          </li>
-          <li className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start gap-3 m-0">
-            <Briefcase className="w-5 h-5 text-blue-600 mt-1" />
-             <div>
-              <strong className="block text-slate-900">Cargos</strong>
-              <span className="text-sm">Ministérios e estatais.</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    {/* How They Operate Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center shrink-0">
-          <RefreshCcw className="text-orange-600 w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 m-0">Como Eles Operam?</h2>
-      </div>
-      <div className="prose prose-lg prose-slate text-slate-600">
-        <p>A lógica é o <strong>pragmatismo</strong> (ou, para os críticos, o fisiologismo).</p>
-        <ul className="space-y-4 list-none pl-0">
-          <li className="flex items-center gap-3">
-             <span className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold text-sm">E</span>
-             <span>Se o presidente é de <strong>esquerda</strong>, eles apoiam em troca de espaço.</span>
-          </li>
-          <li className="flex items-center gap-3">
-             <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">D</span>
-             <span>Se o presidente é de <strong>direita</strong>, eles apoiam... em troca de espaço.</span>
-          </li>
-        </ul>
-        <p className="bg-slate-50 p-4 rounded-lg border-l-4 border-slate-400 mt-6 text-sm">
-          Eles garantem a <strong>governabilidade</strong>. Como somam centenas de votos no Congresso, nenhum presidente consegue aprovar leis ou evitar um impeachment sem o apoio deles.
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Bastidores do Poder
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          O Que é o Centrão?
+        </h1>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Eles não são de esquerda nem de direita. Entenda como funciona o grupo mais poderoso (e polêmico) do Congresso.
+        </p>
+      </header>
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <p>
+          Você ouve falar neles todo dia no jornal: "O governo negociou com o Centrão", "O Centrão ganhou ministérios". Mas afinal, quem são eles?
         </p>
       </div>
-    </section>
-
-     {/* Debate Card */}
-    <section className="grid md:grid-cols-2 gap-8">
-      <div className="bg-red-50 p-8 rounded-3xl border border-red-100">
-         <h3 className="text-lg font-bold text-red-900 mb-3 flex items-center gap-2">
-            <Scale className="w-5 h-5" />
-            O Lado Ruim
-         </h3>
-         <p className="text-red-800 leading-relaxed">
-           A falta de ideologia e os frequentes escândalos de corrupção associados à barganha constante de cargos públicos.
-         </p>
-      </div>
-      <div className="bg-green-50 p-8 rounded-3xl border border-green-100">
-         <h3 className="text-lg font-bold text-green-900 mb-3 flex items-center gap-2">
-            <Scale className="w-5 h-5" />
-            O Argumento de Defesa
-         </h3>
-         <p className="text-green-800 leading-relaxed">
-           Eles trazem estabilidade e representam interesses regionais reais de milhares de municípios brasileiros que dependem dessas emendas.
-         </p>
-      </div>
-    </section>
-
-    <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900 mt-12">
-      <strong>Nota:</strong> Saber quem faz parte do Centrão ajuda você a entender se o seu candidato vai votar por convicção ou por conveniência.
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Definição
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O "Centrão" não é um partido único. É um <strong className="font-semibold text-slate-800">bloco informal de partidos médios e grandes</strong> que, historicamente, não possuem uma ideologia clara (nem esquerda, nem direita) e priorizam o acesso a:
+          </p>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">Orçamento</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Verbas para suas bases eleitorais.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">Cargos</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Ministérios e estatais.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Como Eles Operam?
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A lógica é o <strong className="font-semibold text-slate-800">pragmatismo</strong> (ou, para os críticos, o fisiologismo).
+          </p>
+          <ul className="grid gap-2.5">
+            <li className="flex items-start gap-3">
+              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">E</span>
+              <span>Se o presidente é de <strong className="font-semibold text-slate-800">esquerda</strong>, eles apoiam em troca de espaço.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">D</span>
+              <span>Se o presidente é de <strong className="font-semibold text-slate-800">direita</strong>, eles apoiam... em troca de espaço.</span>
+            </li>
+          </ul>
+        </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+          <p>
+            Eles garantem a <strong className="font-semibold text-slate-800">governabilidade</strong>. Como somam centenas de votos no Congresso, nenhum presidente consegue aprovar leis ou evitar um impeachment sem o apoio deles.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Os Dois Lados do Debate
+        </h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">O Lado Ruim</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              A falta de ideologia e os frequentes escândalos de corrupção associados à barganha constante de cargos públicos.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-[15px] font-bold text-slate-800">O Argumento de Defesa</h3>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+              Eles trazem estabilidade e representam interesses regionais reais de milhares de municípios brasileiros que dependem dessas emendas.
+            </p>
+          </div>
+        </div>
+      </section>
+      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <p>
+          <strong className="font-semibold text-slate-800">Nota:</strong> Saber quem faz parte do Centrão ajuda você a entender se o seu candidato vai votar por convicção ou por conveniência.
+        </p>
+      </aside>
     </div>
-
-  </main>
-  <Footer />
-</div>
+  </Container>
+</main>

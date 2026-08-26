@@ -1,5 +1,4 @@
-import { Badge } from "~/components/ui/badge";
-import { ExternalLink, Banknote, Vote, Landmark } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface SpendingGroup {
   type: string;
@@ -10,124 +9,103 @@ interface SpendingGroup {
   sourceUrl: string | null;
 }
 
-interface SpendingSummaryProps {
-  spending: SpendingGroup[];
-  hasLegislativeRecord: boolean;
-}
-
-const TYPE_CONFIG: Record<
-  string,
-  { label: string; icon: typeof Banknote; description: string }
-> = {
+const TYPE_CONFIG: Record<string, { label: string; description: string }> = {
   CEAP: {
-    label: "Cota Parlamentar (CEAP)",
-    icon: Landmark,
-    description: "Gastos com exercício da atividade parlamentar",
+    label: "Cota parlamentar (CEAP)",
+    description: "Gastos com o exercício da atividade parlamentar",
   },
   CAMPAIGN: {
-    label: "Gastos de Campanha",
-    icon: Vote,
-    description: "Despesas declaradas ao TSE",
+    label: "Gastos de campanha",
+    description: "Despesas declaradas ao TSE durante a campanha",
   },
   DECLARED_ASSETS: {
-    label: "Bens Declarados",
-    icon: Banknote,
-    description: "Patrimônio declarado ao TSE",
+    label: "Bens declarados",
+    description: "Patrimônio declarado ao TSE no registro da candidatura",
   },
 };
 
-const formatBRL = (value: number) =>
-  new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(value);
+const BRL = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+  maximumFractionDigits: 0,
+});
 
-function formatPeriod(start: string, end: string) {
-  const s = new Date(start + "T00:00:00");
-  const e = new Date(end + "T00:00:00");
-  const fmt = new Intl.DateTimeFormat("pt-BR", {
-    month: "short",
-    year: "numeric",
-  });
-  return `${fmt.format(s)} — ${fmt.format(e)}`;
+function formatPeriod(start: string, end: string): string {
+  const fmt = (iso: string) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime())
+      ? iso
+      : new Intl.DateTimeFormat("pt-BR", {
+          month: "2-digit",
+          year: "numeric",
+          timeZone: "UTC",
+        }).format(d);
+  };
+  return start === end ? fmt(start) : `${fmt(start)} — ${fmt(end)}`;
 }
 
+/**
+ * Valores declarados, sem adjetivo. A plataforma não classifica gasto em
+ * "alto" ou "baixo": exibe o número, o período e a fonte, e deixa a leitura
+ * para quem lê.
+ */
 export function SpendingSummary({
   spending,
   hasLegislativeRecord,
-}: SpendingSummaryProps) {
-  if (spending.length === 0) {
-    return (
-      <div className="rounded-lg border bg-card p-6 text-center">
-        <Banknote className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-        <p className="text-sm text-muted-foreground">
-          {hasLegislativeRecord
-            ? "Dados de gastos ainda não disponíveis para este candidato."
-            : "Sem dados de gastos públicos anteriores."}
-        </p>
-        <p className="text-xs text-muted-foreground/70 mt-1">
-          {hasLegislativeRecord
-            ? "Os dados serão adicionados conforme disponibilizados."
-            : "Este candidato não exerceu cargo público com dados de gastos registrados."}
-        </p>
-      </div>
-    );
-  }
+}: {
+  spending: SpendingGroup[];
+  hasLegislativeRecord: boolean;
+}) {
+  if (spending.length === 0) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {spending.map((group) => {
         const config = TYPE_CONFIG[group.type] ?? {
           label: group.type,
-          icon: Banknote,
-          description: "",
+          description: "Valor declarado",
         };
-        const Icon = config.icon;
-
         return (
-          <div key={group.type} className="rounded-lg border bg-card p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="shrink-0 mt-0.5 p-2 rounded-md bg-muted">
-                  <Icon className="w-4 h-4 text-muted-foreground" />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-sm font-medium text-foreground">
-                    {config.label}
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {config.description}
-                  </p>
-                </div>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-sm font-semibold text-foreground tabular-nums">
-                  {formatBRL(group.totalAmount)}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 mt-3 pt-2 border-t border-border/50">
-              <span className="text-[10px] text-muted-foreground">
-                {formatPeriod(group.periodStart, group.periodEnd)}
-              </span>
-              <Badge variant="outline" className="text-[10px] font-normal">
-                {group.source}
-              </Badge>
-              {group.sourceUrl && (
-                <a
-                  href={group.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[10px] text-brand-primary hover:underline inline-flex items-center gap-0.5 ml-auto"
-                >
-                  Fonte <ExternalLink className="w-2.5 h-2.5" />
-                </a>
-              )}
-            </div>
+          <div
+            key={group.type}
+            className="rounded-2xl border border-slate-200 bg-white p-5"
+          >
+            <h3 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              {config.label}
+            </h3>
+            <p className="font-heading mt-2 text-[26px] font-bold text-slate-800">
+              {BRL.format(group.totalAmount)}
+            </p>
+            <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
+              {config.description}
+            </p>
+            <p className="mt-2 text-[11.5px] text-slate-400">
+              Período: {formatPeriod(group.periodStart, group.periodEnd)}
+            </p>
+            {group.sourceUrl ? (
+              <a
+                href={group.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-medium text-indigo-600 hover:underline"
+              >
+                Fonte: {group.source}
+                <ExternalLink className="size-3" />
+              </a>
+            ) : (
+              <p className="mt-1.5 text-[11.5px] text-slate-400">
+                Fonte: {group.source}
+              </p>
+            )}
           </div>
         );
       })}
+      {!hasLegislativeRecord && spending.some((s) => s.type === "CEAP") && (
+        <p className="text-[12px] text-slate-400 sm:col-span-2 lg:col-span-3">
+          A cota parlamentar se refere a mandato anterior — este candidato não
+          exerce mandato legislativo no momento.
+        </p>
+      )}
     </div>
   );
 }

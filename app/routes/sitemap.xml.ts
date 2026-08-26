@@ -21,6 +21,8 @@ export async function loader({ request }: Route.LoaderArgs) {
     { path: "/sobre", priority: "0.4", changefreq: "monthly" },
     { path: "/faq", priority: "0.4", changefreq: "monthly" },
     { path: "/metodologia", priority: "0.5", changefreq: "monthly" },
+    { path: "/privacidade", priority: "0.3", changefreq: "yearly" },
+    { path: "/termos", priority: "0.3", changefreq: "yearly" },
   ];
 
   const content = `<?xml version="1.0" encoding="UTF-8"?>

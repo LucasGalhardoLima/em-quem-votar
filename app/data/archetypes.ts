@@ -132,16 +132,45 @@ function normalizeLikert(score: number): number {
  * Calcula a posição do usuário no compasso político 2D
  * a partir das pontuações por tópico (slug → 1-5).
  */
+/**
+ * "Economia e Fiscal" -> "economia-e-fiscal".
+ * As chaves de CATEGORY_AXIS_MAP sao slugs de CATEGORIA, enquanto o vetor de
+ * respostas e indexado por slug de TOPICO. Sem esta traducao a busca no mapa
+ * falhava sempre e a bussola voltava {0,0} para todo mundo.
+ */
+export function slugifyCategory(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+/**
+ * Posicao na bussola a partir das respostas.
+ *
+ * @param userVector        topicSlug -> resposta Likert (1..5)
+ * @param topicCategories   topicSlug -> nome da categoria tematica
+ *
+ * Topicos sem categoria conhecida sao ignorados, em vez de contarem como
+ * centro: um tema que nao sabemos mapear nao deve empurrar ninguem para o
+ * meio da bussola.
+ */
 export function calculateCompassPosition(
-  userVector: Record<string, number>
+  userVector: Record<string, number>,
+  topicCategories: Record<string, string> = {}
 ): { economic: number; social: number } {
   let economicSum = 0;
   let economicWeight = 0;
   let socialSum = 0;
   let socialWeight = 0;
 
-  for (const [slug, rawScore] of Object.entries(userVector)) {
-    const mappings = CATEGORY_AXIS_MAP[slug];
+  for (const [topicSlug, rawScore] of Object.entries(userVector)) {
+    const categoryName = topicCategories[topicSlug];
+    if (!categoryName) continue;
+
+    const mappings = CATEGORY_AXIS_MAP[slugifyCategory(categoryName)];
     if (!mappings) continue;
 
     const normalized = normalizeLikert(rawScore);
@@ -185,9 +214,10 @@ function euclideanDistance(
  * mais próximo pela distância euclidiana.
  */
 export function calculateArchetype(
-  userVector: Record<string, number>
+  userVector: Record<string, number>,
+  topicCategories: Record<string, string> = {}
 ): Archetype {
-  const userPosition = calculateCompassPosition(userVector);
+  const userPosition = calculateCompassPosition(userVector, topicCategories);
 
   let bestMatch: Archetype = ARCHETYPES[4]; // Default: Pragmático (centro)
   let bestDistance = Infinity;

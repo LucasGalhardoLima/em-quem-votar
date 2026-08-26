@@ -1,0 +1,44 @@
+name: Sync TSE 2026
+
+# O Portal de Dados Abertos do TSE republica o dataset candidatos-2026 quatro
+# vezes por dia. Acompanhamos essa cadência para que a situação de registro
+# exibida no site nunca fique mais de algumas horas atrás da oficial — é o que
+# o SC-104 do spec 002 exige (defasagem máxima de 24h).
+on:
+  schedule:
+    # 03:00, 09:00, 15:00 e 21:00 em Brasília (UTC-3).
+    - cron: "0 6,12,18,0 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sync-tse-2026
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npx prisma generate
+
+      # Garante que o schema em produção acompanha o repositório antes de
+      # gravar. Sem isso, um campo novo faria o sync falhar linha a linha.
+      - name: Aplicar migrations pendentes
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: npx prisma migrate deploy
+
+      - name: Sincronizar candidaturas presidenciais
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: npx tsx scripts/sync-tse-2026.ts

@@ -1,288 +1,336 @@
-import { Suspense, useState } from "react";
-import { Await, useLoaderData, Link } from "react-router";
-import type { Route } from "./+types/resultado";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { MatchResult } from "~/components/quiz/MatchResult";
-import { ArchetypeCard } from "~/components/quiz/ArchetypeCard";
-import { PoliticalCompass } from "~/components/quiz/PoliticalCompass";
-import { calculateCompassPosition } from "~/data/archetypes";
-import {
-  MatchService,
-  type CandidateMatchResult,
-  type MatchMetadata,
-} from "~/services/match.server";
-import type { Archetype } from "~/data/archetypes";
-import type { ImportanceLevel } from "~/components/quiz/ImportanceWeighting";
-import { ArrowRight, Share2, Copy, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
+import type { Route } from "./+types/resultado";
+import { Container } from "~/components/layout";
+import { CandidateAvatar } from "~/components/candidate/CandidateAvatar";
+import { useQuizHydration, useQuizStore } from "~/stores/quizStore";
+import {
+  useComparisonHydration,
+  useComparisonStore,
+} from "~/stores/comparisonStore";
+import { answeredCount, calculateMatches } from "~/lib/match";
+import { calculateArchetype } from "~/data/archetypes";
+import { CandidateService } from "~/services/candidate.server";
+import { db } from "~/utils/db.server";
+import { cn } from "~/lib/utils";
 
-export function meta({ data }: Route.MetaArgs) {
-  // Meta is set after results load
+export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Seu Resultado | Em Quem Votar?" },
+    { title: "Seu resultado | Em Quem Votar?" },
     {
       name: "description",
       content:
-        "Veja qual candidato à presidência 2026 mais se alinha com suas ideias.",
+        "Compatibilidade entre as suas respostas e as posições documentadas dos candidatos à Presidência em 2026.",
     },
+    // O resultado é pessoal e calculado no aparelho: não há o que indexar.
+    { name: "robots", content: "noindex,follow" },
   ];
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const url = new URL(request.url);
-  const vectorParam = url.searchParams.get("v");
-  const weightsParam = url.searchParams.get("w");
+export async function loader({}: Route.LoaderArgs) {
+  // Só dado público sai daqui. As respostas do quiz nunca chegam ao servidor.
+  const [candidates, topics, totalQuestions] = await Promise.all([
+    CandidateService.findAllForMatch(),
+    db.politicalTopic.findMany({
+      select: { slug: true, name: true, category: true },
+      orderBy: { order: "asc" },
+    }),
+    db.quizQuestion.count({ where: { isActive: true } }),
+  ]);
 
-  // Parse user vector: topicSlug:stance,topicSlug:stance,...
-  const userVector: Record<string, number> = {};
-  if (vectorParam) {
-    for (const pair of vectorParam.split(",")) {
-      const [slug, stanceStr] = pair.split(":");
-      if (slug && stanceStr) {
-        const stance = parseInt(stanceStr, 10);
-        if (stance >= 1 && stance <= 5) {
-          userVector[slug] = stance;
-        }
-      }
-    }
-  }
-
-  if (Object.keys(userVector).length === 0) {
-    return { results: null };
-  }
-
-  // Parse axis weights: category:level,category:level,...
-  const axisWeights: Record<string, ImportanceLevel> | undefined = weightsParam
-    ? Object.fromEntries(
-        weightsParam.split(",").map((pair) => {
-          const [cat, level] = pair.split(":");
-          return [decodeURIComponent(cat), level as ImportanceLevel];
-        })
-      )
-    : undefined;
-
-  // Calculate match (deferred for streaming)
-  const resultsPromise = MatchService.calculate(
-    userVector,
-    axisWeights
-  ).then((result) => ({
-    ...result,
-    userVector,
-  }));
-
-  return { results: resultsPromise };
+  return { candidates, topics, totalQuestions };
 }
 
-function NoResults() {
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header breadcrumbItems={[{ label: "Seu Resultado", active: true }]} />
-      <main className="flex-grow flex items-center justify-center">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            Nenhum resultado encontrado
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            Faça o quiz para descobrir qual candidato mais se alinha com você.
-          </p>
-          <Link
-            to="/quiz"
-            className="inline-flex items-center gap-2 bg-brand-primary text-white font-bold py-3 px-6 rounded-xl hover:bg-brand-primary/90 transition-colors"
-          >
-            Fazer Quiz <ArrowRight size={18} />
-          </Link>
-        </div>
-      </main>
-      <Footer />
-    </div>
+export default function Resultado({ loaderData }: Route.ComponentProps) {
+  const { candidates, topics, totalQuestions } = loaderData;
+  const quizReady = useQuizHydration();
+  const comparisonReady = useComparisonHydration();
+
+  const answers = useQuizStore((s) => s.answers);
+  const weights = useQuizStore((s) => s.weights);
+  const reset = useQuizStore((s) => s.reset);
+  const setIds = useComparisonStore((s) => s.setIds);
+
+  const [showAll, setShowAll] = useState(false);
+
+  const topicCategories = useMemo(
+    () => Object.fromEntries(topics.map((t) => [t.slug, t.category])),
+    [topics],
   );
-}
-
-function ResultsContent({
-  data,
-}: {
-  data: {
-    topCandidates: CandidateMatchResult[];
-    archetype: Archetype;
-    metadata: MatchMetadata;
-    userVector: Record<string, number>;
-  };
-}) {
-  const { topCandidates, archetype, metadata, userVector } = data;
-  const [copied, setCopied] = useState(false);
-  const totalQuestions = Object.keys(userVector).length;
-
-  const userCompass = calculateCompassPosition(
-    // Convert userVector topic slugs to category-level averages for compass
-    // This is a simplified mapping; the MatchService does the full calculation
-    userVector
+  const results = useMemo(
+    () =>
+      quizReady
+        ? calculateMatches(candidates, answers, weights, topicCategories)
+        : [],
+    [quizReady, candidates, answers, weights, topicCategories],
   );
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    toast.success("Link copiado!");
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const answered = quizReady ? answeredCount(answers) : 0;
 
-  const handleShare = async () => {
-    const winner = topCandidates[0];
-    const shareData = {
-      title: `Meu perfil político: ${archetype.name}`,
-      text: winner
-        ? `Fiz o quiz do Em Quem Votar e meu match #1 é ${winner.candidate.displayName} com ${winner.matchPercentage}% de compatibilidade!`
-        : "Faça o quiz e descubra seu candidato!",
-      url: window.location.href,
-    };
+  // Arquétipo descreve o PERFIL DE QUEM RESPONDEU, não os candidatos. É uma
+  // leitura das próprias respostas, por isso pode ser calculado no cliente e
+  // não interfere na neutralidade entre candidaturas.
+  const archetype = useMemo(
+    () =>
+      quizReady && answered > 0
+        ? calculateArchetype(answers, topicCategories)
+        : null,
+    [quizReady, answered, answers, topicCategories],
+  );
 
-    if (navigator.share && navigator.canShare?.(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch {
-        handleCopyLink();
-      }
-    } else {
-      handleCopyLink();
-    }
-  };
-
-  if (topCandidates.length === 0) {
+  if (!quizReady) {
     return (
-      <div className="text-center py-16">
-        <p className="text-muted-foreground">
-          Nenhum candidato disponível para comparação.
-        </p>
-      </div>
+      <main className="flex-1">
+        <Container className="py-20">
+          <div className="h-8 w-64 animate-pulse rounded-lg bg-slate-200" />
+          <div className="mt-6 grid gap-2.5">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-28 animate-pulse rounded-2xl border border-slate-200 bg-white"
+              />
+            ))}
+          </div>
+        </Container>
+      </main>
     );
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="space-y-8"
-    >
-      {/* Archetype */}
-      <ArchetypeCard archetype={archetype} />
-
-      {/* Political compass */}
-      <div className="bg-card rounded-2xl border border-border p-6 md:p-8">
-        <h3 className="text-lg font-bold text-foreground mb-6 text-center">
-          Seu Compasso Político
-        </h3>
-        <PoliticalCompass
-          userPosition={userCompass}
-          candidatePositions={topCandidates.slice(0, 5).map((m) => ({
-            label: m.candidate.displayName,
-            economic: 0, // Would need per-candidate compass position
-            social: 0,
-          }))}
-          className="mx-auto"
-        />
-      </div>
-
-      {/* Match results */}
-      <div>
-        <h3 className="text-lg font-bold text-foreground mb-4">
-          Seus Matches
-        </h3>
-        <div className="space-y-4">
-          {topCandidates.map((match, idx) => (
-            <motion.div
-              key={match.candidate.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * idx }}
-            >
-              <MatchResult
-                rank={idx + 1}
-                candidate={match.candidate}
-                matchPercentage={match.matchPercentage}
-                matchedPositions={match.matchedPositions}
-                categoryScores={match.categoryScores}
-                totalQuestions={totalQuestions}
-              />
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Metadata */}
-      <div className="bg-muted/50 rounded-xl p-4 text-center text-sm text-muted-foreground space-y-1">
-        <p>
-          {metadata.totalCandidatesEvaluated} candidatos avaliados
-        </p>
-        {metadata.dominantCategories.length > 0 && (
-          <p>
-            Categorias dominantes:{" "}
-            {metadata.dominantCategories.join(", ")}
+  if (answered === 0) {
+    return (
+      <main className="flex-1">
+        <Container className="py-20 text-center">
+          <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800">
+            Você ainda não respondeu ao quiz
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-[14.5px] text-slate-500">
+            O resultado é calculado no seu aparelho a partir das suas respostas.
+            Como não há nenhuma resposta guardada aqui, não há o que comparar.
           </p>
-        )}
-      </div>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              to="/quiz"
+              className="rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white hover:bg-slate-900"
+            >
+              Fazer o quiz →
+            </Link>
+            <Link
+              to="/candidatos"
+              className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-[13.5px] font-semibold text-slate-600 hover:border-slate-300"
+            >
+              Ver os candidatos
+            </Link>
+          </div>
+        </Container>
+      </main>
+    );
+  }
 
-      {/* Share */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3 py-4">
-        <button
-          onClick={handleShare}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-brand-primary hover:bg-brand-primary/90 text-white font-bold py-3 px-6 rounded-xl transition-colors"
-        >
-          <Share2 size={18} />
-          Compartilhar
-        </button>
-        <button
-          onClick={handleCopyLink}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-card hover:bg-muted text-foreground font-semibold py-3 px-6 rounded-xl border border-border transition-colors"
-        >
-          <Copy size={18} />
-          {copied ? "Copiado!" : "Copiar link"}
-        </button>
-      </div>
+  const visible = showAll ? results : results.slice(0, 3);
+  const top3 = results.slice(0, 3).map((r) => r.candidate.id);
 
-      {/* Links */}
-      <div className="text-center pb-4">
-        <Link
-          to="/candidatos"
-          className="inline-flex items-center gap-2 text-brand-primary font-semibold hover:underline"
-        >
-          Explorar todos os candidatos
-          <ArrowRight size={18} />
-        </Link>
-      </div>
-    </motion.div>
-  );
-}
+  function copySummary() {
+    const lines = results
+      .slice(0, 5)
+      .map(
+        (r, i) =>
+          `${i + 1}. ${r.candidate.displayName} (${r.candidate.party}) — ${
+            r.matchPercentage === null ? "sem dados" : `${r.matchPercentage}%`
+          }`,
+      );
+    const text = [
+      "Minha compatibilidade — Em Quem Votar?",
+      ...lines,
+      "",
+      `Baseado em ${answered} de ${totalQuestions} perguntas.`,
+      "Faça o seu em https://emquemvotar.com.br/quiz",
+    ].join("\n");
 
-function ResultsSkeleton() {
-  return (
-    <div className="flex items-center justify-center py-16">
-      <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
-      <span className="ml-3 text-muted-foreground">Calculando matches...</span>
-    </div>
-  );
-}
-
-export default function Resultado() {
-  const { results } = useLoaderData<typeof loader>();
-
-  if (!results) {
-    return <NoResults />;
+    navigator.clipboard
+      .writeText(text)
+      .then(() => toast.success("Resumo copiado — só os percentuais"))
+      .catch(() => toast.error("Não foi possível copiar"));
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header breadcrumbItems={[{ label: "Seu Resultado", active: true }]} />
+    <main className="flex-1">
+      <Container className="grid items-start gap-7 py-8 lg:grid-cols-[1fr_300px]">
+        <div>
+          <h1 className="font-heading text-[26px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[30px]">
+            Sua compatibilidade
+          </h1>
+          <p className="mt-1.5 text-[13.5px] text-pretty text-slate-500">
+            Baseado em <strong className="font-semibold text-slate-700">
+              {answered} de {totalQuestions}
+            </strong>{" "}
+            perguntas e nos pesos que você definiu. Empates aparecem em ordem
+            alfabética.
+          </p>
 
-      <main className="flex-grow max-w-3xl mx-auto w-full px-4 py-8">
-        <Suspense fallback={<ResultsSkeleton />}>
-          <Await resolve={results}>
-            {(data) => <ResultsContent data={data} />}
-          </Await>
-        </Suspense>
-      </main>
+          <div className="mt-5 grid gap-2.5">
+            {visible.map((result) => {
+              const { candidate, matchPercentage } = result;
+              const isTop = results[0]?.candidate.id === candidate.id;
+              return (
+                <article
+                  key={candidate.id}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <CandidateAvatar
+                      name={candidate.displayName}
+                      photoUrl={candidate.photoUrl}
+                      size="sm"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-[15.5px] font-bold text-slate-800">
+                        {candidate.displayName}
+                      </h2>
+                      <p className="truncate text-[12.5px] text-slate-500">
+                        {candidate.party}
+                        {candidate.number != null ? ` · nº ${candidate.number}` : ""}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {matchPercentage === null ? (
+                        <span className="text-[12.5px] font-semibold text-slate-400">
+                          Sem dados
+                        </span>
+                      ) : (
+                        <span
+                          className={cn(
+                            "font-heading text-[26px] font-bold",
+                            isTop ? "text-indigo-600" : "text-slate-600",
+                          )}
+                        >
+                          {matchPercentage}%
+                        </span>
+                      )}
+                    </div>
+                  </div>
 
-      <Footer />
-    </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className={cn(
+                        "h-full rounded-full",
+                        isTop ? "bg-indigo-600" : "bg-slate-400",
+                      )}
+                      style={{ width: `${matchPercentage ?? 0}%` }}
+                    />
+                  </div>
+
+                  <div className="mt-2.5 flex items-center justify-between gap-3 text-[12.5px]">
+                    <span className="text-slate-500">
+                      {result.comparableCount === 0
+                        ? "Nenhum tema com posição documentada ainda"
+                        : `Concordância em ${result.agreeCount} de ${result.comparableCount} temas comparáveis`}
+                    </span>
+                    <Link
+                      to={`/candidato/${candidate.id}`}
+                      prefetch="intent"
+                      className="flex-none font-semibold text-indigo-600 hover:text-indigo-700"
+                    >
+                      Ver por tema →
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+
+            {results.length > 3 && (
+              <button
+                type="button"
+                onClick={() => setShowAll((v) => !v)}
+                className="p-1 text-center text-[13px] font-semibold text-indigo-600 hover:text-indigo-700"
+              >
+                {showAll
+                  ? "Mostrar só os 3 primeiros"
+                  : `Ver os ${results.length} →`}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <aside className="grid gap-3">
+          {archetype && (
+            <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+              <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500">
+                SEU PERFIL NAS RESPOSTAS
+              </h2>
+              <p className="mt-2 flex items-center gap-2 text-[15px] font-bold text-slate-800">
+                <span aria-hidden="true">{archetype.emoji}</span>
+                {archetype.name}
+              </p>
+              <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-600">
+                {archetype.description}
+              </p>
+              <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">
+                É uma leitura das suas próprias respostas — não diz nada sobre
+                os candidatos nem sugere em quem votar.
+              </p>
+            </section>
+          )}
+
+          <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+            <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              COMO LER ESTE NÚMERO
+            </h2>
+            <p className="mt-2 text-[12.5px] leading-relaxed text-slate-600">
+              O percentual compara as suas respostas com posições{" "}
+              <strong className="font-semibold">documentadas</strong>. Temas sem
+              posição registrada ficam de fora da conta — por isso o total de
+              temas comparáveis varia de candidato para candidato.
+            </p>
+            <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
+              Fontes: propostas de governo protocoladas no TSE e votações
+              nominais da Câmara e do Senado.{" "}
+              <Link to="/metodologia" className="font-semibold text-indigo-600">
+                Ver metodologia
+              </Link>
+            </p>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white px-5 py-4">
+            <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              PRÓXIMOS PASSOS
+            </h2>
+            <div className="mt-2.5 grid gap-2">
+              <Link
+                to={`/comparar?ids=${top3.join(",")}`}
+                onClick={() => comparisonReady && setIds(top3)}
+                className="rounded-xl bg-slate-800 p-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-slate-900"
+              >
+                Comparar os 3 primeiros
+              </Link>
+              <button
+                type="button"
+                onClick={copySummary}
+                className="rounded-xl border border-slate-200 p-[11px] text-center text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
+              >
+                Copiar resumo
+              </button>
+              <Link
+                to="/quiz"
+                onClick={() => reset()}
+                className="rounded-xl border border-slate-200 p-[11px] text-center text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
+              >
+                Refazer o quiz
+              </Link>
+              <p className="text-center text-[11.5px] text-slate-400">
+                O resumo traz só os percentuais — suas respostas não saem do
+                aparelho.
+              </p>
+            </div>
+          </section>
+
+          <p className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[12px] leading-relaxed text-slate-600">
+            Isto <strong className="font-semibold">não é recomendação de voto</strong>{" "}
+            — é uma medida de proximidade entre o que você respondeu e o que está
+            documentado. A decisão é sua.
+          </p>
+        </aside>
+      </Container>
+    </main>
   );
 }

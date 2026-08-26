@@ -5,106 +5,105 @@ image: "/images/voto-consciente.jpg"
 date: "2025-10-01"
 category: "Cidadania"
 ---
+import { ExternalLink } from "lucide-react";
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Megaphone, History, Vote, Lightbulb, BookOpen } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[
-    { label: "Educação Política", href: "/educacao" },
-    { label: "Importância do Voto", active: true }
-  ]} />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
-    {/* Header */}
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
-        <Megaphone size={32} />
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Cidadania
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          A Importância do Seu Voto
+        </h1>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Entenda como o seu voto impacta diretamente o futuro da sua cidade e do país. A democracia precisa de você.
+        </p>
+      </header>
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <p>
+          O <strong className="font-semibold text-slate-800">voto no Brasil</strong> é um pilar fundamental da democracia e um instrumento crucial para a participação cidadã. Ele não é apenas um direito; é a ferramenta mais poderosa que temos para transformar a nossa realidade social.
+        </p>
       </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-        A Importância do <span className="text-brand-primary">Seu Voto</span>
-      </h1>
-      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-        Entenda como o seu voto impacta diretamente o futuro da sua cidade e do país. A democracia precisa de você.
-      </p>
-    </header>
-
-    {/* Intro Subtitle */}
-    <div className="max-w-3xl mx-auto text-center mb-12">
-      <p className="text-lg text-slate-600 leading-relaxed">
-        O **voto no Brasil** é um pilar fundamental da democracia e um instrumento crucial para a participação cidadã. Ele não é apenas um direito; é a ferramenta mais poderosa que temos para transformar a nossa realidade social.
-      </p>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> História e Evolução
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O direito de escolher nossos representantes não foi dado de graça; foi conquistado. A história do voto no Brasil passou por diversas transformações:
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Voto de Cabresto:</strong> Períodos onde o voto era controlado pelos "coronéis".</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Voto Feminino (1932):</strong> Um marco histórico na luta pela igualdade.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Constituição de 1988:</strong> Consolidou o sufrágio universal, direto e secreto.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> O Poder da Escolha
+        </h2>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+          <p className="italic">
+            "O voto é a arma do cidadão para mudar o destino de uma nação sem derramar uma gota de sangue."
+          </p>
+        </div>
+        <div className="mt-3 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Numa democracia representativa, você delega o poder de decisão. Ao votar, você está dizendo: "Eu confio que essa pessoa vai gerenciar o meu dinheiro (impostos) e cuidar da minha cidade melhor do que qualquer outra."
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> O Que é o Voto Consciente?
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>Votar com consciência vai além de escolher um número. Significa:</p>
+          <ul className="grid gap-2.5">
+            <li className="flex items-start gap-3">
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">1</span>
+              <span><strong className="font-semibold text-slate-800">Analisar o passado</strong> do candidato.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">2</span>
+              <span><strong className="font-semibold text-slate-800">Ler as propostas</strong> e ver se são viáveis.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">3</span>
+              <span><strong className="font-semibold text-slate-800">Entender as consequências</strong> que o voto tem por 4 anos.</span>
+            </li>
+          </ul>
+          <p>
+            Um voto consciente impede a eleição de maus políticos e fortalece as instituições democráticas.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">Referências</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.tse.jus.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — A importância do voto
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+          </a>
+          <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Politize! — História do voto
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+          </a>
+        </div>
+      </section>
     </div>
-
-    {/* History Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center shrink-0">
-          <History className="text-brand-primary w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 m-0">História e Evolução</h2>
-      </div>
-      <div className="prose prose-lg prose-slate text-slate-600">
-        <p>O direito de escolher nossos representantes não foi dado de graça; foi conquistado. A história do voto no Brasil passou por diversas transformações:</p>
-        <ul>
-          <li><strong>Voto de Cabresto:</strong> Períodos onde o voto era controlado pelos "coronéis".</li>
-          <li><strong>Voto Feminino (1932):</strong> Um marco histórico na luta pela igualdade.</li>
-          <li><strong>Constituição de 1988:</strong> Consolidou o sufrágio universal, direto e secreto.</li>
-        </ul>
-      </div>
-    </section>
-
-    {/* Power of Choice Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-       <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-brand-primary-light rounded-2xl flex items-center justify-center shrink-0">
-          <Vote className="text-brand-primary w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-slate-900 m-0">O Poder da Escolha</h2>
-      </div>
-      <div className="prose prose-lg prose-slate text-slate-600">
-        <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900 mb-6">
-          "O voto é a arma do cidadão para mudar o destino de uma nação sem derramar uma gota de sangue."
-        </div>
-        <p className="mt-4">
-          Numa democracia representativa, você delega o poder de decisão. Ao votar, você está dizendo: "Eu confio que essa pessoa vai gerenciar o meu dinheiro (impostos) e cuidar da minha cidade melhor do que qualquer outra."
-        </p>
-      </div>
-    </section>
-
-    {/* Conscious Vote Card */}
-    <section className="bg-brand-tertiary text-white p-8 md:p-12 rounded-3xl shadow-xl">
-       <div className="flex items-center gap-4 mb-6">
-        <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0">
-          <Lightbulb className="text-amber-400 w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold text-white m-0">O Que é o Voto Consciente?</h2>
-      </div>
-      <div className="prose prose-lg prose-invert text-slate-300">
-        <p>Votar com consciência vai além de escolher um número. Significa:</p>
-        <ol>
-          <li><strong>Analisar o passado</strong> do candidato.</li>
-          <li><strong>Ler as propostas</strong> e ver se são viáveis.</li>
-          <li><strong>Entender as consequências</strong> que o voto tem por 4 anos.</li>
-        </ol>
-        <p className="font-medium text-white">
-          Um voto consciente impede a eleição de maus políticos e fortalece as instituições democráticas.
-        </p>
-      </div>
-    </section>
-
-    {/* References */}
-    <section className="text-center pt-8 border-t border-slate-200">
-       <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center justify-center gap-2">
-         <BookOpen size={16} /> Referências
-       </h3>
-       <div className="flex flex-wrap justify-center gap-4 text-sm">
-          <a href="https://www.tse.jus.br" target="_blank" className="text-brand-primary hover:underline">TSE - A importância do voto</a>
-          <span className="text-slate-300">•</span>
-          <a href="https://www.politize.com.br" target="_blank" className="text-brand-primary hover:underline">Politize! - História do voto</a>
-       </div>
-    </section>
-
-  </main>
-  <Footer />
-</div>
+  </Container>
+</main>

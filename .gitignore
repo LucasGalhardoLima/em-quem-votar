@@ -13,3 +13,7 @@ Thumbs.db
 .env*
 !.env.example
 coverage/
+
+# PDFs de proposta de governo extraídos do pacote do TSE (npm run sync:tse -- --plans)
+/public/planos/
+.vercel

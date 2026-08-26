@@ -30,11 +30,14 @@ export default [
   route("metodologia", "routes/metodologia.tsx"),
   route("sobre", "routes/sobre.mdx"),
   route("faq", "routes/faq.mdx"),
+  route("privacidade", "routes/privacidade.mdx"),
+  route("termos", "routes/termos.mdx"),
 
   // API
   route("api/newsletter", "routes/api.newsletter.ts"),
 
   // Admin
+  route("admin/login", "routes/admin.login.tsx"),
   route("admin", "routes/admin._index.tsx"),
   route("admin/candidato/:id", "routes/admin.candidato.$id.tsx"),
   route("admin/votacao/:id", "routes/admin.votacao.$id.tsx"),

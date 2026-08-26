@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ExternalLink, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 interface VoteDetailProps {
   billId: string;
@@ -8,6 +8,12 @@ interface VoteDetailProps {
   voteNaoDetails: string | null;
 }
 
+/**
+ * Detalhe do que cada lado da votação significava.
+ *
+ * Sem ícone de aprovação/reprovação e sem verde/vermelho: "Sim" e "Não" são
+ * descrições do efeito do voto, não julgamento sobre quem votou.
+ */
 export function VoteDetail({
   billId,
   description,
@@ -15,37 +21,29 @@ export function VoteDetail({
   voteNaoDetails,
 }: VoteDetailProps) {
   return (
-    <div className="space-y-3 border-t border-border/50 pt-3">
+    <div className="space-y-3 border-t border-slate-100 pt-3">
       {description && (
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {description}
-        </p>
+        <p className="text-xs leading-relaxed text-slate-500">{description}</p>
       )}
 
       {(voteSimDetails || voteNaoDetails) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {voteSimDetails && (
-            <div className="rounded-md border bg-muted/30 p-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <ThumbsUp className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                  Votar Sim significa
-                </span>
-              </div>
-              <p className="text-xs text-foreground/80 leading-relaxed">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                Votar Sim significa
+              </span>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">
                 {voteSimDetails}
               </p>
             </div>
           )}
           {voteNaoDetails && (
-            <div className="rounded-md border bg-muted/30 p-3">
-              <div className="flex items-center gap-1.5 mb-1">
-                <ThumbsDown className="w-3 h-3 text-muted-foreground" />
-                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
-                  Votar Não significa
-                </span>
-              </div>
-              <p className="text-xs text-foreground/80 leading-relaxed">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                Votar Não significa
+              </span>
+              <p className="mt-1 text-xs leading-relaxed text-slate-600">
                 {voteNaoDetails}
               </p>
             </div>
@@ -56,10 +54,10 @@ export function VoteDetail({
       <div className="flex justify-end">
         <Link
           to={`/votacao/${billId}`}
-          className="text-[11px] text-brand-primary hover:underline inline-flex items-center gap-1"
+          className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:underline"
         >
           Ver votação completa
-          <ExternalLink className="w-3 h-3" />
+          <ExternalLink className="size-3" />
         </Link>
       </div>
     </div>

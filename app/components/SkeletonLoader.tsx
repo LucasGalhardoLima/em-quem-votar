@@ -1,141 +1,78 @@
-import { Skeleton } from "~/components/ui/skeleton";
+import { Container } from "~/components/layout";
+import { cn } from "~/lib/utils";
 
-export function PoliticianCardSkeleton() {
-  return (
-    <div className="bg-card p-4 rounded-xl border items-start flex gap-4 min-h-[160px]">
-      <Skeleton className="w-14 h-14 rounded-full flex-shrink-0" />
-      <div className="flex-1 space-y-3 min-w-0">
-        <div className="space-y-2">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          <Skeleton className="h-6 w-20 rounded-full" />
-          <Skeleton className="h-6 w-24 rounded-full" />
-        </div>
-        <div className="pt-2 flex justify-end">
-          <Skeleton className="h-3 w-16" />
-        </div>
-      </div>
-    </div>
-  );
+/** Barra cinza usada dentro dos esqueletos. */
+function Bar({ className }: { className?: string }) {
+  return <div className={cn("rounded-md bg-slate-200", className)} />;
 }
 
-export function FeaturedVoteSkeleton() {
-  return (
-    <div className="bg-muted/10 rounded-2xl p-8 border flex flex-col h-full min-h-[260px]">
-      <div className="flex items-center gap-2 mb-4">
-        <Skeleton className="h-6 w-24 rounded-lg" />
-        <Skeleton className="h-3 w-16" />
-      </div>
-      <div className="space-y-3 flex-grow">
-        <Skeleton className="h-6 w-full" />
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-full mt-4" />
-        <Skeleton className="h-4 w-5/6" />
-      </div>
-      <Skeleton className="mt-6 h-5 w-20" />
-    </div>
-  );
-}
-
-export function ProfileHeaderSkeleton() {
-  return (
-    <section className="bg-card rounded-3xl p-8 shadow-sm border flex flex-col md:flex-row items-center md:items-start gap-8">
-      <Skeleton className="w-32 h-32 md:w-40 md:h-40 rounded-full flex-shrink-0" />
-
-      <div className="flex-1 text-center md:text-left space-y-4 w-full">
-        <div className="space-y-3">
-          <Skeleton className="h-8 w-3/4 mx-auto md:mx-0" />
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-            <Skeleton className="h-6 w-20 rounded-full" />
-            <Skeleton className="h-6 w-16 rounded-full" />
-          </div>
-        </div>
-
-        <div className="pt-2 space-y-2">
-          <Skeleton className="h-3 w-32 mx-auto md:mx-0" />
-          <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-            <Skeleton className="h-7 w-24 rounded-lg" />
-            <Skeleton className="h-7 w-32 rounded-lg" />
-            <Skeleton className="h-7 w-28 rounded-lg" />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function VoteHistorySkeleton() {
-  return (
-    <div className="bg-card p-6 rounded-2xl shadow-sm border flex flex-col md:flex-row gap-6 items-start md:items-center min-h-[140px]">
-      <div className="flex-1 space-y-3 w-full">
-        <Skeleton className="h-3 w-24" />
-        <Skeleton className="h-5 w-full" />
-        <Skeleton className="h-4 w-5/6" />
-      </div>
-
-      <div className="flex-shrink-0">
-        <Skeleton className="h-10 w-20 rounded-xl" />
-      </div>
-    </div>
-  );
-}
-
+/**
+ * Esqueleto da página de detalhe de uma votação (`/votacao/:id`).
+ * Espelha a estrutura real da página: trilha, título, cartão de descrição,
+ * placar neutro, filtro e as duas colunas de votos.
+ */
 export function VoteDetailsSkeleton() {
   return (
-    <div className="min-h-screen bg-muted/10 pb-20">
-      {/* Header Skeleton */}
-      <div className="bg-background border-b h-16 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 h-full flex items-center gap-4">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-5 w-1/3" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-        </div>
-      </div>
+    <main className="flex-1 animate-pulse" aria-hidden="true">
+      <Container className="pt-9 pb-3">
+        <Bar className="h-3 w-48" />
+        <Bar className="mt-4 h-8 w-3/4" />
+        <Bar className="mt-3 h-3 w-56" />
+      </Container>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {/* Description Card Skeleton */}
-        <div className="bg-card rounded-2xl p-6 shadow-sm border space-y-3">
-          <Skeleton className="h-4 w-32" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
+      <Container className="flex flex-col gap-4 pt-5 pb-12">
+        {/* Descrição */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <Bar className="h-3 w-32" />
+          <div className="mt-3 space-y-2">
+            <Bar className="h-3.5 w-full" />
+            <Bar className="h-3.5 w-full" />
+            <Bar className="h-3.5 w-2/3" />
           </div>
         </div>
 
-        {/* Scoreboard Skeleton */}
-        <div className="grid md:grid-cols-2 gap-4">
-          <Skeleton className="rounded-2xl h-32" />
-          <Skeleton className="rounded-2xl h-32" />
-        </div>
-
-        {/* Search Skeleton */}
-        <Skeleton className="h-12 w-full rounded-xl" />
-
-        {/* Lists Skeleton */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-40" />
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-lg" />
-              ))}
+        {/* Placar */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-slate-200 bg-white p-4"
+            >
+              <Bar className="mx-auto h-6 w-10" />
+              <Bar className="mx-auto mt-2 h-3 w-16" />
             </div>
-          </div>
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-40" />
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full rounded-lg" />
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-      </main>
-    </div>
+
+        {/* Filtro */}
+        <div className="h-12 w-full rounded-xl border border-slate-200 bg-white" />
+
+        {/* Colunas de votos */}
+        <div className="grid gap-3 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, col) => (
+            <div
+              key={col}
+              className="rounded-2xl border border-slate-200 bg-white p-5"
+            >
+              <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                <Bar className="h-5 w-14 rounded-full" />
+                <Bar className="h-3 w-24" />
+              </div>
+              <div className="mt-3 space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Bar className="size-9 flex-none rounded-full" />
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <Bar className="h-3.5 w-2/3" />
+                      <Bar className="h-3 w-1/3" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </main>
   );
 }

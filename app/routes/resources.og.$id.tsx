@@ -3,6 +3,47 @@ import type { Route } from "./+types/resources.og.$id";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 
+const FONT_URLS = {
+  bold: "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Bold.ttf",
+  regular:
+    "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Regular.ttf",
+} as const;
+
+/**
+ * As fontes eram baixadas do GitHub a CADA requisição — duas idas à rede por
+ * imagem. No pico de outubro isso é lento e, pior, frágil: se o GitHub
+ * limitar ou cair, as prévias de compartilhamento quebram exatamente quando
+ * mais importam.
+ *
+ * Memoizamos a promessa (não o resultado) para que requisições concorrentes
+ * durante o cold start compartilhem o mesmo download em vez de dispararem
+ * um cada. O cache vive enquanto a instância viver.
+ */
+let fontsPromise: Promise<{ bold: ArrayBuffer; regular: ArrayBuffer }> | null =
+  null;
+
+function loadFonts() {
+  if (!fontsPromise) {
+    fontsPromise = Promise.all([
+      fetch(FONT_URLS.bold).then((r) => {
+        if (!r.ok) throw new Error(`fonte bold: HTTP ${r.status}`);
+        return r.arrayBuffer();
+      }),
+      fetch(FONT_URLS.regular).then((r) => {
+        if (!r.ok) throw new Error(`fonte regular: HTTP ${r.status}`);
+        return r.arrayBuffer();
+      }),
+    ])
+      .then(([bold, regular]) => ({ bold, regular }))
+      .catch((err) => {
+        // Não guarda a falha: a próxima requisição tenta de novo.
+        fontsPromise = null;
+        throw err;
+      });
+  }
+  return fontsPromise;
+}
+
 export async function loader({ params }: Route.LoaderArgs) {
   if (!params.id) {
     return new Response("Not Found", { status: 404 });
@@ -14,13 +55,21 @@ export async function loader({ params }: Route.LoaderArgs) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const fontData = await fetch(
-    "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Bold.ttf"
-  ).then((res) => res.arrayBuffer());
-
-  const regularFontData = await fetch(
-    "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Regular.ttf"
-  ).then((res) => res.arrayBuffer());
+  let fontData: ArrayBuffer;
+  let regularFontData: ArrayBuffer;
+  try {
+    const fonts = await loadFonts();
+    fontData = fonts.bold;
+    regularFontData = fonts.regular;
+  } catch (error) {
+    // Sem fonte não há como renderizar. Melhor devolver 503 com retry curto
+    // do que uma imagem quebrada cacheada por um ano.
+    console.error("[og] falha ao carregar fontes:", error);
+    return new Response("Service Unavailable", {
+      status: 503,
+      headers: { "Retry-After": "60", "Cache-Control": "no-store" },
+    });
+  }
 
   const svg = await satori(
     <div

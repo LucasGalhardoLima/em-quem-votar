@@ -1,159 +1,186 @@
-import { describe, it, expect } from 'vitest';
-import { calculateArchetype, calculateMatchStrength, getDominantCategories, ARCHETYPES } from '../archetypes';
+import { describe, it, expect } from "vitest";
+import {
+  ARCHETYPES,
+  calculateArchetype,
+  calculateCompassPosition,
+  calculateMatchStrength,
+  getDominantCategories,
+  slugifyCategory,
+} from "../archetypes";
 
-describe('archetypes', () => {
-  describe('calculateArchetype', () => {
-    it('should identify Fiscal archetype correctly', () => {
-      const userScores = {
-        'baixo-custo': 3,
-        'oposicao-governo': 3,
-        'oposicao-rigoroso': 2,
-        'assiduo': 2
-      };
+/**
+ * O vetor de respostas é indexado por SLUG DE TÓPICO; o mapa de eixos é
+ * indexado por CATEGORIA. Por isso todo teste precisa fornecer as duas
+ * coisas — foi exatamente a ponte que faltava e que fazia a bússola
+ * devolver {0,0} para qualquer entrada.
+ */
+const CATEGORIES = {
+  privatizacao: "Economia e Fiscal",
+  "reforma-tributaria": "Economia e Fiscal",
+  "bolsa-familia-programas-sociais": "Economia e Fiscal",
+  "armamento-civil": "Segurança Pública",
+  policiamento: "Segurança Pública",
+  "direitos-lgbtqia": "Direitos e Costumes",
+  aborto: "Direitos e Costumes",
+  "desmatamento-amazonia": "Meio Ambiente e Agro",
+  "sistema-eleitoral": "Democracia e Institucional",
+};
 
-      const result = calculateArchetype(userScores);
-      
-      expect(result.id).toBe('fiscal');
-      expect(result.name).toBe('O Fiscal');
-    });
+describe("slugifyCategory", () => {
+  it("normaliza acento e espaço para a chave do mapa de eixos", () => {
+    expect(slugifyCategory("Economia e Fiscal")).toBe("economia-e-fiscal");
+    expect(slugifyCategory("Segurança Pública")).toBe("seguranca-publica");
+    expect(slugifyCategory("Meio Ambiente e Agro")).toBe("meio-ambiente-e-agro");
+    expect(slugifyCategory("Direitos e Costumes")).toBe("direitos-e-costumes");
+    expect(slugifyCategory("Democracia e Institucional")).toBe(
+      "democracia-e-institucional",
+    );
+  });
+});
 
-    it('should identify Progressista archetype correctly', () => {
-      const userScores = {
-        'progressista-costumes': 3,
-        'ambientalista': 3,
-        'garantista': 2,
-        'estatista': 2
-      };
-
-      const result = calculateArchetype(userScores);
-      
-      expect(result.id).toBe('progressista');
-      expect(result.name).toBe('O Progressista');
-    });
-
-    it('should identify Liberal archetype correctly', () => {
-      const userScores = {
-        'liberal': 3,
-        'liberdade-digital': 3,
-        'reformista-economico': 2,
-        'baixo-custo': 1
-      };
-
-      const result = calculateArchetype(userScores);
-      
-      expect(result.id).toBe('liberal');
-      expect(result.name).toBe('O Liberal');
-    });
-
-    it('should identify Conservador archetype correctly', () => {
-      const userScores = {
-        'conservador-costumes': 3,
-        'rigoroso': 3,
-        'ruralista': 2,
-        'oposicao-governo': 1
-      };
-
-      const result = calculateArchetype(userScores);
-      
-      expect(result.id).toBe('conservador');
-      expect(result.name).toBe('O Conservador');
-    });
-
-    it('should return an archetype when no scores match (returns first with score=0)', () => {
-      const userScores = {};
-
-      const result = calculateArchetype(userScores);
-      
-      // When no tags match, all have score 0, so returns the first one evaluated
-      expect(ARCHETYPES.map(a => a.id)).toContain(result.id);
-      expect(result).toHaveProperty('name');
-      expect(result).toHaveProperty('emoji');
-    });
-
-    it('should handle tied scores correctly', () => {
-      // When tied, should return the first one found (based on iteration order)
-      const userScores = {
-        'baixo-custo': 2,
-        'liberal': 2
-      };
-
-      const result = calculateArchetype(userScores);
-      
-      expect(ARCHETYPES.map(a => a.id)).toContain(result.id);
-    });
+describe("calculateCompassPosition", () => {
+  it("sem o mapa de categorias, não consegue posicionar ninguém", () => {
+    const pos = calculateCompassPosition({ privatizacao: 5 });
+    expect(pos).toEqual({ economic: 0, social: 0 });
   });
 
-  describe('calculateMatchStrength', () => {
-    it('should return "strong" for percentage >= 75', () => {
-      expect(calculateMatchStrength(75)).toBe('strong');
-      expect(calculateMatchStrength(80)).toBe('strong');
-      expect(calculateMatchStrength(100)).toBe('strong');
-    });
-
-    it('should return "moderate" for percentage >= 50 and < 75', () => {
-      expect(calculateMatchStrength(50)).toBe('moderate');
-      expect(calculateMatchStrength(60)).toBe('moderate');
-      expect(calculateMatchStrength(74)).toBe('moderate');
-    });
-
-    it('should return "weak" for percentage < 50', () => {
-      expect(calculateMatchStrength(0)).toBe('weak');
-      expect(calculateMatchStrength(25)).toBe('weak');
-      expect(calculateMatchStrength(49)).toBe('weak');
-    });
+  it("respostas econômicas altas empurram o eixo econômico para a direita", () => {
+    const pos = calculateCompassPosition(
+      { privatizacao: 5, "reforma-tributaria": 5 },
+      CATEGORIES,
+    );
+    expect(pos.economic).toBeGreaterThan(0.9);
+    expect(pos.social).toBe(0);
   });
 
-  describe('getDominantCategories', () => {
-    it('should return top 3 categories with highest politician scores', () => {
-      const categoryScores = [
-        { subject: 'Economia', user: 100, politician: 80 },
-        { subject: 'Costumes', user: 100, politician: 60 },
-        { subject: 'Meio Ambiente', user: 100, politician: 90 },
-        { subject: 'Tecnologia', user: 100, politician: 40 },
-        { subject: 'Segurança', user: 100, politician: 70 }
-      ];
+  it("respostas econômicas baixas empurram para a esquerda", () => {
+    const pos = calculateCompassPosition(
+      { privatizacao: 1, "bolsa-familia-programas-sociais": 1 },
+      CATEGORIES,
+    );
+    expect(pos.economic).toBeLessThan(-0.9);
+  });
 
-      const result = getDominantCategories(categoryScores);
-      
-      expect(result).toHaveLength(3);
-      expect(result[0]).toBe('Meio Ambiente');
-      expect(result[1]).toBe('Economia');
-      expect(result[2]).toBe('Segurança');
-    });
+  it("neutro (3) fica no centro do eixo", () => {
+    const pos = calculateCompassPosition(
+      { privatizacao: 3, "direitos-lgbtqia": 3 },
+      CATEGORIES,
+    );
+    expect(pos.economic).toBeCloseTo(0);
+    expect(pos.social).toBeCloseTo(0);
+  });
 
-    it('should filter out categories with 0 politician score', () => {
-      const categoryScores = [
-        { subject: 'Economia', user: 100, politician: 80 },
-        { subject: 'Costumes', user: 100, politician: 0 },
-        { subject: 'Meio Ambiente', user: 100, politician: 60 }
-      ];
+  it("tópico sem categoria conhecida é ignorado, não conta como centro", () => {
+    const comRuido = calculateCompassPosition(
+      { privatizacao: 5, "topico-desconhecido": 1 },
+      CATEGORIES,
+    );
+    const semRuido = calculateCompassPosition({ privatizacao: 5 }, CATEGORIES);
+    expect(comRuido).toEqual(semRuido);
+  });
+});
 
-      const result = getDominantCategories(categoryScores);
-      
-      expect(result).toHaveLength(2);
-      expect(result).not.toContain('Costumes');
-    });
+describe("calculateArchetype", () => {
+  it("identifica o Liberal (econômico à direita, social positivo)", () => {
+    const result = calculateArchetype(
+      {
+        privatizacao: 5,
+        "reforma-tributaria": 5,
+        "direitos-lgbtqia": 4,
+      },
+      CATEGORIES,
+    );
+    expect(["liberal", "fiscal"]).toContain(result.id);
+  });
 
-    it('should handle less than 3 categories', () => {
-      const categoryScores = [
-        { subject: 'Economia', user: 100, politician: 80 }
-      ];
+  it("identifica o Estatista (econômico à esquerda)", () => {
+    const result = calculateArchetype(
+      {
+        privatizacao: 1,
+        "reforma-tributaria": 1,
+        "bolsa-familia-programas-sociais": 1,
+      },
+      CATEGORIES,
+    );
+    expect(["estatista", "progressista"]).toContain(result.id);
+  });
 
-      const result = getDominantCategories(categoryScores);
-      
-      expect(result).toHaveLength(1);
-      expect(result[0]).toBe('Economia');
-    });
+  it("identifica o Progressista (social positivo, econômico à esquerda)", () => {
+    const result = calculateArchetype(
+      {
+        privatizacao: 2,
+        "direitos-lgbtqia": 5,
+        aborto: 5,
+        "desmatamento-amazonia": 1,
+      },
+      CATEGORIES,
+    );
+    expect(result.id).toBe("progressista");
+  });
 
-    it('should return empty array when all politician scores are 0', () => {
-      const categoryScores = [
-        { subject: 'Economia', user: 100, politician: 0 },
-        { subject: 'Costumes', user: 100, politician: 0 }
-      ];
+  it("identifica o Conservador (social negativo, econômico à direita)", () => {
+    const result = calculateArchetype(
+      {
+        privatizacao: 4,
+        "direitos-lgbtqia": 1,
+        aborto: 1,
+        "armamento-civil": 1,
+      },
+      CATEGORIES,
+    );
+    expect(result.id).toBe("conservador");
+  });
 
-      const result = getDominantCategories(categoryScores);
-      
-      expect(result).toHaveLength(0);
-    });
+  it("vetor vazio cai no centro — Pragmático", () => {
+    const result = calculateArchetype({}, CATEGORIES);
+    expect(result.id).toBe("pragmatico");
+    expect(ARCHETYPES.map((a) => a.id)).toContain(result.id);
+  });
+
+  it("sempre devolve um arquétipo válido, com nome e emoji", () => {
+    const result = calculateArchetype({ privatizacao: 4 }, CATEGORIES);
+    expect(result).toHaveProperty("name");
+    expect(result).toHaveProperty("emoji");
+    expect(ARCHETYPES).toContainEqual(result);
+  });
+});
+
+describe("calculateMatchStrength", () => {
+  it("classifica por faixa", () => {
+    expect(calculateMatchStrength(90)).toBe("strong");
+    expect(calculateMatchStrength(75)).toBe("strong");
+    expect(calculateMatchStrength(74)).toBe("moderate");
+    expect(calculateMatchStrength(50)).toBe("moderate");
+    expect(calculateMatchStrength(49)).toBe("weak");
+    expect(calculateMatchStrength(0)).toBe("weak");
+  });
+});
+
+describe("getDominantCategories", () => {
+  it("devolve as 3 categorias com maior score do político", () => {
+    const result = getDominantCategories([
+      { subject: "Economia", user: 5, politician: 90 },
+      { subject: "Segurança", user: 3, politician: 80 },
+      { subject: "Saúde", user: 4, politician: 70 },
+      { subject: "Educação", user: 2, politician: 60 },
+    ]);
+    expect(result).toEqual(["Economia", "Segurança", "Saúde"]);
+  });
+
+  it("descarta categorias com score zero", () => {
+    const result = getDominantCategories([
+      { subject: "Economia", user: 5, politician: 90 },
+      { subject: "Segurança", user: 3, politician: 0 },
+    ]);
+    expect(result).toEqual(["Economia"]);
+  });
+
+  it("devolve vazio quando todos os scores são zero", () => {
+    expect(
+      getDominantCategories([
+        { subject: "Economia", user: 5, politician: 0 },
+        { subject: "Segurança", user: 3, politician: 0 },
+      ]),
+    ).toEqual([]);
   });
 });

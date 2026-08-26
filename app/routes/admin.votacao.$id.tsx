@@ -1,17 +1,43 @@
-import { useLoaderData, Form, useNavigation, redirect } from "react-router";
+import {
+  useLoaderData,
+  useActionData,
+  Form,
+  useNavigation,
+  redirect,
+  Link,
+} from "react-router";
+import {
+  ArrowLeft,
+  Calendar,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  Tag,
+  TriangleAlert,
+  Users,
+  XCircle,
+} from "lucide-react";
+
 import type { Route } from "./+types/admin.votacao.$id";
 import { db } from "~/utils/db.server";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { ArrowLeft, CheckCircle2, XCircle, Loader2, Users, Calendar, Tag } from "lucide-react";
-import { format } from "date-fns";
-import { Link } from "react-router";
+import { requireAdmin } from "~/utils/admin-auth.server";
+import { Container } from "~/components/layout";
+import { cn } from "~/lib/utils";
 
 export function meta() {
-    return [{ title: "Editar Votação | Admin" }];
+  return [
+    { title: "Admin · Votação | Em Quem Votar?" },
+    { name: "robots", content: "noindex,nofollow" },
+  ];
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+/**
+ * Esta tela ainda opera sobre os modelos legados `Politician`/`VoteLog`
+ * (fluxo de tags por voto nominal). O fluxo de dados fica como está — aqui
+ * só o visual acompanha o sistema novo.
+ */
+export async function loader({ params, request }: Route.LoaderArgs) {
+  requireAdmin(request);
     const bill = await db.bill.findUnique({
         where: { id: params.id },
         include: {
@@ -49,6 +75,7 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
+  requireAdmin(request);
     const formData = await request.formData();
     const intent = formData.get("intent");
 
@@ -127,235 +154,288 @@ export async function action({ request, params }: Route.ActionArgs) {
     return null;
 }
 
+const CARD = "rounded-2xl border border-slate-200 bg-white";
+const LABEL =
+    "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-400 uppercase";
+const INPUT =
+    "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
+
+const STATUS_PRESENTATION: Record<string, { label: string; className: string }> = {
+    pending: {
+        label: "Pendente",
+        className: "border-amber-200 bg-amber-50 text-amber-800",
+    },
+    approved: {
+        label: "Aprovada",
+        className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    },
+    rejected: {
+        label: "Rejeitada",
+        className: "border-rose-200 bg-rose-50 text-rose-700",
+    },
+};
+
 export default function AdminVotacaoDetail() {
     const { bill, voteCount, tagsByCategory } = useLoaderData<typeof loader>();
+    const actionData = useActionData<typeof action>();
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting";
 
-    return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900">
-            <Header
-                breadcrumbItems={[
-                    { label: "Admin", href: "/admin" },
-                    { label: "Votação", active: true },
-                ]}
-            />
+    const status =
+        STATUS_PRESENTATION[bill.status] ?? {
+            label: bill.status,
+            className: "border-slate-200 bg-white text-slate-500",
+        };
+    const errorMessage =
+        actionData && "error" in actionData ? actionData.error : null;
 
-            <main className="flex-grow max-w-4xl mx-auto w-full px-4 py-8">
-                {/* Back */}
+    return (
+        <main className="flex-1">
+            <Container className="pt-9 pb-16">
                 <Link
                     to="/admin"
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-brand-primary mb-6"
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-400 transition-colors hover:text-slate-600"
                 >
-                    <ArrowLeft size={18} />
-                    Voltar para lista
+                    <ArrowLeft className="size-3.5" />
+                    Voltar ao painel
                 </Link>
 
-                {/* Bill Info */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-6 mb-6 shadow-sm">
-                    <div className="flex items-start justify-between mb-4">
-                        <div>
-                            <span
-                                className={`px-2 py-1 text-xs font-bold rounded-full ${bill.status === "pending"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : bill.status === "approved"
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-red-100 text-red-700"
-                                    }`}
-                            >
-                                {bill.status === "pending" ? "Pendente" : bill.status === "approved" ? "Aprovada" : "Rejeitada"}
-                            </span>
-                            {bill.aiConfidence && (
-                                <span className="ml-2 text-xs text-gray-500">
-                                    Confiança IA: {bill.aiConfidence.toFixed(0)}%
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">{bill.title}</h1>
-
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
-                        <span className="flex items-center gap-1.5">
-                            <Calendar size={16} />
-                            {format(new Date(bill.voteDate), "dd/MM/yyyy")}
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span
+                        className={cn(
+                            "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                            status.className
+                        )}
+                    >
+                        {status.label}
+                    </span>
+                    {bill.aiConfidence !== null && (
+                        <span className="text-[12px] text-slate-400">
+                            Confiança da IA: {Number(bill.aiConfidence).toFixed(0)}%
                         </span>
-                        <span className="flex items-center gap-1.5">
-                            <Users size={16} />
-                            {voteCount} votos registrados
-                        </span>
-                    </div>
-
-                    {bill.description && (
-                        <div className="mb-4">
-                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Descrição Técnica</p>
-                            <p className="text-sm text-gray-600 leading-relaxed">{bill.description}</p>
-                        </div>
-                    )}
-
-                    {/* Descrição Simplificada pela IA */}
-                    {bill.simplifiedDescription && (
-                        <div className="mt-4 p-5 bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border border-purple-100">
-                            <p className="text-sm font-bold text-purple-700 mb-3 flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM9 9a1 1 0 012 0v4a1 1 0 01-2 0V9zm1-4a1 1 0 100 2 1 1 0 000-2z" />
-                                </svg>
-                                Sobre esta Votação
-                            </p>
-                            <div className="prose prose-sm max-w-none">
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                                    {bill.simplifiedDescription}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Link para Fonte Original */}
-                    {bill.sourceUrl && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                            <a
-                                href={bill.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 text-sm font-medium text-brand-primary hover:underline"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                                Verificar votação original na Câmara dos Deputados
-                            </a>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Use este link para confirmar os detalhes antes de aprovar.
-                            </p>
-                        </div>
-                    )}
-
-
-                    {/* Sugestões da IA */}
-                    {bill.suggestedTagSim && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                            <p className="text-sm font-semibold text-blue-700 mb-2 flex items-center gap-2">
-                                <Tag size={16} />
-                                Sugestão da IA:
-                            </p>
-                            <div className="flex gap-4 text-sm">
-                                <span>
-                                    SIM: <code className="bg-white px-2 py-1 rounded border">{bill.suggestedTagSim}</code>
-                                </span>
-                                <span>
-                                    NÃO: <code className="bg-white px-2 py-1 rounded border">{bill.suggestedTagNao}</code>
-                                </span>
-                            </div>
-                        </div>
                     )}
                 </div>
 
-                {/* Approval Form */}
-                {bill.status === "pending" && (
-                    <Form method="post" className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-                        <h2 className="text-lg font-bold mb-4">Classificar Votação</h2>
+                <h1 className="mt-3 font-heading text-[28px] font-bold tracking-[-0.02em] text-balance text-slate-800 sm:text-[34px]">
+                    {bill.simplifiedTitle || bill.title}
+                </h1>
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14.5px] text-slate-500">
+                    <span className="inline-flex items-center gap-1.5">
+                        <Calendar className="size-4 text-slate-400" aria-hidden="true" />
+                        {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                        <Users className="size-4 text-slate-400" aria-hidden="true" />
+                        {voteCount} votos registrados
+                    </span>
+                    <span>
+                        {bill.sourceType === "senado" ? "Senado" : "Câmara dos Deputados"}
+                    </span>
+                </p>
 
-                        <div className="grid md:grid-cols-2 gap-6 mb-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tag para voto SIM
-                                </label>
-                                <select
-                                    name="tagSim"
-                                    defaultValue={bill.suggestedTagSim || ""}
-                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {Object.entries(tagsByCategory).map(([category, tags]) => (
-                                        <optgroup key={category} label={category}>
-                                            {tags.map((tag) => (
-                                                <option key={tag.slug} value={tag.slug}>
-                                                    {tag.name}
-                                                </option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Tag para voto NÃO
-                                </label>
-                                <select
-                                    name="tagNao"
-                                    defaultValue={bill.suggestedTagNao || ""}
-                                    className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary"
-                                >
-                                    <option value="">Selecione...</option>
-                                    {Object.entries(tagsByCategory).map(([category, tags]) => (
-                                        <optgroup key={category} label={category}>
-                                            {tags.map((tag) => (
-                                                <option key={tag.slug} value={tag.slug}>
-                                                    {tag.name}
-                                                </option>
-                                            ))}
-                                        </optgroup>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <button
-                                type="submit"
-                                name="intent"
-                                value="approve"
-                                disabled={isSubmitting}
-                                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
-                            >
-                                {isSubmitting ? (
-                                    <Loader2 className="animate-spin" size={18} />
-                                ) : (
-                                    <CheckCircle2 size={18} />
-                                )}
-                                Aprovar e Atribuir Tags
-                            </button>
-
-                            <button
-                                type="submit"
-                                name="intent"
-                                value="reject"
-                                disabled={isSubmitting}
-                                className="flex items-center justify-center gap-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
-                            >
-                                <XCircle size={18} />
-                                Rejeitar
-                            </button>
-                        </div>
-                    </Form>
+                {errorMessage && (
+                    <p
+                        role="alert"
+                        className="mt-5 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-800"
+                    >
+                        <TriangleAlert className="mt-0.5 size-4 flex-none" aria-hidden="true" />
+                        <span>{errorMessage}</span>
+                    </p>
                 )}
 
-                {/* Sample Votes */}
-                {bill.voteLogs.length > 0 && (
-                    <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-6">
-                        <h3 className="font-bold mb-4">Amostra de Votos</h3>
-                        <div className="space-y-2">
-                            {bill.voteLogs.map((vote) => (
-                                <div
-                                    key={vote.id}
-                                    className="flex items-center justify-between text-sm py-2 border-b border-gray-50 last:border-0"
+                <div className="mt-6 space-y-5">
+                    <section className={cn(CARD, "space-y-5 p-5 sm:p-6")}>
+                        {bill.simplifiedTitle && (
+                            <div>
+                                <p className={LABEL}>Título original</p>
+                                <p className="text-[13.5px] leading-relaxed text-slate-600">
+                                    {bill.title}
+                                </p>
+                            </div>
+                        )}
+
+                        {bill.description && (
+                            <div>
+                                <p className={LABEL}>Descrição técnica</p>
+                                <p className="text-[13.5px] leading-relaxed text-slate-600">
+                                    {bill.description}
+                                </p>
+                            </div>
+                        )}
+
+                        {bill.simplifiedDescription && (
+                            <div>
+                                <p className={LABEL}>Resumo simplificado</p>
+                                <p className="text-[13.5px] leading-relaxed whitespace-pre-line text-slate-600">
+                                    {bill.simplifiedDescription}
+                                </p>
+                            </div>
+                        )}
+
+                        {bill.sourceUrl && (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <a
+                                    href={bill.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
                                 >
-                                    <span className="text-gray-700">{vote.politician.name}</span>
-                                    <span
-                                        className={`font-semibold ${vote.voteType === "SIM" ? "text-green-600" : "text-red-600"
-                                            }`}
-                                    >
-                                        {vote.voteType}
+                                    Conferir a votação original
+                                    <ExternalLink className="size-3.5" aria-hidden="true" />
+                                </a>
+                                <p className="mt-1 text-[12px] text-slate-400">
+                                    Confirme os detalhes na fonte antes de aprovar.
+                                </p>
+                            </div>
+                        )}
+
+                        {bill.suggestedTagSim && (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-600">
+                                    <Tag className="size-3.5 text-slate-400" aria-hidden="true" />
+                                    Sugestão da IA
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-4 text-[12.5px] text-slate-500">
+                                    <span>
+                                        SIM:{" "}
+                                        <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-slate-700">
+                                            {bill.suggestedTagSim}
+                                        </code>
+                                    </span>
+                                    <span>
+                                        NÃO:{" "}
+                                        <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-slate-700">
+                                            {bill.suggestedTagNao}
+                                        </code>
                                     </span>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </main>
+                            </div>
+                        )}
+                    </section>
 
-            <Footer />
-        </div>
+                    {bill.status === "pending" && (
+                        <Form method="post" className={cn(CARD, "space-y-4 p-5 sm:p-6")}>
+                            <div>
+                                <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+                                    Classificar votação
+                                </h2>
+                                <p className="mt-1 text-[12.5px] text-slate-500">
+                                    A tag escolhida é atribuída a todos os parlamentares
+                                    conforme o voto registrado.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <label htmlFor="tagSim" className={LABEL}>
+                                        Tag para voto SIM
+                                    </label>
+                                    <select
+                                        id="tagSim"
+                                        name="tagSim"
+                                        defaultValue={bill.suggestedTagSim || ""}
+                                        className={INPUT}
+                                    >
+                                        <option value="">Selecione…</option>
+                                        {Object.entries(tagsByCategory).map(([category, tags]) => (
+                                            <optgroup key={category} label={category}>
+                                                {tags.map((tag) => (
+                                                    <option key={tag.slug} value={tag.slug}>
+                                                        {tag.name}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="tagNao" className={LABEL}>
+                                        Tag para voto NÃO
+                                    </label>
+                                    <select
+                                        id="tagNao"
+                                        name="tagNao"
+                                        defaultValue={bill.suggestedTagNao || ""}
+                                        className={INPUT}
+                                    >
+                                        <option value="">Selecione…</option>
+                                        {Object.entries(tagsByCategory).map(([category, tags]) => (
+                                            <optgroup key={category} label={category}>
+                                                {tags.map((tag) => (
+                                                    <option key={tag.slug} value={tag.slug}>
+                                                        {tag.name}
+                                                    </option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                                <button
+                                    type="submit"
+                                    name="intent"
+                                    value="approve"
+                                    disabled={isSubmitting}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                                >
+                                    {isSubmitting ? (
+                                        <Loader2 className="size-4 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 className="size-4" />
+                                    )}
+                                    Aprovar e atribuir tags
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    name="intent"
+                                    value="reject"
+                                    disabled={isSubmitting}
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-6 py-3 text-[13.5px] font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
+                                >
+                                    <XCircle className="size-4" />
+                                    Rejeitar
+                                </button>
+                            </div>
+                        </Form>
+                    )}
+
+                    {bill.voteLogs.length > 0 && (
+                        <section className={cn(CARD, "p-5 sm:p-6")}>
+                            <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+                                Amostra de votos
+                            </h2>
+                            <ul className="mt-3 divide-y divide-slate-100">
+                                {bill.voteLogs.map((vote) => (
+                                    <li
+                                        key={vote.id}
+                                        className="flex items-center justify-between gap-3 py-2.5 text-[13.5px]"
+                                    >
+                                        <span className="truncate text-slate-600">
+                                            {vote.politician.name}
+                                        </span>
+                                        <span
+                                            className={cn(
+                                                "flex-none rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                                                vote.voteType === "SIM"
+                                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                    : vote.voteType === "NÃO" || vote.voteType === "NAO"
+                                                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                                                        : "border-slate-200 bg-white text-slate-500"
+                                            )}
+                                        >
+                                            {vote.voteType}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+                    )}
+                </div>
+            </Container>
+        </main>
     );
 }

@@ -12,92 +12,91 @@ export const meta = () => {
     { name: "description", content: "A verdade sobre o voto nulo no Brasil: ele cancela a eleição? Saiba aqui." },
   ];
 };
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { HelpCircle, AlertTriangle, FileCheck, CheckCircle2, Scale, Info } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[
-    { label: "Educação Política", href: "/educacao" },
-    { label: "O Mito do Voto Nulo", active: true }
-  ]} />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-tertiary rounded-2xl mb-2 text-white">
-        <AlertTriangle size={32} />
-      </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-        O Mito do <span className="text-brand-primary">Voto Nulo</span>
-      </h1>
-      <p className="text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
-        Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado.
-      </p>
-    </header>
-
-    {/* The Myth Card */}
-    <section className="bg-red-50 p-8 rounded-3xl border border-red-100 text-center space-y-4">
-        <h2 className="text-red-900 font-bold text-xl uppercase tracking-widest flex items-center justify-center gap-2">
-            <Ban className="w-6 h-6" /> O Mito
-        </h2>
-        <p className="text-red-800 text-lg font-medium italic">
-            "Se mais de 50% dos eleitores votarem nulo, a eleição é anulada e convocam-se novas eleições com novos candidatos!"
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Mitos Eleitorais
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          O Mito do Voto Nulo
+        </h1>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado.
         </p>
-        <div className="font-black text-4xl text-red-600 uppercase">Isso é Mentira</div>
-    </section>
-
-     {/* The Truth Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-        <div className="flex items-center gap-4 mb-8">
-            <div className="bg-green-100 p-3 rounded-xl text-green-700">
-                <CheckCircle2 size={32} />
-            </div>
-            <div>
-                <h2 className="text-2xl font-bold text-slate-900 m-0">A Realidade</h2>
-                <div className="text-slate-500">Como funciona a contagem</div>
-            </div>
+      </header>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> O Mito
+        </h2>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-5">
+          <p className="text-[14.5px] leading-[1.7] text-pretty text-slate-600 italic">
+            "Se mais de 50% dos eleitores votarem nulo, a eleição é anulada e convocam-se novas eleições com novos candidatos!"
+          </p>
+          <p className="mt-3 font-heading text-[20px] font-bold tracking-[-0.01em] text-indigo-600 uppercase">
+            Isso é Mentira
+          </p>
         </div>
-        
-        <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-4">
-                <p className="text-slate-700">A Constituição é clara: apenas os <strong>votos válidos</strong> contam.</p>
-                <ul className="space-y-3 pl-0 list-none">
-                    <li className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <CheckCircle2 className="text-green-500 w-5 h-5" />
-                        <span><strong>Votos Válidos:</strong> Para candidatos ou partidos.</span>
-                    </li>
-                    <li className="flex gap-3 items-center bg-slate-50 p-3 rounded-lg border border-slate-100">
-                        <XCircle className="text-red-500 w-5 h-5" />
-                        <span><strong>Nulos e Brancos:</strong> São descartados.</span>
-                    </li>
-                </ul>
-            </div>
-            <div className="bg-slate-100 p-6 rounded-2xl border border-slate-200 text-sm">
-                <h3 className="font-bold mb-2 flex items-center gap-2"><Calculator size={16}/> Exemplo Prático</h3>
-                <p className="mb-2">Cidade com 10 eleitores:</p>
-                <ul className="list-disc pl-4 mb-2 space-y-1">
-                    <li>6 votam Nulo</li>
-                    <li>3 votam no Candidato A</li>
-                    <li>1 vota no Candidato B</li>
-                </ul>
-                <p className="font-bold text-brand-primary">Resultado: Candidato A vence com 75% dos votos válidos.</p>
-            </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> A Realidade
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A Constituição é clara: apenas os <strong className="font-semibold text-slate-800">votos válidos</strong> contam.
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Votos Válidos:</strong> Para candidatos ou partidos.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Nulos e Brancos:</strong> São descartados.</span>
+            </li>
+          </ul>
         </div>
-    </section>
-
-    {/* Warning Card */}
-    <section className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-100">
-        <h2 className="text-xl font-bold text-slate-900 mb-4">O Perigo da Desinformação</h2>
-        <div className="prose prose-lg prose-slate text-slate-600">
-            <p>
-                Acreditar nesse mito leva à inércia. Ao votar nulo como forma de protesto achando que vai "cancelar tudo", você está, na prática, <strong>lavando as mãos</strong> e deixando que outras pessoas decidam por você.
-            </p>
-    <div className="bg-amber-50 border border-amber-100 p-6 rounded-2xl text-center text-amber-900">
-        <strong>Nota:</strong> "Votar nulo não é um ato de rebeldia eficaz contra o sistema. É apenas uma forma de se omitir da decisão."
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-5">
+          <h3 className="text-[15px] font-bold text-slate-800">Exemplo Prático</h3>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">Cidade com 10 eleitores:</p>
+          <ul className="mt-2 grid gap-2 text-[13px] leading-relaxed text-slate-500">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>6 votam Nulo</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>3 votam no Candidato A</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>1 vota no Candidato B</span>
+            </li>
+          </ul>
+          <p className="mt-3 text-[13px] font-semibold text-indigo-600">
+            Resultado: Candidato A vence com 75% dos votos válidos.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> O Perigo da Desinformação
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Acreditar nesse mito leva à inércia. Ao votar nulo como forma de protesto achando que vai "cancelar tudo", você está, na prática, <strong className="font-semibold text-slate-800">lavando as mãos</strong> e deixando que outras pessoas decidam por você.
+          </p>
+        </div>
+      </section>
+      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <p>
+          <strong className="font-semibold text-slate-800">Nota:</strong> "Votar nulo não é um ato de rebeldia eficaz contra o sistema. É apenas uma forma de se omitir da decisão."
+        </p>
+      </aside>
     </div>
-        </div>
-    </section>
-
-  </main>
-  <Footer />
-</div>
+  </Container>
+</main>

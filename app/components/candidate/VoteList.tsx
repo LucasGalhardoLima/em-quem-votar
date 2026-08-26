@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Badge } from "~/components/ui/badge";
-import { Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { VoteDetail } from "./VoteDetail";
 
 interface Vote {
@@ -17,26 +16,25 @@ interface Vote {
   };
 }
 
-interface VoteListProps {
-  votes: Vote[];
-}
+const DATE_FMT = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
-const VOTE_TYPE_STYLES: Record<string, string> = {
-  SIM: "bg-foreground/10 text-foreground",
-  "NÃO": "bg-foreground/10 text-foreground",
-  Abstenção: "bg-muted text-muted-foreground",
-  Obstrução: "bg-muted text-muted-foreground",
-};
-
-export function VoteList({ votes }: VoteListProps) {
+export function VoteList({ votes }: { votes: Vote[] }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   if (votes.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p className="text-sm">Nenhum voto registrado para este candidato.</p>
-        <p className="text-xs mt-1">
-          Votos serão adicionados conforme disponíveis.
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+        <p className="text-[15px] font-bold text-slate-600">
+          Nenhuma votação registrada
+        </p>
+        <p className="mx-auto mt-2 max-w-lg text-[13.5px] text-slate-400">
+          As votações nominais aparecem aqui conforme forem sincronizadas das
+          bases da Câmara e do Senado.
         </p>
       </div>
     );
@@ -46,40 +44,44 @@ export function VoteList({ votes }: VoteListProps) {
     <div className="space-y-2">
       {votes.map((vote) => {
         const isExpanded = expandedId === vote.id;
-        const displayTitle =
-          vote.bill.simplifiedTitle || vote.bill.title;
+        const displayTitle = vote.bill.simplifiedTitle || vote.bill.title;
 
         return (
-          <div key={vote.id} className="rounded-lg border bg-card">
+          <div
+            key={vote.id}
+            className="rounded-2xl border border-slate-200 bg-white"
+          >
             <button
               type="button"
+              aria-expanded={isExpanded}
               onClick={() => setExpandedId(isExpanded ? null : vote.id)}
-              className="w-full text-left p-4 flex items-start gap-3 hover:bg-muted/50 transition-colors rounded-lg"
+              className="flex w-full items-start gap-3 rounded-2xl p-4 text-left transition-colors hover:bg-slate-50"
             >
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-medium text-foreground line-clamp-2">
+              <div className="min-w-0 flex-1">
+                <h4 className="line-clamp-2 text-sm font-semibold text-slate-800">
                   {displayTitle}
                 </h4>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] font-semibold ${VOTE_TYPE_STYLES[vote.voteType] ?? ""}`}
-                  >
+                <div className="mt-1.5 flex items-center gap-2">
+                  {/* Chip neutro de propósito: colorir o voto de alguém é
+                      emitir juízo sobre a pessoa, não relatar um fato. */}
+                  <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
                     {vote.voteType}
-                  </Badge>
-                  <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
-                    <Calendar className="w-2.5 h-2.5" />
-                    {new Date(vote.bill.voteDate).toLocaleDateString("pt-BR")}
                   </span>
+                  <time
+                    dateTime={vote.bill.voteDate}
+                    className="text-[10px] text-slate-400"
+                  >
+                    {DATE_FMT.format(new Date(vote.bill.voteDate))}
+                  </time>
                 </div>
               </div>
-              <div className="shrink-0 mt-1 text-muted-foreground">
+              <span className="mt-1 shrink-0 text-slate-400">
                 {isExpanded ? (
-                  <ChevronUp className="w-4 h-4" />
+                  <ChevronUp className="size-4" />
                 ) : (
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="size-4" />
                 )}
-              </div>
+              </span>
             </button>
 
             {isExpanded && (

@@ -1,10 +1,8 @@
 import type { Route } from "./+types/votacoes._index";
 import { useLoaderData, Link, Form, useSubmit, useSearchParams } from "react-router";
 import { BillService } from "~/services/bill.server";
-import { Header } from "~/components/Header";
-import { Footer } from "~/components/Footer";
-import { Search, FileText, Calendar, ArrowRight } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
+import { Search } from "lucide-react";
+import { Container } from "~/components/layout";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -42,6 +40,13 @@ const SOURCE_LABELS: Record<string, string> = {
   senado: "Senado",
 };
 
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
 export default function VotacoesIndex() {
   const { bills, q, source } = useLoaderData<typeof loader>();
   const submit = useSubmit();
@@ -58,112 +63,107 @@ export default function VotacoesIndex() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header breadcrumbItems={[{ label: "Votações", active: true }]} />
+    <main className="flex-1">
+      <Container className="pt-9 pb-3">
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
+          Votações
+        </h1>
+        <p className="mt-1.5 text-[14.5px] text-pretty text-slate-500">
+          Pesquise as votações nominais da Câmara e do Senado e veja como cada
+          parlamentar se posicionou — sem rótulo de certo ou errado.
+        </p>
 
-      <main className="flex-grow max-w-4xl mx-auto w-full px-4 py-8">
-        {/* Page Header */}
-        <div className="space-y-2 mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-            Votações
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-2xl">
-            Pesquise e entenda como os parlamentares se posicionaram nas pautas
-            mais importantes do país.
-          </p>
-        </div>
-
-        {/* Search + Filters */}
-        <div className="space-y-4 mb-8">
+        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
           <Form
             method="get"
-            className="relative"
+            className="relative flex-1"
             onChange={(e) => submit(e.currentTarget, { replace: true })}
           >
             <input type="hidden" name="source" value={source} />
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-4 w-4 text-muted-foreground" />
-            </div>
+            <Search
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-400"
+              aria-hidden="true"
+            />
             <input
               type="search"
               name="q"
               defaultValue={q}
-              placeholder="Buscar votação..."
-              className="block w-full pl-10 pr-3 py-2.5 border border-border rounded-lg bg-card text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring transition-all"
+              placeholder="Buscar votação por título ou tema…"
+              aria-label="Buscar votações"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
             />
           </Form>
 
-          {/* Source tabs */}
-          <div className="flex gap-1.5">
-            {SOURCE_TABS.map((tab) => (
-              <button
-                key={tab.value}
-                type="button"
-                onClick={() => handleSourceChange(tab.value)}
-                className={cn(
-                  "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
-                  source === tab.value
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Filtrar por casa legislativa"
+          >
+            {SOURCE_TABS.map((tab) => {
+              const active = source === tab.value;
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => handleSourceChange(tab.value)}
+                  className={cn(
+                    "rounded-full border px-3.5 py-2 text-[12.5px] transition-colors",
+                    active
+                      ? "border-slate-800 bg-slate-800 font-semibold text-white"
+                      : "border-slate-200 bg-white font-medium text-slate-500 hover:border-slate-300",
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
+      </Container>
 
-        {/* Results */}
-        <div className="space-y-3">
-          {bills.length === 0 ? (
-            <div className="text-center py-16 rounded-lg border bg-card">
-              <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-sm font-semibold text-foreground">
-                Nenhuma votação encontrada
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Tente buscar por outros termos.
-              </p>
-            </div>
-          ) : (
-            bills.map((bill) => (
+      <Container className="pt-5 pb-10">
+        {bills.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
+            <p className="text-base font-bold text-slate-600">
+              Nenhuma votação encontrada
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+              Tente outro termo ou remova o filtro de casa legislativa.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {bills.map((bill) => (
               <Link
                 key={bill.id}
                 to={`/votacao/${bill.id}`}
-                className="group block rounded-lg border bg-card p-4 hover:border-foreground/20 transition-colors"
+                prefetch="intent"
+                className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-indigo-300"
               >
-                <div className="flex items-start gap-4">
-                  <div className="shrink-0 mt-0.5 p-2 rounded-md bg-muted">
-                    <FileText className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-medium text-foreground group-hover:text-foreground/80 line-clamp-2">
-                      {bill.simplifiedTitle || bill.title}
-                    </h2>
-                    <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground inline-flex items-center gap-0.5">
-                        <Calendar className="w-2.5 h-2.5" />
-                        {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
-                      </span>
-                      <Badge
-                        variant="outline"
-                        className="text-[10px] font-normal"
-                      >
-                        {SOURCE_LABELS[bill.sourceType] ?? bill.sourceType}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground shrink-0 mt-1 transition-colors" />
-                </div>
+                {/*
+                  A listagem não carrega sourceUrl (não faz parte do select de
+                  BillService.listApproved), então a origem aparece aqui como
+                  texto simples. O link para a fonte oficial fica na página da
+                  votação, onde sourceUrl está disponível.
+                */}
+                <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+                  {SOURCE_LABELS[bill.sourceType] ?? bill.sourceType}
+                </span>
+                <span className="text-[15px] leading-snug font-bold text-pretty text-slate-800">
+                  {bill.simplifiedTitle || bill.title}
+                </span>
+                <time
+                  dateTime={bill.voteDate}
+                  className="mt-auto pt-2 text-[12px] text-slate-400"
+                >
+                  {dateFormatter.format(new Date(bill.voteDate))}
+                </time>
               </Link>
-            ))
-          )}
-        </div>
-      </main>
-
-      <Footer />
-    </div>
+            ))}
+          </div>
+        )}
+      </Container>
+    </main>
   );
 }

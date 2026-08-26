@@ -2,64 +2,82 @@
 title: "Termos de Uso | Em Quem Votar"
 description: "Regras e condições para uso da plataforma"
 ---
+import { AlertCircle } from "lucide-react";
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { FileText, AlertCircle, Scale } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[{ label: "Termos de Uso", active: true }]} />
-
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-16 space-y-12">
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-gray-100 rounded-2xl mb-2 text-gray-600">
-        <FileText size={32} />
-      </div>
-      <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-        Termos de Uso
-      </h1>
-      <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-        Ao usar o <strong>Em Quem Votar?</strong>, você concorda com as seguintes condições.
-      </p>
-    </header>
-
-    <article className="prose prose-lg prose-blue mx-auto prose-headings:font-bold prose-headings:text-gray-900 bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100">
-      
-      <h3>1. Objetivo da Plataforma</h3>
-      <p>
-        O <strong>Em Quem Votar?</strong> é uma ferramenta de consulta e visualização de dados públicos. Nosso objetivo é facilitar o acesso a informações sobre o legislativo brasileiro. Não representamos nenhuma entidade governamental.
-      </p>
-
-      <h3>2. Uso dos Dados</h3>
-      <p>
-        As informações apresentadas (votações, gastos, presenças) são extraídas automaticamente de fontes oficiais. Embora nos esforcemos para garantir a precisão, <strong>não garantimos que os dados estejam livres de erros pontuais</strong> provenientes da fonte ou do processamento.
-      </p>
-      <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 text-yellow-900 text-sm not-prose flex gap-3 font-medium">
-        <AlertCircle className="flex-shrink-0" />
-        Recomendamos sempre conferir informações críticas diretamente nos portais oficiais da Câmara dos Deputados.
-      </div>
-
-      <h3>3. Isenção de Responsabilidade</h3>
-      <p>
-        A equipe do projeto não se responsabiliza por decisões tomadas com base nas informações aqui apresentadas. As classificações (tags) são geradas por algoritmos baseados em padrões de votação e não refletem opinião pessoal dos desenvolvedores.
-      </p>
-
-      <h3>4. Propriedade Intelectual</h3>
-      <p>
-        O código-fonte desta plataforma é aberto (Open Source) e está disponível no GitHub. Você é livre para auditar, copiar e contribuir, respeitando a licença MIT especificada no repositório. Os dados dos parlamentares são públicos.
-      </p>
-
-      <h3>5. Alterações nos Termos</h3>
-      <p>
-        Podemos atualizar estes termos a qualquer momento para refletir mudanças na legislação ou na plataforma. O uso contínuo do site implica na aceitação dos novos termos.
-      </p>
-      
-      <p className="text-sm text-gray-500 mt-8">
-        Última atualização: {new Date().toLocaleDateString('pt-BR')}
-      </p>
-
-    </article>
-  </main>
-
-  <Footer />
-</div>
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Documento legal
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          Termos de Uso
+        </h1>
+        <p className="text-[14px] text-slate-500">
+          Última atualização: {new Date().toLocaleDateString('pt-BR')}
+        </p>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          Ao usar o <strong className="font-semibold text-slate-800">Em Quem Votar?</strong>, você concorda com as seguintes condições.
+        </p>
+      </header>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Objetivo da Plataforma
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O <strong className="font-semibold text-slate-800">Em Quem Votar?</strong> é uma ferramenta de consulta e visualização de dados públicos. Nosso objetivo é facilitar o acesso a informações sobre o legislativo brasileiro. Não representamos nenhuma entidade governamental.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Uso dos Dados
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            As informações apresentadas (posições, votações, gastos e bens declarados) são extraídas de fontes oficiais. Embora nos esforcemos para garantir a precisão, <strong className="font-semibold text-slate-800">não garantimos que os dados estejam livres de erros pontuais</strong> provenientes da fonte ou do processamento.
+          </p>
+        </div>
+        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+          <AlertCircle className="mt-0.5 size-4 flex-none text-indigo-600" aria-hidden="true" />
+          <span>
+            Recomendamos sempre conferir informações críticas diretamente nos portais oficiais do TSE, da Câmara dos Deputados e do Senado Federal.
+          </span>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Isenção de Responsabilidade
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A equipe do projeto não se responsabiliza por decisões tomadas com base nas informações aqui apresentadas. As classificações (tags) são geradas por algoritmos baseados em padrões de votação e não refletem opinião pessoal dos desenvolvedores.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> Propriedade Intelectual
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O código-fonte desta plataforma é aberto (Open Source) e está disponível no GitHub. Você é livre para auditar, copiar e contribuir, respeitando a licença MIT especificada no repositório. Os dados dos parlamentares são públicos.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">5.</span> Alterações nos Termos
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Podemos atualizar estes termos a qualquer momento para refletir mudanças na legislação ou na plataforma. O uso contínuo do site implica na aceitação dos novos termos.
+          </p>
+        </div>
+      </section>
+    </div>
+  </Container>
+</main>

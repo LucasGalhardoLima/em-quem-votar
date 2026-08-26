@@ -6,87 +6,102 @@ date: "2026-01-05"
 category: "Guia do Eleitor"
 readTime: "5 min"
 ---
+import { Container } from "../components/layout";
 
-import { Header } from "../components/Header";
-import { Footer } from "../components/Footer";
-import { Calendar, TrendingUp, Users, Target, Rocket, Zap, Clock } from "lucide-react";
-
-<div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-  <Header breadcrumbItems={[
-    { label: "Educação Política", href: "/educacao" },
-    { label: "Eleição 2026", active: true }
-  ]} />
-  <main className="flex-grow max-w-4xl mx-auto px-4 py-8 space-y-12">
-    
-    <header className="text-center space-y-4">
-      <div className="inline-flex items-center justify-center p-3 bg-brand-secondary/10 rounded-2xl mb-2 text-brand-secondary">
-        <Calendar size={32} />
-      </div>
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900">
-        O que esperar do <span className="text-brand-secondary">Ano Eleitoral?</span>
-      </h1>
-      <div className="flex items-center justify-center gap-4 text-sm text-gray-500 font-medium">
-        <span>05 de Janeiro de 2026</span>
-        <span>•</span>
-        <span>5 min de leitura</span>
-      </div>
-    </header>
-
-    <div className="prose prose-lg prose-slate text-gray-600 mx-auto">
-      <p className="lead text-xl text-gray-600 font-medium text-center max-w-2xl mx-auto leading-relaxed not-prose mb-12">
-        2026 é ano de decisão. Prepare-se para um período de debates intensos, muita propaganda e, acima de tudo, a oportunidade de renovar a esperança.
-      </p>
-
-      <h2>Calendário Essencial</h2>
-      <p>Fique atento às datas que definem o jogo democrático:</p>
-      
-      <div className="space-y-4 not-prose my-8">
-        <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-            <div className="bg-gray-100 px-3 py-1 rounded text-center min-w-[60px]">
-                <span className="block text-xs font-bold uppercase text-gray-500">JAN-MAR</span>
-            </div>
-            <div>
-                <h4 className="font-bold text-gray-900">Janela Partidária</h4>
-                <p className="text-sm text-gray-500">Período onde políticos podem trocar de partido sem perder o mandato. Espere muitas movimentações.</p>
-            </div>
+<main className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Guia do Eleitor
+        </span>
+        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+          O que esperar do Ano Eleitoral?
+        </h1>
+        <p className="text-[14px] text-slate-500">
+          05 de Janeiro de 2026 · 5 min de leitura
+        </p>
+        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          2026 é ano de decisão. Prepare-se para um período de debates intensos, muita propaganda e, acima de tudo, a oportunidade de renovar a esperança.
+        </p>
+      </header>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Calendário Essencial
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>Fique atento às datas que definem o jogo democrático:</p>
         </div>
-        <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-            <div className="bg-gray-100 px-3 py-1 rounded text-center min-w-[60px]">
-                <span className="block text-xs font-bold uppercase text-gray-500">JUN-JUL</span>
-            </div>
+        <div className="mt-3 grid gap-3">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              Jan-Mar
+            </span>
             <div>
-                <h4 className="font-bold text-gray-900">Convenções Partidárias</h4>
-                <p className="text-sm text-gray-500">Definição oficial dos candidatos. É aqui que as chapas são formadas.</p>
+              <h3 className="text-[15px] font-bold text-slate-800">Janela Partidária</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                Período onde políticos podem trocar de partido sem perder o mandato. Espere muitas movimentações.
+              </p>
             </div>
-        </div>
-         <div className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
-            <div className="bg-brand-primary text-white px-3 py-1 rounded text-center min-w-[60px]">
-                <span className="block text-xs font-bold uppercase">OUT</span>
-            </div>
+          </div>
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              Jun-Jul
+            </span>
             <div>
-                <h4 className="font-bold text-gray-900">Eleições (1º e 2º Turno)</h4>
-                <p className="text-sm text-gray-500">O momento da verdade nas urnas.</p>
+              <h3 className="text-[15px] font-bold text-slate-800">Convenções Partidárias</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                Definição oficial dos candidatos. É aqui que as chapas são formadas.
+              </p>
             </div>
+          </div>
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-indigo-600 px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-white uppercase">
+              Out
+            </span>
+            <div>
+              <h3 className="text-[15px] font-bold text-slate-800">Eleições (1º e 2º Turno)</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+                O momento da verdade nas urnas.
+              </p>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <h2>Cuidado com a Desinformação</h2>
-      <p>
-        Em anos eleitorais, o volume de <em>Fake News</em> triplica. Antes de compartilhar qualquer notícia bombástica no grupo da família:
-      </p>
-      <ul>
-          <li><strong>Cheque a fonte:</strong> É um jornal conhecido?</li>
-          <li><strong>Verifique a data:</strong> Notícias antigas costumam ressurgir fora de contexto.</li>
-          <li><strong>Desconfie do tom:</strong> Textos muito alarmistas ou com muitos adjetivos ("URGENTE", "CRIMINOSO") geralmente são falsos.</li>
-      </ul>
-
-      <h2>A Polarização</h2>
-      <p>
-        A tendência é que o clima político continue polarizado. O desafio para o eleitor consciente é furar a bolha, ouvir propostas de diferentes espectros e votar com racionalidade, não apenas com o fígado.
-      </p>
-
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Cuidado com a Desinformação
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Em anos eleitorais, o volume de <em>Fake News</em> triplica. Antes de compartilhar qualquer notícia bombástica no grupo da família:
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Cheque a fonte:</strong> É um jornal conhecido?</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Verifique a data:</strong> Notícias antigas costumam ressurgir fora de contexto.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Desconfie do tom:</strong> Textos muito alarmistas ou com muitos adjetivos ("URGENTE", "CRIMINOSO") geralmente são falsos.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-[17px] font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> A Polarização
+        </h2>
+        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A tendência é que o clima político continue polarizado. O desafio para o eleitor consciente é furar a bolha, ouvir propostas de diferentes espectros e votar com racionalidade, não apenas com o fígado.
+          </p>
+        </div>
+      </section>
     </div>
-
-  </main>
-  <Footer />
-</div>
+  </Container>
+</main>
