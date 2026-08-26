@@ -35,13 +35,36 @@ npx prisma db seed   # Idempotent seed (topics, tags, quiz, 13 candidacies)
 
 Data pipeline:
 ```bash
-npm run sync:tse                  # Sync the 13 presidential candidacies from TSE
+npm run sync:tse                  # Sync the 211 candidacies from TSE
 npm run sync:tse -- --dry-run     # Show the diff, write nothing
 npm run sync:tse -- --from-file <path>   # Parse an already-downloaded CSV/ZIP
 npm run sync:tse -- --photos      # Also fetch official ballot photos
 ```
-The TSE hosts block some networks (Akamai edge). If the sync returns 403/404,
-download `consulta_cand_2026_BR.zip` manually and use `--from-file`.
+
+The sync reads **two** TSE sources, because neither is sufficient alone:
+
+1. `cdn.tse.jus.br` — the open-data package, for identity, coalition, chapa.
+2. `divulgacandcontas.tse.jus.br` — the divulgation REST API, for the
+   **situação da candidatura**, in 28 calls (BR/presidente + 27 UFs/governador).
+
+The second one is not optional. In 2026 the open-data package does not carry
+the situation at all: `DS_SITUACAO_CANDIDATURA` is `#NE` in all 41,500 rows of
+the 29 CSVs and `DS_DETALHE_SITUACAO_CAND` is absent from the layout (verified
+2026-08-26 over the whole package). Without the API the site would state
+"aguardando julgamento" for people the Justiça Eleitoral has already ruled on.
+
+**Never let an API failure rewrite a situation.** When a unit does not answer,
+the sync omits `tseStatusLabel`/`tseStatusDetail`/`registrationStatus` from the
+update and warns once per unit — the stored value survives. Writing the
+`PENDING_JUDGMENT` fallback there would turn a TSE outage into a false claim
+about a real person. Verified by pointing the API at an unreachable host: 28
+warnings, zero status diffs.
+
+On 403s: `cdn.tse.jus.br` answers 403 to a request with **no** User-Agent and
+200 with one (the script always sends `USER_AGENT`); `curl` is blocked on both
+hosts by Akamai's TLS fingerprinting while Node's `fetch` is not. So a 403 from
+`curl` says nothing about the script. If the script itself hits 403/404,
+download the package manually and use `--from-file`.
 
 ## Architecture
 

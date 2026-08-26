@@ -572,6 +572,122 @@ async function fetchBinary(url: string): Promise<Uint8Array> {
 }
 
 // ============================================================
+// Situação da candidatura — DivulgaCandContas
+// ============================================================
+
+/**
+ * POR QUE UMA SEGUNDA FONTE, E NÃO SÓ O CSV
+ *
+ * O pacote de dados abertos NÃO publica a situação da candidatura em 2026:
+ * `DS_SITUACAO_CANDIDATURA` vem `#NE` nas 41.500 linhas dos 29 CSVs e
+ * `DS_DETALHE_SITUACAO_CAND` nem existe no layout. Verificado em 26/08/2026
+ * varrendo o pacote inteiro, não por amostra. Não é atraso de publicação —
+ * é ausência do campo; esperar o CSV encher nunca resolveria.
+ *
+ * O DivulgaCandContas é o mesmo TSE, e nessa mesma data já publicava
+ * "Deferido" para 48 candidaturas, "Renúncia" para 2 e "Indeferido em prazo
+ * recursal ou com recurso" para 1. Sem esta chamada o site afirma
+ * "aguardando julgamento" para 52 pessoas reais cuja situação a Justiça
+ * Eleitoral já decidiu — inclusive duas que renunciaram. É exatamente o tipo
+ * de afirmação que a regra de neutralidade proíbe.
+ *
+ * Custo: 28 requisições, não 211. O endpoint de LISTA já traz
+ * `descricaoSituacao` de cada candidatura, então basta uma chamada por
+ * unidade eleitoral (BR/presidente + 27 UFs/governador).
+ */
+const DIVULGA_LIST_BASE =
+  "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura/listar";
+const DIVULGA_TIMEOUT_MS = 20000;
+const DIVULGA_RETRIES = 2;
+
+interface DivulgaStatuses {
+  /** SQ_CANDIDATO → redação literal do TSE ("Deferido", "Renúncia", …). */
+  byTseId: Map<string, string>;
+  /** Unidades eleitorais que não responderam, para o aviso e o resumo. */
+  failedUnits: string[];
+}
+
+interface DivulgaCandidate {
+  id?: unknown;
+  descricaoSituacao?: unknown;
+}
+
+async function fetchDivulgaUnit(ue: string, cargo: string): Promise<DivulgaCandidate[]> {
+  const url = `${DIVULGA_LIST_BASE}/${ELECTION_YEAR}/${ue}/${DIVULGA_ELECTION_CODE}/${cargo}/candidatos`;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= DIVULGA_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DIVULGA_TIMEOUT_MS);
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json", "User-Agent": USER_AGENT },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new FetchError(
+          `${url}: ${response.status} ${response.statusText}`,
+          response.status,
+          isRetryableStatus(response.status)
+        );
+      }
+      const body = (await response.json()) as { candidatos?: unknown };
+      return Array.isArray(body.candidatos) ? (body.candidatos as DivulgaCandidate[]) : [];
+    } catch (err) {
+      lastError = err;
+      if (!isRetryableError(err) || attempt === DIVULGA_RETRIES) throw err;
+      await sleep(FETCH_BACKOFF_MS * Math.pow(2, attempt));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  throw lastError;
+}
+
+/**
+ * Uma unidade eleitoral que falha NÃO derruba o sync: os outros campos do
+ * CSV (nome, coligação, chapa, sourceUrl) continuam valendo. O que ela
+ * derruba é a escrita da situação daquelas candidaturas — ver a guarda
+ * `statusKnown` em `buildPayload`/`writeData`. Sem isso, uma indisponibilidade
+ * do TSE reescreveria "Deferido" como "aguardando julgamento", que é
+ * justamente o erro que esta função existe para corrigir.
+ */
+async function fetchDivulgaStatuses(): Promise<DivulgaStatuses> {
+  const units: Array<[string, string]> = [
+    ["BR", CARGO_PRESIDENTE],
+    ...Object.keys(UE_REGION)
+      .filter(ue => ue !== "BR")
+      .map(uf => [uf, CARGO_GOVERNADOR] as [string, string]),
+  ];
+
+  const byTseId = new Map<string, string>();
+  const failedUnits: string[] = [];
+
+  console.log(`🔎 Lendo a situação das candidaturas no DivulgaCandContas (${units.length} unidades)...`);
+
+  for (const [ue, cargo] of units) {
+    try {
+      for (const cand of await fetchDivulgaUnit(ue, cargo)) {
+        const id = cand.id === null || cand.id === undefined ? null : String(cand.id);
+        const situacao = typeof cand.descricaoSituacao === "string" ? cand.descricaoSituacao.trim() : "";
+        if (id && situacao) byTseId.set(id, situacao);
+      }
+    } catch (err) {
+      failedUnits.push(ue);
+      warn(
+        `DivulgaCandContas não respondeu para ${ue}: ${firstLine(err)}. ` +
+          "A situação das candidaturas dessa unidade NÃO será sobrescrita " +
+          "(o valor já gravado é preservado)."
+      );
+    }
+  }
+
+  console.log(`   ${byTseId.size} situações lidas` + (failedUnits.length ? `, ${failedUnits.length} unidade(s) sem resposta` : ""));
+  return { byTseId, failedUnits };
+}
+
+// ============================================================
 // ZIP (leitura mínima do diretório central)
 // ============================================================
 
@@ -953,6 +1069,9 @@ const STATUS_MAP: Record<string, RegistrationStatus> = {
   "CANCELADO COM RECURSO": "SUB_JUDICE",
   "RENUNCIA/FALECIMENTO/CASSACAO": "WITHDRAWN",
   "INDEFERIDO COM RECURSO NO STF": "SUB_JUDICE",
+  // Vista no DivulgaCandContas em 26/08/2026 (1 candidatura). Ainda cabe
+  // recurso, então é sub judice — não "indeferido" definitivo.
+  "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO": "SUB_JUDICE",
 };
 
 interface StatusResult {
@@ -1094,14 +1213,18 @@ interface CandidateWriteData {
   number: number | null;
   coalition: string | null;
   coalitionParties: string[];
-  tseStatusLabel: string | null;
-  tseStatusDetail: string | null;
-  registrationStatus: RegistrationStatus;
   electionType: string;
   uf: string | null;
   dataSource: string;
   /** `null` quando o CSV não trouxe CD_ELEICAO/SG_UE — ausência, não erro. */
   sourceUrl: string | null;
+  /**
+   * Opcionais de propósito: sem fonte para a situação, os três são omitidos
+   * do update e o valor já gravado sobrevive. Ver a guarda em `writeData`.
+   */
+  tseStatusLabel?: string | null;
+  tseStatusDetail?: string | null;
+  registrationStatus?: RegistrationStatus;
   lastSyncedAt: Date;
   /** Só presentes quando o CSV trouxe valor — ver preservação de curadoria. */
   viceName?: string;
@@ -1127,6 +1250,11 @@ interface CandidatePayload {
   dataSource: string;
   /** `null` quando o CSV não trouxe CD_ELEICAO/SG_UE — ausência, não erro. */
   sourceUrl: string | null;
+  /**
+   * Houve fonte para a situação (DivulgaCandContas ou CSV). Quando `false`,
+   * os campos de situação são OMITIDOS do update — ver `writeData`.
+   */
+  statusKnown: boolean;
   /** Só preenchido quando o CSV traz a chapa; nunca apaga curadoria manual. */
   viceName: string | null;
   viceParty: string | null;
@@ -1136,9 +1264,22 @@ interface CandidatePayload {
   governmentPlanUrl: string | null;
 }
 
-function buildPayload(row: TseRow, vice: TseRow | null): CandidatePayload {
+/**
+ * `divulgaSituacao` vem do DivulgaCandContas e tem precedência sobre o CSV:
+ * em 2026 o CSV não traz o campo (é sempre `#NE`), e mesmo quando trouxer, a
+ * divulgação é atualizada de hora em hora enquanto o pacote de dados abertos
+ * sai quatro vezes por dia. Preferir a fonte mais fresca é o que sustenta o
+ * SC-104. `null` significa "nenhuma das duas fontes disse" — e aí o script
+ * não afirma nada, em vez de chutar.
+ */
+function buildPayload(
+  row: TseRow,
+  vice: TseRow | null,
+  divulgaSituacao: string | null
+): CandidatePayload {
   const label = `${row.nomeUrna ?? row.nome} (${row.partido})`;
-  const { status } = mapStatus(row.situacao, row.detalheSituacao, label);
+  const situacao = divulgaSituacao ?? row.situacao;
+  const { status } = mapStatus(situacao, row.detalheSituacao, label);
 
   return {
     tseId: row.tseId,
@@ -1148,9 +1289,10 @@ function buildPayload(row: TseRow, vice: TseRow | null): CandidatePayload {
     number: row.numero,
     coalition: row.coligacao,
     coalitionParties: splitCoalitionParties(row.composicaoColigacao),
-    tseStatusLabel: row.situacao,
+    tseStatusLabel: situacao,
     tseStatusDetail: row.detalheSituacao,
     registrationStatus: status,
+    statusKnown: situacao !== null || row.detalheSituacao !== null,
     electionType: row.cargo === CARGO_GOVERNADOR ? "governor" : "presidential",
     // Presidente é nacional: uf fica nula. Governador carrega o estado.
     uf: row.cargo === CARGO_GOVERNADOR ? row.uf : null,
@@ -1482,14 +1624,19 @@ function diffCandidate(
     ["number", payload.number],
     ["coalition", payload.coalition],
     ["coalitionParties", payload.coalitionParties],
-    ["tseStatusLabel", payload.tseStatusLabel],
-    ["tseStatusDetail", payload.tseStatusDetail],
-    ["registrationStatus", payload.registrationStatus],
     ["electionType", payload.electionType],
     ["uf", payload.uf],
     ["dataSource", payload.dataSource],
     ["sourceUrl", payload.sourceUrl],
   ];
+
+  // Espelha a guarda de escrita: sem fonte para a situação, o script não
+  // anuncia mudança de situação — porque não vai gravar nenhuma.
+  if (payload.statusKnown) {
+    managed.push(["tseStatusLabel", payload.tseStatusLabel]);
+    managed.push(["tseStatusDetail", payload.tseStatusDetail]);
+    managed.push(["registrationStatus", payload.registrationStatus]);
+  }
 
   // Só entra no diff quando o pacote foi lido E o campo está vazio — as duas
   // condições espelham exatamente a guarda de escrita. Sem a segunda, o diff
@@ -1520,6 +1667,10 @@ function diffCandidate(
 // ============================================================
 
 interface SyncStats {
+  /** Quantas situações o DivulgaCandContas devolveu (fonte da verdade). */
+  statusFromDivulga: number;
+  /** Unidades eleitorais sem resposta — situação preservada, não sobrescrita. */
+  divulgaFailedUnits: number;
   totalRows: number;
   presidentialRows: number;
   adopted: number;
@@ -1534,6 +1685,8 @@ interface SyncStats {
 
 async function syncTse(options: Options) {
   const stats: SyncStats = {
+    statusFromDivulga: 0,
+    divulgaFailedUnits: 0,
     totalRows: 0,
     presidentialRows: 0,
     adopted: 0,
@@ -1780,14 +1933,18 @@ async function syncTse(options: Options) {
     }
   }
 
+  const divulga = await fetchDivulgaStatuses();
+  stats.statusFromDivulga = divulga.byTseId.size;
+  stats.divulgaFailedUnits = divulga.failedUnits.length;
+
   const created: string[] = [];
   const updated: Array<{ label: string; diffs: FieldDiff[] }> = [];
   const unchanged: string[] = [];
 
-  console.log("🔁 Processando candidaturas...\n");
+  console.log("\n🔁 Processando candidaturas...\n");
 
   for (const row of titularRows) {
-    const payload = buildPayload(row, findVice(row));
+    const payload = buildPayload(row, findVice(row), divulga.byTseId.get(row.tseId) ?? null);
     const label = `${payload.displayName} (${payload.party}${payload.number !== null ? `, ${payload.number}` : ""})`;
 
     if (payload.number === null) {
@@ -1819,15 +1976,27 @@ async function syncTse(options: Options) {
       number: payload.number,
       coalition: payload.coalition,
       coalitionParties: payload.coalitionParties,
-      tseStatusLabel: payload.tseStatusLabel,
-      tseStatusDetail: payload.tseStatusDetail,
-      registrationStatus: payload.registrationStatus,
       electionType: payload.electionType,
       uf: payload.uf,
       dataSource: payload.dataSource,
       sourceUrl: payload.sourceUrl,
       lastSyncedAt: new Date(),
     };
+    // A SITUAÇÃO SÓ É GRAVADA QUANDO ALGUÉM A AFIRMOU.
+    //
+    // Se o DivulgaCandContas não respondeu para esta unidade eleitoral e o CSV
+    // veio vazio (o normal em 2026), omitir os três campos preserva o que já
+    // está no banco. A alternativa — gravar o fallback PENDING_JUDGMENT —
+    // transformaria uma indisponibilidade do TSE em "aguardando julgamento"
+    // para quem já foi deferido, indeferido ou renunciou.
+    //
+    // Numa candidatura NOVA não há o que preservar: aí o fallback é a única
+    // resposta honesta e é gravado (ver o ramo `if (!existing)`).
+    if (payload.statusKnown || !existing) {
+      writeData.tseStatusLabel = payload.tseStatusLabel;
+      writeData.tseStatusDetail = payload.tseStatusDetail;
+      writeData.registrationStatus = payload.registrationStatus;
+    }
     if (payload.viceName !== null) writeData.viceName = payload.viceName;
     if (payload.viceParty !== null) writeData.viceParty = payload.viceParty;
     if (payload.photoUrl !== null) writeData.photoUrl = payload.photoUrl;
@@ -2038,7 +2207,13 @@ function printSummary(stats: SyncStats, options: Options) {
     ["Adotados (linha do seed ganhou tseId)", String(stats.adopted)],
     ["Propostas de governo extraídas", String(stats.plansWritten)],
     [
-      "Sem situação divulgada pelo TSE",
+      "Situação lida do DivulgaCandContas",
+      stats.divulgaFailedUnits === 0
+        ? String(stats.statusFromDivulga)
+        : `${stats.statusFromDivulga} (${stats.divulgaFailedUnits} unidade(s) sem resposta)`,
+    ],
+    [
+      "Sem situação em nenhuma fonte",
       `${statusUndisclosedCount} → aguardando julgamento`,
     ],
     ["Atualizados", String(stats.updated)],
