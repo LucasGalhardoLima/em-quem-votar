@@ -78,6 +78,63 @@ export const STATUS_PRESENTATION: Record<RegistrationStatus, StatusPresentation>
   },
 };
 
+/**
+ * Redação literal do TSE → enum interno.
+ *
+ * Mora aqui, e não no script de sync, porque duas rotinas dependem dela: o
+ * `npm run sync:tse` e o cron horário de situação (`/api/cron/tse-status`).
+ * Duplicar o mapa faria uma delas envelhecer sozinha na primeira redação
+ * nova que o TSE inventasse.
+ *
+ * O enum existe para filtro e ordenação. O que o usuário LÊ continua sendo a
+ * redação do TSE via `statusLabel()` — mapear nunca é reescrever.
+ */
+const TSE_STATUS_MAP: Record<string, RegistrationStatus> = {
+  // --- Redações confirmadas do TSE ---
+  DEFERIDO: "APPROVED",
+  "DEFERIDO COM RECURSO": "SUB_JUDICE",
+  INDEFERIDO: "REJECTED",
+  "INDEFERIDO COM RECURSO": "SUB_JUDICE",
+  "AGUARDANDO JULGAMENTO": "PENDING_JUDGMENT",
+  "SUB JUDICE": "SUB_JUDICE",
+  RENUNCIA: "WITHDRAWN", // "RENÚNCIA" chega aqui já sem acento
+  CASSADO: "CANCELLED",
+  FALECIDO: "CANCELLED",
+
+  // --- Variantes defensivas (vistas em ciclos anteriores / campos vizinhos) ---
+  "PENDENTE DE JULGAMENTO": "PENDING_JUDGMENT",
+  CANCELADO: "CANCELLED",
+  "CANCELADO COM RECURSO": "SUB_JUDICE",
+  "RENUNCIA/FALECIMENTO/CASSACAO": "WITHDRAWN",
+  "INDEFERIDO COM RECURSO NO STF": "SUB_JUDICE",
+  // Vista no DivulgaCandContas em 26/08/2026 (1 candidatura). Ainda cabe
+  // recurso, então é sub judice — não "indeferido" definitivo.
+  "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO": "SUB_JUDICE",
+};
+
+/** Caixa alta, sem acento, sem pontuação final: "Deferido." → "DEFERIDO". */
+function normalizeTseLabel(value: string): string {
+  return value
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .toUpperCase()
+    .replace(/[.;]+$/, "");
+}
+
+/**
+ * `null` quando o TSE não disse nada OU escreveu algo desconhecido. Quem
+ * chama decide o que fazer com isso — e a decisão certa nunca é inventar uma
+ * situação: ver a guarda `statusKnown` no sync.
+ */
+export function statusFromTseLabel(
+  value: string | null | undefined,
+): RegistrationStatus | null {
+  if (!value) return null;
+  return TSE_STATUS_MAP[normalizeTseLabel(value)] ?? null;
+}
+
 /** Classes do badge. Sem cor partidária — só neutro ou âmbar de atenção. */
 export const STATUS_BADGE_CLASS: Record<StatusPresentation["tone"], string> = {
   neutral: "border-slate-200 bg-white text-slate-500",

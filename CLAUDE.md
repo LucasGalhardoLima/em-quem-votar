@@ -66,6 +66,35 @@ hosts by Akamai's TLS fingerprinting while Node's `fetch` is not. So a 403 from
 `curl` says nothing about the script. If the script itself hits 403/404,
 download the package manually and use `--from-file`.
 
+### Scheduled refresh — `/api/cron/tse-status` (hourly)
+
+GitHub Actions is disabled for this repo, so the schedule lives in
+`vercel.json`. The hourly cron calls `refreshCandidateStatuses()`, which
+re-reads only the **situação** — it never creates, deletes, or touches another
+field. That cadence mirrors the TSE's own ("a atualização dos dados referentes
+às candidaturas ocorre a cada 60 min"), and during the judgment of registrations
+the situation is the fastest-moving and most consequential field on the site.
+
+The route is a **write** endpoint on a public site: it requires
+`Authorization: Bearer $CRON_SECRET` (Vercel Cron sends this automatically) and
+returns 503 in production when `CRON_SECRET` is unset — fails closed, like
+`/admin`. `robots.txt` already disallows `/api/`.
+
+**No LLM is involved in this path.** The OpenAI classifier
+(`vote-classifier.server.ts`) belongs to the *votações* pipeline and is never
+reached from the candidate sync or the cron, so neither costs model credits.
+
+Code layout, so the two callers cannot drift:
+- `app/lib/tse-divulga.ts` — pure: election code, region map, `divulgaUrl()`,
+  `fetchDivulgaStatuses()`. No Prisma, so the sync script can import it without
+  opening a second client.
+- `app/services/tse-status.server.ts` — the DB write.
+- `app/lib/candidate-status.ts` — `statusFromTseLabel()`, the TSE wording → enum
+  map. Add new TSE wordings **here**, not in the script.
+
+The **full sync** (identity, coalition, chapa, photos) has no scheduled home
+right now — run `npm run sync:tse` by hand until one is decided.
+
 ## Architecture
 
 ### Path Alias

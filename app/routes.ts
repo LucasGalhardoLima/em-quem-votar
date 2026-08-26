@@ -35,6 +35,8 @@ export default [
 
   // API
   route("api/newsletter", "routes/api.newsletter.ts"),
+  // Cron do Vercel (horário). Protegido por CRON_SECRET; ver vercel.json.
+  route("api/cron/tse-status", "routes/api.cron.tse-status.ts"),
 
   // Admin
   route("admin/login", "routes/admin.login.tsx"),

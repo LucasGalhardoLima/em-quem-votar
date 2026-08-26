@@ -48,7 +48,14 @@ import { inflateRawSync } from "node:zlib";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { RegistrationStatus } from "../app/lib/candidate-status";
+import { statusFromTseLabel, type RegistrationStatus } from "../app/lib/candidate-status";
+import {
+  CARGO_GOVERNADOR,
+  CARGO_PRESIDENTE,
+  divulgaUrl,
+  ELECTION_YEAR,
+  fetchDivulgaStatuses,
+} from "../app/lib/tse-divulga";
 
 // ============================================================
 // Configuração
@@ -76,71 +83,7 @@ function photoZipUrl(uf: string): string {
   return `https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/fotos/foto_cand2026_${uf}_div.zip`;
 }
 
-/**
- * URL da ficha no DivulgaCandContas.
- *
- * VERIFICADO em 26/08/2026 navegando o próprio site (versão 2.8.17): abri
- * `#/home` → região → estado → cargo → candidato e li a URL resultante.
- * O formato é
- *
- *   #/candidato/{REGIÃO}/{SG_UE}/{CD_ELEICAO_DIVULGA}/{SQ_CANDIDATO}/{ANO}/{SG_UE}
- *
- * e não o `#/candidato/{ano}/{cdEleicao}/{sgUe}/{sqCandidato}` que este script
- * gerava — aquele abre "ERRO AO CARREGAR A PÁGINA" para todas as 211 fichas.
- * Duas correções de fato, ambas conferidas contra fichas reais:
- *
- * 1. O código de eleição do DivulgaCandContas NÃO é o `CD_ELEICAO` do CSV.
- *    6257/6259 são os códigos do pacote de dados abertos; o site usa
- *    `20322002026`, um único código que cobre presidente E governador
- *    (o cabeçalho do site diz "Eleição Geral Federal 2026" nos dois casos).
- * 2. A rota começa pela REGIÃO, não pela UF, e repete a unidade eleitoral
- *    no fim. Presidente é `BR/BR/…/2026/BR`.
- *
- * Conferido carregando:
- *   .../BR/BR/20322002026/280002541457/2026/BR      → HERTZ DIAS, Presidente
- *   .../SUDESTE/ES/20322002026/80002551833/2026/ES  → HELDER SALOMÃO, Gov./ES
- *
- * O `CD_ELEICAO` do CSV continua sendo lido e guardado em `TseRow` — ele é o
- * dado de origem correto para o pacote de dados abertos —, só não serve para
- * montar esta URL.
- */
-const DIVULGA_ELECTION_CODE = "20322002026";
-
-/**
- * Região de cada unidade eleitoral, como o DivulgaCandContas a escreve na
- * rota. Os slugs saem do próprio site (sem acento, sem espaço:
- * "Centro Oeste" vira `CENTROOESTE`), não de uma convenção nossa.
- */
-const UE_REGION: Record<string, string> = {
-  BR: "BR",
-  AC: "NORTE", AP: "NORTE", AM: "NORTE", PA: "NORTE",
-  RO: "NORTE", RR: "NORTE", TO: "NORTE",
-  AL: "NORDESTE", BA: "NORDESTE", CE: "NORDESTE", MA: "NORDESTE",
-  PB: "NORDESTE", PE: "NORDESTE", PI: "NORDESTE", RN: "NORDESTE",
-  SE: "NORDESTE",
-  DF: "CENTROOESTE", GO: "CENTROOESTE", MT: "CENTROOESTE", MS: "CENTROOESTE",
-  ES: "SUDESTE", MG: "SUDESTE", RJ: "SUDESTE", SP: "SUDESTE",
-  PR: "SUL", RS: "SUL", SC: "SUL",
-};
-
-function divulgaUrl(sgUe: string | null, tseId: string): string | null {
-  // Sem unidade eleitoral — ou com uma que não sabemos mapear para região —
-  // não se monta link honesto: melhor `null` (a interface mostra ausência)
-  // que uma URL que abre em erro.
-  if (!sgUe) return null;
-  const region = UE_REGION[sgUe.toUpperCase()];
-  if (!region) return null;
-  const ue = sgUe.toUpperCase();
-  return (
-    "https://divulgacandcontas.tse.jus.br/divulga/#/candidato/" +
-    `${region}/${ue}/${DIVULGA_ELECTION_CODE}/${tseId}/${ELECTION_YEAR}/${ue}`
-  );
-}
-
-const ELECTION_YEAR = "2026";
-const CARGO_PRESIDENTE = "1";
 const CARGO_VICE = "2";
-const CARGO_GOVERNADOR = "3";
 const CARGO_VICE_GOVERNADOR = "4";
 
 /**
@@ -572,122 +515,6 @@ async function fetchBinary(url: string): Promise<Uint8Array> {
 }
 
 // ============================================================
-// Situação da candidatura — DivulgaCandContas
-// ============================================================
-
-/**
- * POR QUE UMA SEGUNDA FONTE, E NÃO SÓ O CSV
- *
- * O pacote de dados abertos NÃO publica a situação da candidatura em 2026:
- * `DS_SITUACAO_CANDIDATURA` vem `#NE` nas 41.500 linhas dos 29 CSVs e
- * `DS_DETALHE_SITUACAO_CAND` nem existe no layout. Verificado em 26/08/2026
- * varrendo o pacote inteiro, não por amostra. Não é atraso de publicação —
- * é ausência do campo; esperar o CSV encher nunca resolveria.
- *
- * O DivulgaCandContas é o mesmo TSE, e nessa mesma data já publicava
- * "Deferido" para 48 candidaturas, "Renúncia" para 2 e "Indeferido em prazo
- * recursal ou com recurso" para 1. Sem esta chamada o site afirma
- * "aguardando julgamento" para 52 pessoas reais cuja situação a Justiça
- * Eleitoral já decidiu — inclusive duas que renunciaram. É exatamente o tipo
- * de afirmação que a regra de neutralidade proíbe.
- *
- * Custo: 28 requisições, não 211. O endpoint de LISTA já traz
- * `descricaoSituacao` de cada candidatura, então basta uma chamada por
- * unidade eleitoral (BR/presidente + 27 UFs/governador).
- */
-const DIVULGA_LIST_BASE =
-  "https://divulgacandcontas.tse.jus.br/divulga/rest/v1/candidatura/listar";
-const DIVULGA_TIMEOUT_MS = 20000;
-const DIVULGA_RETRIES = 2;
-
-interface DivulgaStatuses {
-  /** SQ_CANDIDATO → redação literal do TSE ("Deferido", "Renúncia", …). */
-  byTseId: Map<string, string>;
-  /** Unidades eleitorais que não responderam, para o aviso e o resumo. */
-  failedUnits: string[];
-}
-
-interface DivulgaCandidate {
-  id?: unknown;
-  descricaoSituacao?: unknown;
-}
-
-async function fetchDivulgaUnit(ue: string, cargo: string): Promise<DivulgaCandidate[]> {
-  const url = `${DIVULGA_LIST_BASE}/${ELECTION_YEAR}/${ue}/${DIVULGA_ELECTION_CODE}/${cargo}/candidatos`;
-  let lastError: unknown;
-
-  for (let attempt = 0; attempt <= DIVULGA_RETRIES; attempt++) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), DIVULGA_TIMEOUT_MS);
-    try {
-      const response = await fetch(url, {
-        headers: { Accept: "application/json", "User-Agent": USER_AGENT },
-        signal: controller.signal,
-      });
-      if (!response.ok) {
-        throw new FetchError(
-          `${url}: ${response.status} ${response.statusText}`,
-          response.status,
-          isRetryableStatus(response.status)
-        );
-      }
-      const body = (await response.json()) as { candidatos?: unknown };
-      return Array.isArray(body.candidatos) ? (body.candidatos as DivulgaCandidate[]) : [];
-    } catch (err) {
-      lastError = err;
-      if (!isRetryableError(err) || attempt === DIVULGA_RETRIES) throw err;
-      await sleep(FETCH_BACKOFF_MS * Math.pow(2, attempt));
-    } finally {
-      clearTimeout(timeout);
-    }
-  }
-
-  throw lastError;
-}
-
-/**
- * Uma unidade eleitoral que falha NÃO derruba o sync: os outros campos do
- * CSV (nome, coligação, chapa, sourceUrl) continuam valendo. O que ela
- * derruba é a escrita da situação daquelas candidaturas — ver a guarda
- * `statusKnown` em `buildPayload`/`writeData`. Sem isso, uma indisponibilidade
- * do TSE reescreveria "Deferido" como "aguardando julgamento", que é
- * justamente o erro que esta função existe para corrigir.
- */
-async function fetchDivulgaStatuses(): Promise<DivulgaStatuses> {
-  const units: Array<[string, string]> = [
-    ["BR", CARGO_PRESIDENTE],
-    ...Object.keys(UE_REGION)
-      .filter(ue => ue !== "BR")
-      .map(uf => [uf, CARGO_GOVERNADOR] as [string, string]),
-  ];
-
-  const byTseId = new Map<string, string>();
-  const failedUnits: string[] = [];
-
-  console.log(`🔎 Lendo a situação das candidaturas no DivulgaCandContas (${units.length} unidades)...`);
-
-  for (const [ue, cargo] of units) {
-    try {
-      for (const cand of await fetchDivulgaUnit(ue, cargo)) {
-        const id = cand.id === null || cand.id === undefined ? null : String(cand.id);
-        const situacao = typeof cand.descricaoSituacao === "string" ? cand.descricaoSituacao.trim() : "";
-        if (id && situacao) byTseId.set(id, situacao);
-      }
-    } catch (err) {
-      failedUnits.push(ue);
-      warn(
-        `DivulgaCandContas não respondeu para ${ue}: ${firstLine(err)}. ` +
-          "A situação das candidaturas dessa unidade NÃO será sobrescrita " +
-          "(o valor já gravado é preservado)."
-      );
-    }
-  }
-
-  console.log(`   ${byTseId.size} situações lidas` + (failedUnits.length ? `, ${failedUnits.length} unidade(s) sem resposta` : ""));
-  return { byTseId, failedUnits };
-}
-
-// ============================================================
 // ZIP (leitura mínima do diretório central)
 // ============================================================
 
@@ -1051,39 +878,9 @@ function cell(table: CsvTable, row: string[], column: string): string | undefine
  * nomeando as duas strings, para que uma redação nova do TSE apareça no log
  * em vez de ser engolida.
  */
-const STATUS_MAP: Record<string, RegistrationStatus> = {
-  // --- Redações confirmadas do TSE ---
-  DEFERIDO: "APPROVED",
-  "DEFERIDO COM RECURSO": "SUB_JUDICE",
-  INDEFERIDO: "REJECTED",
-  "INDEFERIDO COM RECURSO": "SUB_JUDICE",
-  "AGUARDANDO JULGAMENTO": "PENDING_JUDGMENT",
-  "SUB JUDICE": "SUB_JUDICE",
-  RENUNCIA: "WITHDRAWN", // "RENÚNCIA" chega aqui já sem acento
-  CASSADO: "CANCELLED",
-  FALECIDO: "CANCELLED",
-
-  // --- Variantes defensivas (vistas em ciclos anteriores / campos vizinhos) ---
-  "PENDENTE DE JULGAMENTO": "PENDING_JUDGMENT",
-  CANCELADO: "CANCELLED",
-  "CANCELADO COM RECURSO": "SUB_JUDICE",
-  "RENUNCIA/FALECIMENTO/CASSACAO": "WITHDRAWN",
-  "INDEFERIDO COM RECURSO NO STF": "SUB_JUDICE",
-  // Vista no DivulgaCandContas em 26/08/2026 (1 candidatura). Ainda cabe
-  // recurso, então é sub judice — não "indeferido" definitivo.
-  "INDEFERIDO EM PRAZO RECURSAL OU COM RECURSO": "SUB_JUDICE",
-};
-
 interface StatusResult {
   status: RegistrationStatus;
   matchedFrom: "detalhe" | "situacao" | "fallback";
-}
-
-function lookupStatus(value: string | null): RegistrationStatus | null {
-  if (!value) return null;
-  // Normaliza acento, caixa, espaços e pontuação final ("DEFERIDO." → "DEFERIDO").
-  const key = normalizeText(value).replace(/[.;]+$/, "");
-  return STATUS_MAP[key] ?? null;
 }
 
 function mapStatus(
@@ -1091,10 +888,10 @@ function mapStatus(
   detalhe: string | null,
   candidateLabel: string
 ): StatusResult {
-  const fromDetail = lookupStatus(detalhe);
+  const fromDetail = statusFromTseLabel(detalhe);
   if (fromDetail) return { status: fromDetail, matchedFrom: "detalhe" };
 
-  const fromSituacao = lookupStatus(situacao);
+  const fromSituacao = statusFromTseLabel(situacao);
   if (fromSituacao) return { status: fromSituacao, matchedFrom: "situacao" };
 
   // Dois casos muito diferentes caem aqui, e tratá-los igual é o que fazia o
@@ -1118,7 +915,7 @@ function mapStatus(
     `Situação do TSE não mapeada para ${candidateLabel}: ` +
       `DS_SITUACAO_CANDIDATURA=${JSON.stringify(situacao)} / ` +
       `DS_DETALHE_SITUACAO_CAND=${JSON.stringify(detalhe)}. ` +
-      "Registrado como PENDING_JUDGMENT — adicione a redação em STATUS_MAP."
+      "Registrado como PENDING_JUDGMENT — adicione a redação em TSE_STATUS_MAP (app/lib/candidate-status.ts)."
   );
   return { status: "PENDING_JUDGMENT", matchedFrom: "fallback" };
 }
@@ -1933,9 +1730,26 @@ async function syncTse(options: Options) {
     }
   }
 
+  // A situação da candidatura NÃO vem no pacote de dados abertos de 2026
+  // (`DS_SITUACAO_CANDIDATURA` é `#NE` em todas as linhas). Vem daqui.
+  console.log("🔎 Lendo a situação das candidaturas no DivulgaCandContas...");
   const divulga = await fetchDivulgaStatuses();
   stats.statusFromDivulga = divulga.byTseId.size;
   stats.divulgaFailedUnits = divulga.failedUnits.length;
+
+  for (const { unit, error } of divulga.failedUnits) {
+    warn(
+      `DivulgaCandContas não respondeu para ${unit}: ${error}. ` +
+        "A situação das candidaturas dessa unidade NÃO será sobrescrita " +
+        "(o valor já gravado é preservado)."
+    );
+  }
+  console.log(
+    `   ${divulga.byTseId.size} situações lidas` +
+      (divulga.failedUnits.length
+        ? `, ${divulga.failedUnits.length} unidade(s) sem resposta`
+        : "")
+  );
 
   const created: string[] = [];
   const updated: Array<{ label: string; diffs: FieldDiff[] }> = [];

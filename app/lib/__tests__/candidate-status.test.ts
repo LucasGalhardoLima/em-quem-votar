@@ -5,6 +5,7 @@ import {
   STATUS_BADGE_CLASS,
   STATUS_PRESENTATION,
   statusDescription,
+  statusFromTseLabel,
   statusLabel,
   statusTone,
   type RegistrationStatus,
@@ -151,5 +152,67 @@ describe("RUNNING_STATUSES", () => {
       expect(REGISTRATION_STATUSES).toContain(status);
     }
     expect(new Set(RUNNING_STATUSES).size).toBe(RUNNING_STATUSES.length);
+  });
+});
+
+describe("statusFromTseLabel", () => {
+  // Redações realmente observadas no DivulgaCandContas em 26/08/2026, nas 211
+  // candidaturas. Não são hipóteses: cada uma existia no ar naquele dia.
+  const observadas: Array<[string, RegistrationStatus]> = [
+    ["Aguardando julgamento", "PENDING_JUDGMENT"],
+    ["Deferido", "APPROVED"],
+    ["Deferido com recurso", "SUB_JUDICE"],
+    ["Indeferido em prazo recursal ou com recurso", "SUB_JUDICE"],
+    ["Renúncia", "WITHDRAWN"],
+  ];
+
+  it.each(observadas)("mapeia a redação do TSE %s", (label, esperado) => {
+    expect(statusFromTseLabel(label)).toBe(esperado);
+  });
+
+  it("ignora acento, caixa, espaço extra e ponto final", () => {
+    expect(statusFromTseLabel("  renuncia ")).toBe("WITHDRAWN");
+    expect(statusFromTseLabel("DEFERIDO.")).toBe("APPROVED");
+    expect(statusFromTseLabel("Deferido  com   recurso")).toBe("SUB_JUDICE");
+  });
+
+  it("devolve null quando não há redação — nunca inventa situação", () => {
+    expect(statusFromTseLabel(null)).toBeNull();
+    expect(statusFromTseLabel(undefined)).toBeNull();
+    expect(statusFromTseLabel("")).toBeNull();
+    expect(statusFromTseLabel("   ")).toBeNull();
+  });
+
+  it("devolve null para redação desconhecida, em vez de chutar", () => {
+    // Quem chama trata isso como "não sei" e preserva o que está gravado.
+    // Adivinhar aqui atribuiria a uma pessoa real uma situação jurídica
+    // que ninguém afirmou.
+    expect(statusFromTseLabel("Situação que o TSE ainda não inventou")).toBeNull();
+  });
+
+  it("toda redação mapeada aponta para uma situação válida do enum", () => {
+    for (const [label] of observadas) {
+      const status = statusFromTseLabel(label);
+      expect(status).not.toBeNull();
+      expect(REGISTRATION_STATUSES).toContain(status as RegistrationStatus);
+    }
+  });
+
+  it("indeferimento com recurso não é indeferimento definitivo", () => {
+    // A distinção importa: REJECTED sai da disputa, SUB_JUDICE continua nela
+    // e os votos são contabilizados até a decisão final.
+    expect(statusFromTseLabel("Indeferido")).toBe("REJECTED");
+    expect(statusFromTseLabel("Indeferido em prazo recursal ou com recurso")).toBe("SUB_JUDICE");
+    expect(RUNNING_STATUSES).toContain("SUB_JUDICE");
+    expect(RUNNING_STATUSES).not.toContain("REJECTED");
+  });
+
+  it("a redação literal do TSE é o que o badge mostra, não o rótulo do enum", () => {
+    // statusLabel prefere o texto do TSE — é a regra de neutralidade: a
+    // plataforma exibe o que a Justiça Eleitoral escreveu, sem parafrasear.
+    const label = "Indeferido em prazo recursal ou com recurso";
+    const status = statusFromTseLabel(label) as RegistrationStatus;
+    expect(statusLabel(status, label)).toBe(label);
+    expect(statusLabel(status, null)).toBe(STATUS_PRESENTATION[status].label);
   });
 });
