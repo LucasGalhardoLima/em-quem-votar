@@ -1,23 +1,31 @@
 /**
- * Cron horário: reconfere a situação das candidaturas no DivulgaCandContas.
+ * Cron diário: reconfere a situação das candidaturas no DivulgaCandContas.
  *
- * POR QUE DE HORA EM HORA, E SEPARADO DO SYNC COMPLETO
+ * QUEM É A FONTE PRINCIPAL — E POR QUE ESTA ROTA NÃO É
  *
- * O próprio site do TSE anuncia que "a atualização dos dados referentes às
- * candidaturas ocorre a cada 60 min". Durante o julgamento dos registros a
- * situação de uma candidatura muda várias vezes ao dia — e é o dado mais
- * sensível que a plataforma exibe, porque diz respeito à condição jurídica de
- * uma pessoa real. O sync completo (identidade, coligação, chapa, fotos)
- * acompanha o pacote de dados abertos e é pesado; a situação não precisa
- * esperar por ele.
+ * A cobertura real da situação vem do sync completo em
+ * `.github/workflows/sync-tse-2026.yml`, que roda 4×/dia e também grava
+ * `tseStatusLabel`/`registrationStatus` — cerca de 6h de defasagem, contra as
+ * 24h que o SC-104 exige. Esta rota é o *segundo caminho*: existe para que a
+ * situação continue sendo atualizada se o workflow do Actions se auto-desativar
+ * por inatividade, o que já aconteceu com quatro workflows deste repo.
+ *
+ * shortcut: 1×/dia em vez de 1×/hora — o plano Hobby do Vercel recusa na
+ * implantação qualquer expressão mais frequente que diária ("Hobby accounts are
+ * limited to daily cron jobs"), e a precisão lá é ±59min. O desenho original
+ * era `0 * * * *`, espelhando os 60min que o próprio TSE anuncia; durante o
+ * julgamento dos registros a situação muda várias vezes ao dia, então a
+ * cadência horária não era capricho. upgrade: assinar o plano Pro (intervalo
+ * mínimo de 1min) e devolver `0 * * * *` ao vercel.json — nenhuma mudança de
+ * código é necessária, só a expressão.
  *
  * CUSTO: 28 requisições HTTP ao TSE e um punhado de updates. Nenhuma chamada
  * a modelo de linguagem — o classificador com OpenAI pertence ao pipeline de
  * votações e não é tocado aqui.
  *
  * AUTENTICAÇÃO: com a variável `CRON_SECRET` definida no projeto, o Vercel
- * Cron passa a mandar `Authorization: Bearer <valor>` em cada disparo. Definir
- * a variável é passo manual no painel — sem ela o cron chama sem header.
+ * Cron passa a mandar `Authorization: Bearer <valor>` em cada disparo. Criar a
+ * variável é passo manual no painel — sem ela o cron chama sem header.
  * Isto é um endpoint de ESCRITA num site público, então sem segredo válido
  * ele recusa — e, em produção, recusa também se o segredo não estiver
  * configurado (falha fechado, como o /admin).

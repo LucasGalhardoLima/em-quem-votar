@@ -66,14 +66,31 @@ hosts by Akamai's TLS fingerprinting while Node's `fetch` is not. So a 403 from
 `curl` says nothing about the script. If the script itself hits 403/404,
 download the package manually and use `--from-file`.
 
-### Scheduled refresh — `/api/cron/tse-status` (hourly)
+### Scheduled refresh — `/api/cron/tse-status` (daily, 12:00 BRT)
 
-GitHub Actions is disabled for this repo, so the schedule lives in
-`vercel.json`. The hourly cron calls `refreshCandidateStatuses()`, which
-re-reads only the **situação** — it never creates, deletes, or touches another
-field. That cadence mirrors the TSE's own ("a atualização dos dados referentes
-às candidaturas ocorre a cada 60 min"), and during the judgment of registrations
-the situation is the fastest-moving and most consequential field on the site.
+The schedule lives in `vercel.json`. The cron calls
+`refreshCandidateStatuses()`, which re-reads only the **situação** — it never
+creates, deletes, or touches another field.
+
+This is the **backup path, not the primary one.** The full sync (below) runs
+4×/day and writes the same two fields, so the situação is already ~6h fresh
+against SC-104's 24h ceiling. This route exists so the situação keeps updating
+if the Actions workflow auto-disables for inactivity — which has already
+happened to four workflows here. It fires at 15:00 UTC (12:00 BRT) to land in
+the middle of the 09:00→15:00 BRT gap between full syncs.
+
+**Why daily and not hourly.** The Vercel **Hobby** plan refuses at *deploy
+time* any cron more frequent than daily — "Hobby accounts are limited to daily
+cron jobs" — with ±59min precision. `0 * * * *` was tried and failed the
+deployment; the fix is the expression, not the code. Upgrading to Pro (1-minute
+minimum) makes `0 * * * *` deployable again with no other change. Check the
+plan before editing this schedule.
+
+(An earlier note here claimed GitHub Actions was disabled for this repo — it
+is not: `actions/permissions` reports `enabled: true`. The four older workflows
+sit in `disabled_inactivity`, GitHub's automatic shutdown of scheduled
+workflows after 60 days without repo activity. Re-enable one with
+`gh workflow enable <file>`.)
 
 The route is a **write** endpoint on a public site: it requires
 `Authorization: Bearer $CRON_SECRET` (Vercel Cron sends this automatically) and
@@ -92,8 +109,23 @@ Code layout, so the two callers cannot drift:
 - `app/lib/candidate-status.ts` — `statusFromTseLabel()`, the TSE wording → enum
   map. Add new TSE wordings **here**, not in the script.
 
-The **full sync** (identity, coalition, chapa, photos) has no scheduled home
-right now — run `npm run sync:tse` by hand until one is decided.
+### Scheduled full sync — `.github/workflows/sync-tse-2026.yml` (4×/day)
+
+The **full sync** (identity, coalition, chapa, photos) runs on GitHub Actions
+at 03:00, 09:00, 15:00 and 21:00 Brasília, following the four daily
+republications of the `candidatos-2026` open-data package. It runs
+`prisma migrate deploy` before `scripts/sync-tse-2026.ts`, so a schema change
+never makes the sync fail row by row. `DATABASE_URL`/`DIRECT_URL` come from
+repo secrets.
+
+It is **not** a Vercel cron on purpose: the script is a CLI with module state
+and `process.exit`, and a full run took 3m45 locally — close enough to the
+300s function ceiling to be a bad bet. Actions has no such ceiling.
+
+A scheduled workflow only fires from the **default branch**. This one is
+`active` because `main` carries the file; a copy living only on a feature
+branch never runs. Run it on demand with
+`gh workflow run sync-tse-2026.yml`.
 
 ## Architecture
 
