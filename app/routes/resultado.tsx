@@ -130,6 +130,12 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
   const visible = showAll ? results : results.slice(0, 3);
   const top3 = results.slice(0, 3).map((r) => r.candidate.id);
 
+  // Sem NENHUMA posição documentada todos os matches são null, o desempate
+  // alfabético de calculateMatches vira a ordem da lista e as três primeiras
+  // letras do alfabeto passam a ser lidas como "seus três mais compatíveis".
+  // Ranking acidental é ranking: nesse caso a página não exibe lista alguma.
+  const anyComparable = results.some((r) => r.matchPercentage !== null);
+
   function copySummary() {
     const lines = results
       .slice(0, 5)
@@ -164,92 +170,127 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
             Baseado em <strong className="font-semibold text-slate-700">
               {answered} de {totalQuestions}
             </strong>{" "}
-            perguntas e nos pesos que você definiu. Empates aparecem em ordem
-            alfabética.
+            perguntas e nos pesos que você definiu.{" "}
+            {anyComparable
+              ? "Empates aparecem em ordem alfabética."
+              : "Nenhuma candidatura tem posição documentada ainda."}
           </p>
 
-          <div className="mt-5 grid gap-2.5">
-            {visible.map((result) => {
-              const { candidate, matchPercentage } = result;
-              const isTop = results[0]?.candidate.id === candidate.id;
-              return (
-                <article
-                  key={candidate.id}
-                  className="rounded-2xl border border-slate-200 bg-white px-5 py-4"
+          {anyComparable ? (
+            <div className="mt-5 grid gap-2.5">
+              {visible.map((result) => {
+                const { candidate, matchPercentage } = result;
+                const isTop = results[0]?.candidate.id === candidate.id;
+                return (
+                  <article
+                    key={candidate.id}
+                    className="rounded-2xl border border-slate-200 bg-white px-5 py-4"
+                  >
+                    <div className="flex items-center gap-3.5">
+                      <CandidateAvatar
+                        name={candidate.displayName}
+                        photoUrl={candidate.photoUrl}
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-[15.5px] font-bold text-slate-800">
+                          {candidate.displayName}
+                        </h2>
+                        <p className="truncate text-[12.5px] text-slate-500">
+                          {candidate.party}
+                          {candidate.number != null ? ` · nº ${candidate.number}` : ""}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {matchPercentage === null ? (
+                          <span className="text-[12.5px] font-semibold text-slate-400">
+                            Sem dados
+                          </span>
+                        ) : (
+                          <span
+                            className={cn(
+                              "font-heading text-[26px] font-bold",
+                              isTop ? "text-indigo-600" : "text-slate-600",
+                            )}
+                          >
+                            {matchPercentage}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={cn(
+                          "h-full rounded-full",
+                          isTop ? "bg-indigo-600" : "bg-slate-400",
+                        )}
+                        style={{ width: `${matchPercentage ?? 0}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-2.5 flex items-center justify-between gap-3 text-[12.5px]">
+                      <span className="text-slate-500">
+                        {result.comparableCount === 0
+                          ? "Nenhum tema com posição documentada ainda"
+                          : `Concordância em ${result.agreeCount} de ${result.comparableCount} temas comparáveis`}
+                      </span>
+                      <Link
+                        to={`/candidato/${candidate.id}`}
+                        prefetch="intent"
+                        className="flex-none font-semibold text-indigo-600 hover:text-indigo-700"
+                      >
+                        Ver por tema →
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+
+              {results.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAll((v) => !v)}
+                  className="p-1 text-center text-[13px] font-semibold text-indigo-600 hover:text-indigo-700"
                 >
-                  <div className="flex items-center gap-3.5">
-                    <CandidateAvatar
-                      name={candidate.displayName}
-                      photoUrl={candidate.photoUrl}
-                      size="sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <h2 className="truncate text-[15.5px] font-bold text-slate-800">
-                        {candidate.displayName}
-                      </h2>
-                      <p className="truncate text-[12.5px] text-slate-500">
-                        {candidate.party}
-                        {candidate.number != null ? ` · nº ${candidate.number}` : ""}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      {matchPercentage === null ? (
-                        <span className="text-[12.5px] font-semibold text-slate-400">
-                          Sem dados
-                        </span>
-                      ) : (
-                        <span
-                          className={cn(
-                            "font-heading text-[26px] font-bold",
-                            isTop ? "text-indigo-600" : "text-slate-600",
-                          )}
-                        >
-                          {matchPercentage}%
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
-                    <div
-                      className={cn(
-                        "h-full rounded-full",
-                        isTop ? "bg-indigo-600" : "bg-slate-400",
-                      )}
-                      style={{ width: `${matchPercentage ?? 0}%` }}
-                    />
-                  </div>
-
-                  <div className="mt-2.5 flex items-center justify-between gap-3 text-[12.5px]">
-                    <span className="text-slate-500">
-                      {result.comparableCount === 0
-                        ? "Nenhum tema com posição documentada ainda"
-                        : `Concordância em ${result.agreeCount} de ${result.comparableCount} temas comparáveis`}
-                    </span>
-                    <Link
-                      to={`/candidato/${candidate.id}`}
-                      prefetch="intent"
-                      className="flex-none font-semibold text-indigo-600 hover:text-indigo-700"
-                    >
-                      Ver por tema →
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
-
-            {results.length > 3 && (
-              <button
-                type="button"
-                onClick={() => setShowAll((v) => !v)}
-                className="p-1 text-center text-[13px] font-semibold text-indigo-600 hover:text-indigo-700"
-              >
-                {showAll
-                  ? "Mostrar só os 3 primeiros"
-                  : `Ver os ${results.length} →`}
-              </button>
-            )}
-          </div>
+                  {showAll
+                    ? "Mostrar só os 3 primeiros"
+                    : `Ver os ${results.length} →`}
+                </button>
+              )}
+            </div>
+          ) : (
+            <section className="mt-5 rounded-2xl border border-slate-200 bg-white px-6 py-9 text-center">
+              <h2 className="text-[15.5px] font-bold text-slate-800">
+                Ainda não há posições documentadas para comparar
+              </h2>
+              <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-pretty text-slate-500">
+                Suas {answered} respostas continuam guardadas no seu aparelho.
+                Acontece que nenhuma das {candidates.length} candidaturas tem
+                posição registrada com fonte ainda — e sem as duas pontas não
+                existe percentual de compatibilidade.
+              </p>
+              <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-pretty text-slate-400">
+                Preferimos não mostrar lista nenhuma a mostrar uma ordenada por
+                critério que não seja a sua resposta. Assim que houver posições
+                aprovadas, o cálculo aparece aqui sem você refazer o quiz.
+              </p>
+              <div className="mt-5 flex flex-wrap justify-center gap-3">
+                <Link
+                  to="/candidatos"
+                  className="rounded-xl bg-slate-800 px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-slate-900"
+                >
+                  Ver as candidaturas →
+                </Link>
+                <Link
+                  to="/metodologia"
+                  className="rounded-xl border border-slate-200 px-5 py-2.5 text-[13px] font-semibold text-slate-600 hover:border-slate-300"
+                >
+                  Como o cálculo funciona
+                </Link>
+              </div>
+            </section>
+          )}
         </div>
 
         <aside className="grid gap-3">
@@ -296,20 +337,24 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               PRÓXIMOS PASSOS
             </h2>
             <div className="mt-2.5 grid gap-2">
-              <Link
-                to={`/comparar?ids=${top3.join(",")}`}
-                onClick={() => comparisonReady && setIds(top3)}
-                className="rounded-xl bg-slate-800 p-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-slate-900"
-              >
-                Comparar os 3 primeiros
-              </Link>
-              <button
-                type="button"
-                onClick={copySummary}
-                className="rounded-xl border border-slate-200 p-[11px] text-center text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
-              >
-                Copiar resumo
-              </button>
+              {anyComparable && (
+                <>
+                  <Link
+                    to={`/comparar?ids=${top3.join(",")}`}
+                    onClick={() => comparisonReady && setIds(top3)}
+                    className="rounded-xl bg-slate-800 p-3 text-center text-[13px] font-semibold text-white transition-colors hover:bg-slate-900"
+                  >
+                    Comparar os 3 primeiros
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={copySummary}
+                    className="rounded-xl border border-slate-200 p-[11px] text-center text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
+                  >
+                    Copiar resumo
+                  </button>
+                </>
+              )}
               <Link
                 to="/quiz"
                 onClick={() => reset()}
@@ -317,10 +362,12 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               >
                 Refazer o quiz
               </Link>
-              <p className="text-center text-[11.5px] text-slate-400">
-                O resumo traz só os percentuais — suas respostas não saem do
-                aparelho.
-              </p>
+              {anyComparable && (
+                <p className="text-center text-[11.5px] text-slate-400">
+                  O resumo traz só os percentuais — suas respostas não saem do
+                  aparelho.
+                </p>
+              )}
             </div>
           </section>
 
