@@ -2,6 +2,27 @@ import { CandidateService } from "~/services/candidate.server";
 import type { Route } from "./+types/resources.og.$id";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
+import { checkQuota } from "~/utils/rate-limit.server";
+
+/**
+ * Cota por origem — 30 imagens a cada 5 minutos.
+ *
+ * POR QUE ESTE NÚMERO. Aqui cada pedido rasteriza um PNG de 1200×630 (satori
+ * monta o SVG, o resvg desenha): é a coisa mais cara que o site faz por
+ * requisição, em CPU e em memória, e no cold start ainda baixa duas fontes.
+ * Nada disso tem cache do lado de cá — a proteção era só o `s-maxage=86400`
+ * do CDN, que um pedido com query string variável fura.
+ *
+ * A rajada de 30 é dimensionada pelo pior caso legítimo: alguém publica um
+ * post com vários links de candidatura e o robô da rede social resolve todos
+ * em sequência, do mesmo IP. Trinta cobre isso com folga. A janela de 5
+ * minutos é o que segura o custo sustentado em 6 rasterizações/min por
+ * origem; varrer as 211 candidaturas de um IP só levaria ~35min, e nada
+ * legítimo faz isso — o CDN aquece um card por compartilhamento, sob demanda.
+ */
+const QUOTA_BUCKET = "og";
+const QUOTA_LIMIT = 30;
+const QUOTA_WINDOW_MS = 5 * 60 * 1000;
 
 /**
  * As duas fontes vinham de
@@ -67,6 +88,18 @@ function loadFonts() {
 }
 
 export async function loader({ params, request }: Route.LoaderArgs) {
+  // O loader do root não roda em resource route (React Router despacha por
+  // `handleResourceRequest`, só a folha). Mesma leitura de origem que ele faz.
+  // A cota vem antes de tudo porque o custo é o pedido inteiro: consulta,
+  // fontes e rasterização.
+  const ip = request.headers.get("x-forwarded-for") || "local";
+  if (!checkQuota(QUOTA_BUCKET, ip, QUOTA_LIMIT, QUOTA_WINDOW_MS)) {
+    return new Response("Too Many Requests", {
+      status: 429,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   if (!params.id) {
     return new Response("Not Found", { status: 404 });
   }

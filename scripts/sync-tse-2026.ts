@@ -207,12 +207,20 @@ let statusUndisclosedCount = 0;
 let dbUnavailable = false;
 
 /**
- * Marca que o DivulgaCandContas não respondeu para quase nenhuma unidade —
- * ou seja, este run não conferiu a situação de ninguém. Faz o script sair com
- * código != 0, senão o Actions marca verde sobre uma execução que não fez o
- * trabalho principal e a defasagem cresce sem ninguém ver.
+ * Motivo pelo qual este run NÃO conferiu a situação de ninguém — `null` quando
+ * conferiu. Faz o script sair com código != 0, senão o Actions marca verde
+ * sobre uma execução que não fez o trabalho principal e a defasagem cresce sem
+ * ninguém ver.
+ *
+ * DUAS CAUSAS, UM MECANISMO SÓ (ver onde é atribuído, no passo 3):
+ *   - indisponibilidade — metade ou mais das unidades sem resposta;
+ *   - anomalia de formato — zero situações lidas E nenhuma unidade falhou.
+ * A segunda é invisível para a primeira: num ponto cego de formato ninguém
+ * falha, então não há contagem de falhas para cruzar o teto. É por isso que a
+ * variável guarda a mensagem em vez de um booleano — o mesmo caminho de saída
+ * precisa dizer QUAL das duas aconteceu.
  */
-let statusOutage = false;
+let statusOutage: string | null = null;
 
 /** BR/presidente + 27 UFs/governador — o denominador do teto abaixo. */
 const DIVULGA_UNITS = 28;
@@ -1911,9 +1919,43 @@ async function syncTse(options: Options) {
   // nenhuma. Terminar com código 0 faria o Actions pintar verde sobre uma
   // execução que não fez o trabalho principal — e a defasagem cresceria em
   // silêncio até alguém notar pelo site.
-  const divulgaOutage =
-    divulga.failedUnits.length > DIVULGA_UNITS * DIVULGA_OUTAGE_RATIO;
-  if (divulgaOutage) statusOutage = true;
+  if (divulga.failedUnits.length > DIVULGA_UNITS * DIVULGA_OUTAGE_RATIO) {
+    statusOutage =
+      `${divulga.failedUnits.length} de ${DIVULGA_UNITS} unidades do ` +
+      "DivulgaCandContas não responderam: a situação das candidaturas NÃO foi " +
+      "conferida nesta execução.";
+  } else if (divulga.byTseId.size === 0) {
+    // PONTO CEGO — NÃO REMOVA ACHANDO QUE É PARANOIA.
+    //
+    // O cenário: o TSE renomeia a chave `candidatos` no corpo da listagem (ou
+    // muda a forma da resposta de qualquer jeito que não seja erro de
+    // transporte). As 28 unidades respondem **HTTP 200**, `fetchUnit` não acha
+    // a lista e devolve `[]`, ninguém lança — então saem ZERO situações lidas
+    // e ZERO unidades falhas. O guarda de indisponibilidade acima não pega
+    // isto: ele conta falhas, e aqui não houve nenhuma.
+    //
+    // `fetchDivulgaStatuses` está CERTO em não afirmar nada (o valor gravado
+    // sobrevive, como manda o CLAUDE.md). Quem tem de gritar é o chamador:
+    // sem este ramo, o sync termina verde, a situação das 211 candidaturas
+    // congela e o site segue no ar afirmando situações velhas sobre pessoas
+    // reais, com aparência de saúde.
+    //
+    // O critério é um estado logicamente impossível, não uma heurística: se as
+    // 28 unidades responderam bem numa eleição com 211 candidaturas, alguma
+    // situação tinha de vir. Zero leituras sem nenhuma falha só acontece se o
+    // formato mudou. (Zero leituras COM falhas é outra coisa — cai no aviso
+    // por unidade logo acima, e no teto de indisponibilidade.)
+    //
+    // ISTO É ALARME, NÃO FALLBACK: nada é sobrescrito aqui.
+    const anomalia =
+      `as ${DIVULGA_UNITS} unidades do DivulgaCandContas responderam sem erro e ` +
+      "ainda assim ZERO situações foram lidas. Isso é impossível com 211 " +
+      "candidaturas — o formato da resposta do TSE provavelmente mudou (a chave " +
+      "`candidatos` da listagem, em app/lib/tse-divulga.ts). Nada foi " +
+      "sobrescrito, mas nenhuma situação foi conferida.";
+    statusOutage = anomalia;
+    warn(anomalia);
+  }
 
   // ---------- 3b. Ficha completa (bens, eleições anteriores, processo, aptidão) ----------
   //
@@ -2474,8 +2516,7 @@ function printSummary(stats: SyncStats, options: Options) {
 
   if (statusOutage) {
     console.log(
-      `\n❌ ${stats.divulgaFailedUnits} de ${DIVULGA_UNITS} unidades do DivulgaCandContas ` +
-        "não responderam: a situação das candidaturas NÃO foi conferida nesta execução. " +
+      `\n❌ ${statusOutage} ` +
         "Nada foi sobrescrito. Saindo com código 1 para que a falha apareça no Actions."
     );
   }

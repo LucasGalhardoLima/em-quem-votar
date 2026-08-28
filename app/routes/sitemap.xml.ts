@@ -1,8 +1,38 @@
 import type { Route } from "./+types/sitemap.xml";
 import { CandidateService } from "~/services/candidate.server";
 import { ArticleService } from "~/services/article.server";
+import { checkQuota } from "~/utils/rate-limit.server";
+
+/**
+ * Cota por origem — 20 gerações por minuto.
+ *
+ * POR QUE ESTE NÚMERO. Cada geração custa duas consultas ao Postgres
+ * (`listAllIds` + `ArticleService.list()`), que saem do mesmo pool das
+ * páginas que gente de verdade está lendo. O consumidor legítimo é robô de
+ * busca, que busca o sitemap algumas vezes por dia, e a resposta sai com
+ * `max-age=3600` — uma repetição dentro da hora é servida pelo CDN e nem
+ * chega aqui. Ou seja: 20/min é ordens de grandeza acima de qualquer padrão
+ * legítimo. O que ele limita é o laço com query string variável, que fura o
+ * cache do CDN e transforma uma URL pública em duas consultas por pedido.
+ *
+ * É mais folgado que o da imagem OG porque duas consultas indexadas custam
+ * muito menos que rasterizar um PNG.
+ */
+const QUOTA_BUCKET = "sitemap";
+const QUOTA_LIMIT = 20;
+const QUOTA_WINDOW_MS = 60 * 1000;
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // O loader do root não roda em resource route (React Router despacha por
+  // `handleResourceRequest`, só a folha). Mesma leitura de origem que ele faz.
+  const ip = request.headers.get("x-forwarded-for") || "local";
+  if (!checkQuota(QUOTA_BUCKET, ip, QUOTA_LIMIT, QUOTA_WINDOW_MS)) {
+    return new Response("Too Many Requests", {
+      status: 429,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   const url = new URL(request.url);
   const baseUrl = `${url.protocol}//${url.host}`;
 
