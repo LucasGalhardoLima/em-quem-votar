@@ -34,12 +34,12 @@ export default [
   route("termos", "routes/termos.mdx"),
 
   // API
-  route("api/newsletter", "routes/api.newsletter.ts"),
   // Cron do Vercel (horário). Protegido por CRON_SECRET; ver vercel.json.
   route("api/cron/tse-status", "routes/api.cron.tse-status.ts"),
 
   // Admin
   route("admin/login", "routes/admin.login.tsx"),
+  route("admin/logout", "routes/admin.logout.tsx"),
   route("admin", "routes/admin._index.tsx"),
   route("admin/candidato/:id", "routes/admin.candidato.$id.tsx"),
   route("admin/votacao/:id", "routes/admin.votacao.$id.tsx"),

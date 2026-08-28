@@ -1,9 +1,10 @@
-import { useLoaderData, Link } from "react-router";
+import { Form, useLoaderData, Link } from "react-router";
 import {
   CheckCircle2,
   ChevronRight,
   Clock,
   FileText,
+  LogOut,
   TriangleAlert,
   Users,
 } from "lucide-react";
@@ -91,6 +92,9 @@ export async function loader({ request }: Route.LoaderArgs) {
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const CHIP =
   "rounded-full border px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap";
+/** Mesmo botão discreto do editor de candidato (`BTN_QUIET`). */
+const BTN_QUIET =
+  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[12.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800 focus-visible:border-indigo-300 focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:outline-none";
 
 export default function AdminIndex() {
   const { stats, pendingPositions, pendingBills } =
@@ -123,25 +127,38 @@ export default function AdminIndex() {
   return (
     <main className="flex-1">
       <Container className="pt-9 pb-16">
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
-          Painel editorial
-        </h1>
-        <p className="mt-1.5 text-[14.5px] text-slate-500">
-          Aprovação de posições e votações. Nada vai ao ar sem documento,
-          página e trecho citados.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+          <div className="min-w-0">
+            <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
+              Painel editorial
+            </h1>
+            <p className="mt-1.5 text-[14.5px] text-slate-500">
+              Aprovação de posições e votações. Nada vai ao ar sem documento,
+              página e trecho citados.
+            </p>
+          </div>
+
+          {/* POST, nunca GET: sair é escrita, e um GET seria disparável por
+              um <img> de outra página. Ver `routes/admin.logout.tsx`. */}
+          <Form method="post" action="/admin/logout" className="flex-none">
+            <button type="submit" className={BTN_QUIET}>
+              <LogOut className="size-3.5" aria-hidden="true" />
+              Sair
+            </button>
+          </Form>
+        </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {statCards.map((stat) => (
             <div key={stat.label} className={cn(CARD, "px-4 py-4 text-center")}>
               <stat.icon
-                className="mx-auto mb-1.5 size-4 text-slate-400"
+                className="mx-auto mb-1.5 size-4 text-slate-500"
                 aria-hidden="true"
               />
               <p className="font-heading text-[26px] font-bold tabular-nums text-slate-800">
                 {stat.value}
               </p>
-              <p className="mt-0.5 text-[10.5px] tracking-[0.06em] text-slate-400 uppercase">
+              <p className="mt-0.5 text-[10.5px] tracking-[0.06em] text-slate-500 uppercase">
                 {stat.label}
               </p>
             </div>
@@ -161,7 +178,7 @@ export default function AdminIndex() {
 
         <section className="mt-8">
           <h2 className="flex items-center gap-2 font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
-            <Clock className="size-4 text-slate-400" aria-hidden="true" />
+            <Clock className="size-4 text-slate-500" aria-hidden="true" />
             Posições pendentes ({stats.positionsPending})
           </h2>
 
@@ -217,7 +234,7 @@ export default function AdminIndex() {
 
         <section className="mt-8">
           <h2 className="flex items-center gap-2 font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
-            <FileText className="size-4 text-slate-400" aria-hidden="true" />
+            <FileText className="size-4 text-slate-500" aria-hidden="true" />
             Votações pendentes ({stats.billsPending})
           </h2>
 
@@ -273,7 +290,7 @@ function EmptyState({ label }: { label: string }) {
         className="mx-auto mb-2 size-6 text-slate-300"
         aria-hidden="true"
       />
-      <p className="text-[13.5px] text-slate-400">{label}</p>
+      <p className="text-[13.5px] text-slate-500">{label}</p>
     </div>
   );
 }

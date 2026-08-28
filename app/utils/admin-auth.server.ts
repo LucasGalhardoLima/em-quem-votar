@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 import { redirect } from "react-router";
 
 /**
@@ -16,7 +16,8 @@ import { redirect } from "react-router";
  * isso a sessão é um cookie assinado, com uma tela de login de verdade.
  *
  * Configuração: ADMIN_PASSWORD (obrigatória em produção) e ADMIN_USER
- * (opcional, padrão "admin").
+ * (opcional, padrão "admin"). A chave que assina o cookie é DERIVADA da
+ * senha com scrypt — nunca é a senha crua. Ver `sessionKey` abaixo.
  */
 
 const COOKIE_NAME = "eqv_admin";
@@ -31,8 +32,13 @@ function misconfigured(): never {
   );
 }
 
-/** Comparação em tempo constante, tolerante a tamanhos diferentes. */
-function safeEqual(a: string, b: string): boolean {
+/**
+ * Comparação em tempo constante, tolerante a tamanhos diferentes.
+ * Exportada porque o cron (`/api/cron/tse-status`) precisa exatamente
+ * disto para conferir o bearer — comparar segredo com `===` sai cedo no
+ * primeiro byte diferente e vaza o prefixo correto pelo tempo gasto.
+ */
+export function safeEqual(a: string, b: string): boolean {
   const bufA = Buffer.from(a, "utf8");
   const bufB = Buffer.from(b, "utf8");
   if (bufA.length !== bufB.length) {
@@ -43,23 +49,76 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-function sign(payload: string, secret: string): string {
-  return createHmac("sha256", secret).update(payload).digest("base64url");
+/**
+ * DERIVAÇÃO DA CHAVE — por que a assinatura não usa a senha crua.
+ *
+ * O token é `<expiração>.<HMAC>` e a expiração viaja legível dentro do
+ * cookie. Assinar isso com `ADMIN_PASSWORD` fazia do cookie um par
+ * (texto conhecido, assinatura) cuja chave é a própria senha do painel,
+ * sem KDF e sem salt. Quem visse o cookie uma única vez — log de proxy,
+ * extensão de navegador, print de DevTools, máquina compartilhada —
+ * deixava de levar uma sessão de 8h e passava a poder quebrar a senha
+ * permanente offline, a ~600 mil tentativas por segundo num só núcleo
+ * (medido nesta máquina). E com a senha em mãos dá para forjar cookies
+ * com qualquer expiração, não só reusar o vazado.
+ *
+ * Agora a chave do HMAC é `scrypt(ADMIN_PASSWORD, salt fixo)`. Cada
+ * tentativa offline passa a custar ~50ms e 32MB (N=2^15, r=8, p=1) em vez
+ * de ~1.6µs: ~30 mil vezes mais cara por tentativa, e cara em *memória*,
+ * que é justamente o que tira a vantagem de GPU e ASIC.
+ *
+ * POR QUE O SALT É FIXO. Um salt aleatório por token quebraria a promessa
+ * registrada no CLAUDE.md de que trocar a senha revoga toda sessão aberta,
+ * ou obrigaria a guardar estado no servidor. Salt fixo mantém a relação
+ * senha → chave → assinatura: senha diferente, chave diferente, cookie
+ * antigo deixa de conferir. O salt é público de propósito; ele não é o
+ * que protege aqui. O que protege é o custo por tentativa. (Salt existe
+ * para impedir que uma tabela pré-computada ataque muitos hashes de uma
+ * vez; aqui só existe uma senha e nenhum banco de hashes.)
+ *
+ * POR QUE NÃO UM `ADMIN_SESSION_SECRET` SEPARADO. Seria igualmente
+ * seguro, mas exige uma variável de ambiente nova em produção e um
+ * mecanismo extra para preservar a revogação por troca de senha. scrypt
+ * sobre a senha resolve os dois pontos sem configuração nova.
+ *
+ * CUSTO: scrypt é caro de propósito, então derivamos UMA vez por processo
+ * e guardamos em cache. Sem o cache, toda requisição a /admin pagaria os
+ * ~50ms. O cache é invalidado quando a senha muda (ver `sessionKey`), o
+ * que é o que faz a revogação continuar valendo sem reiniciar nada.
+ */
+const KEY_SALT = "em-quem-votar/admin-session/v1";
+const KEY_LENGTH = 32;
+// maxmem precisa ser declarado: 128 * N * r = 32MB bate no teto padrão do Node.
+const SCRYPT_PARAMS = { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+let keyCache: { password: string; key: Buffer } | null = null;
+
+function sessionKey(password: string): Buffer {
+  if (keyCache && keyCache.password === password) return keyCache.key;
+  const key = scryptSync(password, KEY_SALT, KEY_LENGTH, SCRYPT_PARAMS);
+  keyCache = { password, key };
+  return key;
+}
+
+function sign(payload: string, password: string): string {
+  return createHmac("sha256", sessionKey(password))
+    .update(payload)
+    .digest("base64url");
 }
 
 /** Token = expiração + assinatura HMAC. Sem estado no servidor. */
-function issueToken(secret: string): string {
+function issueToken(password: string): string {
   const expiresAt = String(Date.now() + SESSION_MAX_AGE_SECONDS * 1000);
-  return `${expiresAt}.${sign(expiresAt, secret)}`;
+  return `${expiresAt}.${sign(expiresAt, password)}`;
 }
 
-function tokenIsValid(token: string, secret: string): boolean {
+function tokenIsValid(token: string, password: string): boolean {
   const separator = token.lastIndexOf(".");
   if (separator <= 0) return false;
 
   const payload = token.slice(0, separator);
   const signature = token.slice(separator + 1);
-  if (!safeEqual(signature, sign(payload, secret))) return false;
+  if (!safeEqual(signature, sign(payload, password))) return false;
 
   const expiresAt = Number(payload);
   return Number.isFinite(expiresAt) && expiresAt > Date.now();
@@ -96,15 +155,24 @@ function isSecureRequest(request: Request): boolean {
   return new URL(request.url).protocol === "https:";
 }
 
+const ADMIN_PREFIX = "/admin";
+
 /**
  * Só aceita destinos internos ao painel. Sem isso, `?next=` viraria um
  * open redirect: bastaria mandar ao editor um link de login que devolve
  * para um domínio hostil depois de autenticar.
+ *
+ * O prefixo tem que terminar em fronteira. `startsWith("/admin")` sozinho
+ * aceitava `/administracao-falsa`, `/adminevil.com` e `/admin@outro.host`
+ * — nenhum deles é uma rota do painel. (A checagem de `//` que existia
+ * aqui era código morto: nada que começa com `//` começa com `/admin`.)
  */
 export function safeNextPath(raw: string | null): string {
-  if (!raw) return "/admin";
-  if (!raw.startsWith("/admin")) return "/admin";
-  if (raw.startsWith("//")) return "/admin";
+  if (!raw || !raw.startsWith(ADMIN_PREFIX)) return ADMIN_PREFIX;
+  const boundary = raw.charAt(ADMIN_PREFIX.length);
+  if (boundary !== "" && boundary !== "/" && boundary !== "?" && boundary !== "#") {
+    return ADMIN_PREFIX;
+  }
   return raw;
 }
 

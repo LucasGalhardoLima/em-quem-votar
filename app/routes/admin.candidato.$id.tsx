@@ -323,9 +323,9 @@ const STATUS_OPTIONS = REGISTRATION_STATUSES.map((value) => ({
 
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const LABEL =
-  "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-400 uppercase";
+  "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
 const INPUT =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
+  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
 const BTN_PRIMARY =
   "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-50";
 const BTN_QUIET =
@@ -356,7 +356,7 @@ export default function AdminCandidatoPage() {
       <Container className="pt-9 pb-16">
         <Link
           to="/admin"
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-400 transition-colors hover:text-slate-600"
+          className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-500 transition-colors hover:text-slate-600"
         >
           <ArrowLeft className="size-3.5" />
           Voltar ao painel
@@ -402,13 +402,13 @@ export default function AdminCandidatoPage() {
               <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
                 Posições políticas
               </h2>
-              <p className="text-[12.5px] text-slate-400">
+              <p className="text-[12.5px] text-slate-500">
                 Toda posição publicada cita documento, página e trecho literal.
               </p>
             </div>
 
             {positions.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-[13.5px] text-slate-400">
+              <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-[13.5px] text-slate-500">
                 Nenhuma posição cadastrada. Extraia da proposta de governo
                 protocolada no TSE e registre abaixo.
               </p>
@@ -495,14 +495,14 @@ function CandidateForm({
           />
         ) : (
           <div className="flex size-12 flex-none items-center justify-center rounded-xl bg-slate-100">
-            <User className="size-5 text-slate-400" aria-hidden="true" />
+            <User className="size-5 text-slate-500" aria-hidden="true" />
           </div>
         )}
         <div className="min-w-0">
           <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
             Dados do candidato
           </h2>
-          <p className="truncate text-[12px] text-slate-400">
+          <p className="truncate text-[12px] text-slate-500">
             {candidate.dataSource === "tse"
               ? "Origem TSE"
               : `Origem ${candidate.dataSource}`}
@@ -514,7 +514,7 @@ function CandidateForm({
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-400 uppercase">
+        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Campos do TSE
         </legend>
         <p className="text-[12.5px] leading-relaxed text-slate-500">
@@ -565,7 +565,7 @@ function CandidateForm({
       </fieldset>
 
       <fieldset className="space-y-3 border-t border-slate-100 pt-5">
-        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-400 uppercase">
+        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Curadoria editorial
         </legend>
         <p className="text-[12.5px] leading-relaxed text-slate-500">
@@ -636,7 +636,7 @@ function TagsSection({
       </h2>
 
       {candidate.tags.length === 0 ? (
-        <p className="text-[13px] text-slate-400">Nenhuma tag atribuída.</p>
+        <p className="text-[13px] text-slate-500">Nenhuma tag atribuída.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {candidate.tags.map((tag) => (
@@ -736,7 +736,7 @@ function PositionCard({
 
           {/* Prévia exata do que o leitor vê na página pública. */}
           <div className="mt-2">
-            <p className="mb-1 text-[10.5px] tracking-[0.06em] text-slate-400 uppercase">
+            <p className="mb-1 text-[10.5px] tracking-[0.06em] text-slate-500 uppercase">
               Como o leitor vê
             </p>
             <SourceCite source={position} />
@@ -786,7 +786,7 @@ function PositionCard({
               type="submit"
               disabled={isSubmitting}
               title="Remover posição"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-400 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
             >
               <Trash2 className="size-3.5" />
             </button>
@@ -1013,7 +1013,7 @@ function SourceFields({
           placeholder="Copie e cole a frase do documento. Nunca parafraseie."
           className={cn(INPUT, "resize-y leading-relaxed")}
         />
-        <p className="mt-1 text-[11.5px] text-slate-400">
+        <p className="mt-1 text-[11.5px] text-slate-500">
           O trecho aparece entre aspas na página do candidato, exatamente como
           digitado aqui.
         </p>

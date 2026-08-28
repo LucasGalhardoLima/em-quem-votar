@@ -156,7 +156,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const LABEL =
-    "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-400 uppercase";
+    "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
 const INPUT =
     "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
 
@@ -194,7 +194,7 @@ export default function AdminVotacaoDetail() {
             <Container className="pt-9 pb-16">
                 <Link
                     to="/admin"
-                    className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-400 transition-colors hover:text-slate-600"
+                    className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-500 transition-colors hover:text-slate-600"
                 >
                     <ArrowLeft className="size-3.5" />
                     Voltar ao painel
@@ -210,7 +210,7 @@ export default function AdminVotacaoDetail() {
                         {status.label}
                     </span>
                     {bill.aiConfidence !== null && (
-                        <span className="text-[12px] text-slate-400">
+                        <span className="text-[12px] text-slate-500">
                             Confiança da IA: {Number(bill.aiConfidence).toFixed(0)}%
                         </span>
                     )}
@@ -221,11 +221,11 @@ export default function AdminVotacaoDetail() {
                 </h1>
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14.5px] text-slate-500">
                     <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="size-4 text-slate-400" aria-hidden="true" />
+                        <Calendar className="size-4 text-slate-500" aria-hidden="true" />
                         {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                        <Users className="size-4 text-slate-400" aria-hidden="true" />
+                        <Users className="size-4 text-slate-500" aria-hidden="true" />
                         {voteCount} votos registrados
                     </span>
                     <span>
@@ -283,7 +283,7 @@ export default function AdminVotacaoDetail() {
                                     Conferir a votação original
                                     <ExternalLink className="size-3.5" aria-hidden="true" />
                                 </a>
-                                <p className="mt-1 text-[12px] text-slate-400">
+                                <p className="mt-1 text-[12px] text-slate-500">
                                     Confirme os detalhes na fonte antes de aprovar.
                                 </p>
                             </div>
@@ -292,7 +292,7 @@ export default function AdminVotacaoDetail() {
                         {bill.suggestedTagSim && (
                             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                                 <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-600">
-                                    <Tag className="size-3.5 text-slate-400" aria-hidden="true" />
+                                    <Tag className="size-3.5 text-slate-500" aria-hidden="true" />
                                     Sugestão da IA
                                 </p>
                                 <div className="mt-2 flex flex-wrap gap-4 text-[12.5px] text-slate-500">

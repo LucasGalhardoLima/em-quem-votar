@@ -32,6 +32,7 @@
  */
 import type { LoaderFunctionArgs } from "react-router";
 import { refreshCandidateStatuses } from "~/services/tse-status.server";
+import { safeEqual } from "~/utils/admin-auth.server";
 
 const NO_STORE = { "Cache-Control": "no-store" } as const;
 
@@ -56,8 +57,11 @@ function authorize(request: Request): Response | null {
     return null;
   }
 
-  const header = request.headers.get("Authorization");
-  return header === `Bearer ${secret}` ? null : unauthorized();
+  // `===` sai no primeiro byte diferente e vaza o prefixo correto pelo
+  // tempo de resposta. `safeEqual` compara em tempo constante — é a mesma
+  // função que o login do /admin usa para conferir a senha.
+  const header = request.headers.get("Authorization") ?? "";
+  return safeEqual(header, `Bearer ${secret}`) ? null : unauthorized();
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
