@@ -51,10 +51,16 @@ function formatPeriod(start: string, end: string): string {
  */
 export function SpendingSummary({
   spending,
-  hasLegislativeRecord,
+  hasLegislativeLink,
 }: {
   spending: SpendingGroup[];
-  hasLegislativeRecord: boolean;
+  /**
+   * Existe, no NOSSO banco, a linha `CandidateLegislativeLink` que amarra esta
+   * candidatura a um id da Câmara ou do Senado. É um fato sobre a nossa
+   * importação, não sobre a vida da pessoa — hoje há 1 vínculo para 211
+   * candidaturas.
+   */
+  hasLegislativeLink: boolean;
 }) {
   if (spending.length === 0) return null;
 
@@ -79,7 +85,7 @@ export function SpendingSummary({
             <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
               {config.description}
             </p>
-            <p className="mt-2 text-[11.5px] text-slate-400">
+            <p className="mt-2 text-[11.5px] text-slate-500">
               Período: {formatPeriod(group.periodStart, group.periodEnd)}
             </p>
             {group.sourceUrl ? (
@@ -93,17 +99,31 @@ export function SpendingSummary({
                 <ExternalLink className="size-3" />
               </a>
             ) : (
-              <p className="mt-1.5 text-[11.5px] text-slate-400">
+              <p className="mt-1.5 text-[11.5px] text-slate-500">
                 Fonte: {group.source}
               </p>
             )}
           </div>
         );
       })}
-      {!hasLegislativeRecord && spending.some((s) => s.type === "CEAP") && (
-        <p className="text-[12px] text-slate-400 sm:col-span-2 lg:col-span-3">
-          A cota parlamentar se refere a mandato anterior — este candidato não
-          exerce mandato legislativo no momento.
+      {/*
+        Esta nota já afirmava "este candidato não exerce mandato legislativo no
+        momento", derivando isso de `hasLegislativeRecord` — que é só
+        `candidate.legislativeLink !== null`, uma linha que falta no NOSSO
+        banco (1 vínculo para 211 candidaturas). É a mesma classe de erro da
+        aba de votações, corrigida no mesmo dia: a ausência era de importação,
+        não de mandato, e o texto virava afirmação falsa sobre uma pessoa real.
+
+        O que sustentamos é apenas isto: a cota apareceu, e não sabemos a que
+        mandato ligá-la porque o vínculo legislativo não foi importado.
+      */}
+      {!hasLegislativeLink && spending.some((s) => s.type === "CEAP") && (
+        <p className="text-[12px] leading-relaxed text-slate-500 sm:col-span-2 lg:col-span-3">
+          A cota parlamentar (CEAP) só é paga a quem exerce mandato na Câmara ou
+          no Senado, mas esta candidatura ainda não tem o vínculo com a casa
+          legislativa importado para o nosso registro — por isso a plataforma
+          não afirma aqui a qual mandato, ou a qual período de mandato, estes
+          gastos correspondem.
         </p>
       )}
     </div>

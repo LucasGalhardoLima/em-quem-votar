@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  aptoFromDivulga,
   REGISTRATION_STATUSES,
   RUNNING_STATUSES,
   STATUS_BADGE_CLASS,
@@ -8,6 +9,8 @@ import {
   statusFromTseLabel,
   statusLabel,
   statusTone,
+  TSE_DENIAL_WORDINGS,
+  tseStatusWrite,
   type RegistrationStatus,
 } from "../candidate-status";
 
@@ -214,5 +217,271 @@ describe("statusFromTseLabel", () => {
     const status = statusFromTseLabel(label) as RegistrationStatus;
     expect(statusLabel(status, label)).toBe(label);
     expect(statusLabel(status, null)).toBe(STATUS_PRESENTATION[status].label);
+  });
+});
+
+describe("tseStatusWrite", () => {
+  // A política de escrita da situação, que o sync e o cron compartilham.
+  // O caso que ela existe para separar é o terceiro: redação PRESENTE mas
+  // desconhecida. Antes, o sync avisava e mesmo assim gravava o fallback
+  // PENDING_JUDGMENT — a candidatura ficava com rótulo honesto ("Cassado por
+  // abuso de poder") e enum inventado ("Aguardando julgamento"), que o
+  // StatusBadge lê no `title` e no `sr-only`. E ficava PRESA: no run seguinte
+  // o diff não via diferença nenhuma.
+
+  it("redação conhecida: grava a redação E o enum", () => {
+    expect(tseStatusWrite("Deferido")).toEqual({
+      kind: "mapped",
+      label: "Deferido",
+      status: "APPROVED",
+    });
+  });
+
+  it("sem redação: não grava situação nenhuma", () => {
+    // O valor guardado sobrevive — uma queda do TSE não rebaixa "Deferido"
+    // para "aguardando julgamento".
+    for (const vazio of [null, undefined, "", "   ", "\n\t "]) {
+      expect(tseStatusWrite(vazio)).toEqual({ kind: "absent" });
+    }
+  });
+
+  it("redação DESCONHECIDA: grava a redação, NÃO grava o enum", () => {
+    const write = tseStatusWrite("Cassado por abuso de poder econômico");
+    expect(write.kind).toBe("unmapped");
+    // A palavra do TSE é gravada — é ela que o badge exibe, e é verdadeira.
+    expect(write).toHaveProperty("label", "Cassado por abuso de poder econômico");
+    // O enum NÃO vem junto: quem grava preserva o que já estava.
+    expect(write).not.toHaveProperty("status");
+  });
+
+  it("apara espaços da redação antes de gravá-la", () => {
+    expect(tseStatusWrite("  Renúncia  ")).toMatchObject({
+      kind: "mapped",
+      label: "Renúncia",
+      status: "WITHDRAWN",
+    });
+  });
+
+  it("concorda com statusFromTseLabel em toda redação conhecida", () => {
+    for (const label of [
+      "Aguardando julgamento",
+      "Deferido",
+      "Deferido com recurso",
+      "Indeferido",
+      "Indeferido em prazo recursal ou com recurso",
+      "Renúncia",
+      "Cassado",
+    ]) {
+      const write = tseStatusWrite(label);
+      expect(write.kind, label).toBe("mapped");
+      expect(write).toHaveProperty("status", statusFromTseLabel(label));
+    }
+  });
+});
+
+describe("aptoFromDivulga", () => {
+  // A ARMADILHA, medida na fonte: das 13 candidaturas presidenciais lidas no
+  // DivulgaCandContas em 27/08/2026, ONZE devolvem `candidatoApto: false` E
+  // `isCandidatoInapto: false` ao mesmo tempo, porque estão "Aguardando
+  // julgamento". As outras duas (Deferido) devolvem `candidatoApto: true`.
+  const aguardandoJulgamento = {
+    candidatoApto: false,
+    isCandidatoInapto: false,
+    situacao: "Aguardando julgamento",
+  };
+
+  it("NÃO trata candidatoApto:false como inapto", () => {
+    // Ler o campo como booleano marcaria 11 pessoas reais como inaptas sem
+    // que nenhuma decisão da Justiça Eleitoral existisse.
+    expect(aptoFromDivulga(aguardandoJulgamento)).toBeNull();
+    expect(aptoFromDivulga(aguardandoJulgamento)).not.toBe(false);
+  });
+
+  it("é tri-estado: apta, inapta e ainda não julgada são valores distintos", () => {
+    expect(
+      aptoFromDivulga({
+        candidatoApto: true,
+        isCandidatoInapto: false,
+        situacao: "Deferido",
+      }),
+    ).toBe(true);
+    expect(
+      aptoFromDivulga({
+        candidatoApto: false,
+        isCandidatoInapto: true,
+        situacao: "Indeferido",
+      }),
+    ).toBe(false);
+    expect(aptoFromDivulga(aguardandoJulgamento)).toBeNull();
+  });
+
+  it("a flag do TSE decide quando a redação não a contradiz", () => {
+    // `candidatoApto: true` e `isCandidatoInapto: true` são afirmações
+    // explícitas da Justiça Eleitoral; sem redação que as negue, elas valem.
+    expect(
+      aptoFromDivulga({ candidatoApto: true, isCandidatoInapto: false, situacao: null }),
+    ).toBe(true);
+    expect(
+      aptoFromDivulga({ candidatoApto: false, isCandidatoInapto: true, situacao: null }),
+    ).toBe(false);
+  });
+
+  // MUDANÇA DE COMPORTAMENTO (27/08/2026). Antes, `candidatoApto: true`
+  // retornava `true` ANTES de olhar a redação, e este teste afirmava que a
+  // flag vencia "mesmo contra a redação". Ela não pode: o schema documenta
+  // `tseApto: true` como "a Justiça Eleitoral deferiu o registro", e dizer
+  // isso de um registro INDEFERIDO é afirmação falsa sobre uma pessoa real.
+  describe("redação de indeferimento derruba a flag afirmativa", () => {
+    it("o caso real: ESTÊVÃO (BA), apto=true com registro indeferido", () => {
+      // VERIFICADO na ficha 50002536579 em 27/08/2026 — a única das 211 em
+      // que as duas fontes se contradizem.
+      const estevao = {
+        candidatoApto: true,
+        isCandidatoInapto: false,
+        situacao: "Indeferido em prazo recursal ou com recurso",
+      };
+      expect(aptoFromDivulga(estevao)).not.toBe(true);
+      // `null` e não `false`: ainda cabe recurso (SUB_JUDICE), então nem
+      // "apta" nem "inapta" — o desfecho não existe ainda.
+      expect(aptoFromDivulga(estevao)).toBeNull();
+    });
+
+    it("indeferimento definitivo com a flag afirmativa é inapto, não apto", () => {
+      expect(
+        aptoFromDivulga({
+          candidatoApto: true,
+          isCandidatoInapto: false,
+          situacao: "Indeferido",
+        }),
+      ).toBe(false);
+    });
+
+    it("cassação e renúncia também derrubam a flag", () => {
+      for (const situacao of ["Cassado", "Renúncia", "Falecido", "Cancelado"]) {
+        expect(
+          aptoFromDivulga({ candidatoApto: true, isCandidatoInapto: false, situacao }),
+        ).toBe(false);
+      }
+    });
+
+    it("mas a flag de INAPTIDÃO continua valendo antes de tudo", () => {
+      // Nenhuma redação contradiz uma inaptidão declarada: o TSE afirmou.
+      expect(
+        aptoFromDivulga({
+          candidatoApto: false,
+          isCandidatoInapto: true,
+          situacao: "Indeferido em prazo recursal ou com recurso",
+        }),
+      ).toBe(false);
+    });
+
+    it("'deferido com recurso' NÃO é redação de indeferimento", () => {
+      // A regra derruba a flag só quando o TEXTO nega o registro. Aqui ele
+      // não nega, então a flag afirmativa segue decidindo.
+      expect(
+        aptoFromDivulga({
+          candidatoApto: true,
+          isCandidatoInapto: false,
+          situacao: "Deferido com recurso",
+        }),
+      ).toBe(true);
+    });
+
+    it("toda redação da lista de negativas existe no TSE_STATUS_MAP", () => {
+      // Impede que uma redação removida do mapa sobreviva esquecida na lista.
+      for (const wording of TSE_DENIAL_WORDINGS) {
+        expect(statusFromTseLabel(wording), wording).not.toBeNull();
+      }
+    });
+  });
+
+  it("renúncia é inapta, não 'ainda não julgada'", () => {
+    // Quem renunciou tem as MESMAS duas flags de quem aguarda julgamento.
+    // Sem a leitura da situação, o retorno seria null — e a plataforma diria
+    // "ainda não julgada" sobre uma candidatura que acabou.
+    expect(
+      aptoFromDivulga({
+        candidatoApto: false,
+        isCandidatoInapto: false,
+        situacao: "Renúncia",
+      }),
+    ).toBe(false);
+    expect(
+      aptoFromDivulga({
+        candidatoApto: false,
+        isCandidatoInapto: false,
+        situacao: "Cassado",
+      }),
+    ).toBe(false);
+    expect(
+      aptoFromDivulga({
+        candidatoApto: false,
+        isCandidatoInapto: false,
+        situacao: "Indeferido",
+      }),
+    ).toBe(false);
+  });
+
+  it("deferido pela redação é apto mesmo se a flag vier calada", () => {
+    expect(
+      aptoFromDivulga({ candidatoApto: null, isCandidatoInapto: null, situacao: "Deferido" }),
+    ).toBe(true);
+  });
+
+  it("sub judice não afirma desfecho: sem flag, fica não julgada", () => {
+    // "Deferido com recurso" e "Indeferido em prazo recursal ou com recurso"
+    // caem no mesmo enum — a redação não basta para dizer o desfecho.
+    for (const situacao of [
+      "Deferido com recurso",
+      "Indeferido em prazo recursal ou com recurso",
+      "Sub judice",
+    ]) {
+      expect(
+        aptoFromDivulga({ candidatoApto: false, isCandidatoInapto: false, situacao }),
+      ).toBeNull();
+    }
+  });
+
+  it("redação desconhecida ou ausente não vira palpite", () => {
+    expect(aptoFromDivulga({})).toBeNull();
+    expect(
+      aptoFromDivulga({ candidatoApto: null, isCandidatoInapto: null, situacao: null }),
+    ).toBeNull();
+    expect(
+      aptoFromDivulga({
+        candidatoApto: false,
+        isCandidatoInapto: false,
+        situacao: "Situação que o TSE ainda não inventou",
+      }),
+    ).toBeNull();
+  });
+
+  it("reproduz a distribuição real das 13 presidenciais em 27/08/2026", () => {
+    const fichas = [
+      // 11 "Aguardando julgamento" — apto=false, inapto=false
+      ...Array.from({ length: 11 }, () => aguardandoJulgamento),
+      // 2 "Deferido" — apto=true
+      ...Array.from({ length: 2 }, () => ({
+        candidatoApto: true,
+        isCandidatoInapto: false,
+        situacao: "Deferido",
+      })),
+    ];
+
+    const resultados = fichas.map(aptoFromDivulga);
+    expect(resultados.filter((r) => r === true)).toHaveLength(2);
+    expect(resultados.filter((r) => r === null)).toHaveLength(11);
+    // O número que importa: NENHUMA pessoa marcada como inapta sem decisão.
+    expect(resultados.filter((r) => r === false)).toHaveLength(0);
+  });
+
+  it("ignora st_MOTIVO_FICHA_LIMPA — o campo não entra na assinatura", () => {
+    // Ele vem `false` para todas as 13, inclusive quem está sob julgamento:
+    // é o MOTIVO de um indeferimento, não um atestado. Passá-lo não muda nada.
+    const comCampoExtra = {
+      ...aguardandoJulgamento,
+      st_MOTIVO_FICHA_LIMPA: false,
+    } as Parameters<typeof aptoFromDivulga>[0];
+    expect(aptoFromDivulga(comCampoExtra)).toBeNull();
   });
 });
