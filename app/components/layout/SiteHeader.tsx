@@ -12,6 +12,23 @@ const NAV_ITEMS = [
   { label: "Metodologia", to: "/metodologia", match: ["/metodologia"] },
 ] as const;
 
+/**
+ * Alvo do link de salto. As rotas marcam o próprio `<main>` com este id; onde
+ * ele ainda não existe, o fallback pega o primeiro `<main>` da página — assim
+ * o link nunca vira âncora morta enquanto as demais telas não são marcadas.
+ */
+export const MAIN_CONTENT_ID = "conteudo";
+
+function skipToContent(event: React.MouseEvent<HTMLAnchorElement>) {
+  const target =
+    document.getElementById(MAIN_CONTENT_ID) ?? document.querySelector("main");
+  if (!target) return; // deixa o navegador tentar a âncora sozinho
+  event.preventDefault();
+  target.setAttribute("tabindex", "-1");
+  target.focus();
+  target.scrollIntoView();
+}
+
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
@@ -21,6 +38,17 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur-sm">
+      {/*
+        Primeiro foco tabulável da página. Sem ele o teclado percorre os cinco
+        itens de navegação a cada troca de rota antes de chegar ao conteúdo.
+      */}
+      <a
+        href={`#${MAIN_CONTENT_ID}`}
+        onClick={skipToContent}
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-4 focus:z-50 focus:rounded-xl focus:bg-slate-800 focus:px-4 focus:py-2.5 focus:text-[13.5px] focus:font-semibold focus:text-white"
+      >
+        Pular para o conteúdo
+      </a>
       <Container className="flex items-center gap-9 py-3.5">
         <Link
           to="/"
