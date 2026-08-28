@@ -151,11 +151,27 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
   const visible = showAll ? results : results.slice(0, 3);
   const top3 = results.slice(0, 3).map((r) => r.candidate.id);
 
-  // Sem NENHUMA posição documentada todos os matches são null, o desempate
-  // alfabético de calculateMatches vira a ordem da lista e as três primeiras
-  // letras do alfabeto passam a ser lidas como "seus três mais compatíveis".
-  // Ranking acidental é ranking: nesse caso a página não exibe lista alguma.
-  const anyComparable = results.some((r) => r.matchPercentage !== null);
+  // DUAS perguntas diferentes, e confundi-las já produziu uma afirmação falsa.
+  //
+  // `anyComparable` é sobre EXISTIR BASE: alguma candidatura tem posição
+  // documentada em algum tema que a pessoa respondeu. É o que decide entre
+  // mostrar a lista e cair no estado vazio — cujo texto diz, com todas as
+  // letras, que nenhuma candidatura tem posição registrada com fonte. Testar
+  // isso por `matchPercentage !== null` (o que este trecho fazia) mentia
+  // sempre que todas ficassem abaixo de MIN_COMPARABLE_TOPICS: elas têm 1 ou 2
+  // temas, e a página afirmava que não têm nenhum — além de deixar o rótulo
+  // "Base insuficiente" inalcançável. `comparableCount` é o campo que
+  // `app/lib/match.ts` expõe justamente para isso.
+  //
+  // `anyRanked` é sobre EXISTIR PERCENTUAL PUBLICÁVEL, e guarda o que só faz
+  // sentido com um pódio real. Sem nenhum percentual todos os matches são
+  // null, o desempate alfabético de calculateMatches vira a ordem da lista, e
+  // destacar o primeiro ou oferecer "comparar os 3 primeiros" transformaria as
+  // três primeiras letras do alfabeto em "seus três mais compatíveis". Ranking
+  // acidental é ranking: a lista aparece (a base existe e é informação
+  // verdadeira), o pódio não.
+  const anyComparable = results.some((r) => r.comparableCount > 0);
+  const anyRanked = results.some((r) => r.matchPercentage !== null);
 
   function copySummary() {
     const lines = results
@@ -163,7 +179,16 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
       .map(
         (r, i) =>
           `${i + 1}. ${r.candidate.displayName} (${r.candidate.party}) — ${
-            r.matchPercentage === null ? "sem dados" : `${r.matchPercentage}%`
+            r.matchPercentage !== null
+              ? `${r.matchPercentage}%`
+              : // Mesma redação da tela. O texto copiado circula sozinho em
+                // grupo de WhatsApp, sem a lista ao lado para desfazer o
+                // engano: "sem dados" para os dois casos apagaria a diferença
+                // entre "não tem posição registrada em nenhum tema que você
+                // respondeu" e "tem, mas só uma ou duas".
+                r.insufficientBase
+                ? "Base insuficiente"
+                : "Sem dados"
           }`,
       );
     const text = [
@@ -199,16 +224,23 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               {answered} de {totalQuestions}
             </strong>{" "}
             perguntas e nos pesos que você definiu.{" "}
-            {anyComparable
-              ? "Empates aparecem em ordem alfabética."
-              : "Nenhuma candidatura tem posição documentada ainda."}
+            {!anyComparable
+              ? "Nenhuma candidatura tem posição documentada ainda."
+              : anyRanked
+                ? "Empates aparecem em ordem alfabética."
+                : "Nenhuma candidatura tem base documental suficiente para um percentual — a lista está em ordem alfabética, e não por compatibilidade."}
           </p>
 
           {anyComparable ? (
             <div className="mt-5 grid gap-2.5">
               {visible.map((result) => {
                 const { candidate, matchPercentage } = result;
-                const isTop = results[0]?.candidate.id === candidate.id;
+                // Destaque só existe se houver percentual: sem ele o primeiro
+                // lugar é fruto do desempate alfabético, e pintá-lo de indigo
+                // afirmaria uma preferência que o dado não sustenta.
+                const isTop =
+                  matchPercentage !== null &&
+                  results[0]?.candidate.id === candidate.id;
                 return (
                   <article
                     key={candidate.id}
@@ -369,7 +401,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               PRÓXIMOS PASSOS
             </h2>
             <div className="mt-2.5 grid gap-2">
-              {anyComparable && (
+              {anyRanked && (
                 <>
                   <Link
                     to={`/comparar?ids=${top3.join(",")}`}
@@ -394,7 +426,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               >
                 Refazer o quiz
               </Link>
-              {anyComparable && (
+              {anyRanked && (
                 <p className="text-center text-[11.5px] text-slate-500">
                   O resumo traz só os percentuais — suas respostas não saem do
                   aparelho.
