@@ -1,16 +1,16 @@
 import { useLoaderData, Link } from "react-router";
 import { ArticleService } from "~/services/article.server";
-import { Container } from "~/components/layout";
+import { pageMeta } from "~/root";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 
 export function meta() {
-  return [
-    { title: "Educação Política | Em Quem Votar?" },
-    {
-      name: "description",
-      content:
-        "Entenda o cenário político com nossos guias e artigos educativos.",
-    },
-  ];
+  // Mesma frase que a página exibe sob o <h1> — ver a nota em votacoes._index.
+  return pageMeta({
+    title: "Educação Política | Em Quem Votar?",
+    description:
+      "Textos curtos e sem lado sobre como o voto funciona, para você entender a eleição antes de escolher.",
+    type: "website",
+  });
 }
 
 export async function loader() {
@@ -28,7 +28,7 @@ export default function ContentHub() {
   const { articles } = useLoaderData<typeof loader>();
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-9 pb-3">
         <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
           Educação Política
@@ -45,7 +45,7 @@ export default function ContentHub() {
             <p className="text-base font-bold text-slate-600">
               Nenhum artigo disponível no momento
             </p>
-            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-500">
               Novos textos são publicados conforme a campanha avança.
             </p>
           </div>
@@ -67,7 +67,7 @@ export default function ContentHub() {
                 <span className="line-clamp-3 text-[13px] leading-relaxed text-slate-500">
                   {article.excerpt}
                 </span>
-                <span className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-[12px] text-slate-400">
+                <span className="mt-auto flex flex-wrap items-center gap-2 pt-2 text-[12px] text-slate-500">
                   <time dateTime={article.date}>
                     {dateFormatter.format(new Date(article.date))}
                   </time>

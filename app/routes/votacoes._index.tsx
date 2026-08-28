@@ -1,19 +1,22 @@
 import type { Route } from "./+types/votacoes._index";
+import { useEffect, useRef } from "react";
 import { useLoaderData, Link, Form, useSubmit, useSearchParams } from "react-router";
 import { BillService } from "~/services/bill.server";
+import { pageMeta } from "~/root";
 import { Search } from "lucide-react";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { cn } from "~/lib/utils";
 
 export function meta() {
-  return [
-    { title: "Votações | Em Quem Votar?" },
-    {
-      name: "description",
-      content:
-        "Explore o histórico de votações da Câmara dos Deputados e do Senado Federal.",
-    },
-  ];
+  // A descrição é a mesma frase que a página exibe sob o <h1>: quem chega pelo
+  // card compartilhado lê exatamente o que vai encontrar, e a promessa não
+  // existe em duas versões que podem divergir.
+  return pageMeta({
+    title: "Votações | Em Quem Votar?",
+    description:
+      "Pesquise as votações nominais da Câmara e do Senado e veja como cada parlamentar se posicionou — sem rótulo de certo ou errado.",
+    type: "website",
+  });
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -52,6 +55,24 @@ export default function VotacoesIndex() {
   const submit = useSubmit();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Sem espera, cada tecla vira uma navegação e um `contains` no Postgres:
+  // "orçamento" são nove buscas de texto para uma intenção só.
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    },
+    [],
+  );
+
+  function cancelPendingSearch() {
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+      searchTimer.current = null;
+    }
+  }
+
   function handleSourceChange(value: string) {
     const params = new URLSearchParams(searchParams);
     if (value) {
@@ -63,7 +84,7 @@ export default function VotacoesIndex() {
   }
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-9 pb-3">
         <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
           Votações
@@ -77,11 +98,20 @@ export default function VotacoesIndex() {
           <Form
             method="get"
             className="relative flex-1"
-            onChange={(e) => submit(e.currentTarget, { replace: true })}
+            onChange={(e) => {
+              // `currentTarget` é zerado quando o handler retorna: guarda agora.
+              const form = e.currentTarget;
+              cancelPendingSearch();
+              searchTimer.current = setTimeout(
+                () => submit(form, { replace: true }),
+                300,
+              );
+            }}
+            onSubmit={cancelPendingSearch}
           >
             <input type="hidden" name="source" value={source} />
             <Search
-              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -90,7 +120,7 @@ export default function VotacoesIndex() {
               defaultValue={q}
               placeholder="Buscar votação por título ou tema…"
               aria-label="Buscar votações"
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
             />
           </Form>
 
@@ -128,7 +158,7 @@ export default function VotacoesIndex() {
             <p className="text-base font-bold text-slate-600">
               Nenhuma votação encontrada
             </p>
-            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-500">
               Tente outro termo ou remova o filtro de casa legislativa.
             </p>
           </div>
@@ -155,7 +185,7 @@ export default function VotacoesIndex() {
                 </span>
                 <time
                   dateTime={bill.voteDate}
-                  className="mt-auto pt-2 text-[12px] text-slate-400"
+                  className="mt-auto pt-2 text-[12px] text-slate-500"
                 >
                   {dateFormatter.format(new Date(bill.voteDate))}
                 </time>

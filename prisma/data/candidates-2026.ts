@@ -12,9 +12,32 @@
  * O sync do TSE faz upsert por `tseId` e SOBRESCREVE estes valores assim que
  * roda — é assim que se pretende. Nada aqui é chute: campo sem confirmação
  * fica `null`, nunca preenchido por inferência.
+ *
+ * A recíproca NÃO vale, e é o ponto: uma vez que o TSE sincronizou, o seed
+ * não reescreve mais nada. Ele identifica a linha por `tseId` e só preenche
+ * campo vazio (ver `seedCandidates()` em prisma/seed.ts). Rodar o seed depois
+ * do sync é inofensivo de propósito.
  */
 
 export interface CandidateSeed {
+  /**
+   * Identificador do registro no TSE (`SQ_CANDIDATO`). É a CHAVE do seed.
+   *
+   * Casar por nome não funciona e nunca funcionou: o TSE grava o nome de urna
+   * em caixa alta e sem acento ("VETERINÁRIO WILSON GRASSI", "CLARIANA
+   * BARAO"), enquanto este arquivo traz a grafia jornalística ("Wilson
+   * Grassi", "Clariana Barão"). Conferido contra o banco em 27/08/2026: uma
+   * comparação sensível a caixa acha ZERO das 13, e mesmo ignorando caixa e
+   * acento três continuariam sem par ("Romeu Zema" × "ZEMA", "Wilson Grassi"
+   * × "VETERINÁRIO WILSON GRASSI", "Augusto Cury" × "ESCRITOR AUGUSTO CURY").
+   * Cada não-par vira uma candidatura DUPLICADA na listagem.
+   *
+   * Os valores abaixo vieram do próprio banco já sincronizado, e cada um foi
+   * conferido por partido E número de urna — os dois batem 1 para 1 com as 13
+   * linhas presidenciais. `null` só para uma candidatura ainda sem registro
+   * no TSE; aí o seed cai no casamento por nome, que é frágil por natureza.
+   */
+  tseId: string | null;
   /** Nome completo, como registrado. */
   name: string;
   /** Nome de urna. */
@@ -52,6 +75,7 @@ export interface CandidateSeed {
 
 export const CANDIDATES_2026: CandidateSeed[] = [
   {
+    tseId: "280002542548",
     name: "Luiz Inácio Lula da Silva",
     displayName: "Lula",
     party: "PT",
@@ -69,6 +93,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002540694",
     name: "Renan Antonio Ferreira dos Santos",
     displayName: "Renan Santos",
     party: "MISSÃO",
@@ -91,6 +116,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002541457",
     name: "Hertz Dias",
     displayName: "Hertz Dias",
     party: "PSTU",
@@ -108,6 +134,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002551975",
     name: "Edmilson Costa",
     displayName: "Edmilson Costa",
     party: "PCB",
@@ -125,6 +152,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002551544",
     name: "Flávio Nantes Bolsonaro",
     displayName: "Flávio Bolsonaro",
     party: "PL",
@@ -146,6 +174,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     },
   },
   {
+    tseId: "280002552484",
     name: "Clariana Barão",
     displayName: "Clariana Barão",
     party: "DC",
@@ -163,6 +192,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002553884",
     name: "Pablo Marçal",
     displayName: "Pablo Marçal",
     party: "PRTB",
@@ -180,6 +210,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002552487",
     name: "Rui Costa Pimenta",
     displayName: "Rui Costa Pimenta",
     party: "PCO",
@@ -197,6 +228,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002539826",
     name: "Romeu Zema",
     displayName: "Romeu Zema",
     party: "NOVO",
@@ -214,6 +246,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002548139",
     name: "Wilson Grassi",
     displayName: "Wilson Grassi",
     party: "DEMOCRATA",
@@ -231,6 +264,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002551932",
     name: "Ronaldo Caiado",
     displayName: "Ronaldo Caiado",
     party: "PSD",
@@ -248,6 +282,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002551547",
     name: "Augusto Cury",
     displayName: "Augusto Cury",
     party: "AVANTE",
@@ -265,6 +300,7 @@ export const CANDIDATES_2026: CandidateSeed[] = [
     legislative: null,
   },
   {
+    tseId: "280002538811",
     name: "Samara Martins",
     displayName: "Samara",
     party: "UP",

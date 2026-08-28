@@ -2,8 +2,10 @@ import { useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { X } from "lucide-react";
 import type { Route } from "./+types/comparar";
-import { Container } from "~/components/layout";
+import { pageMeta } from "~/root";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { CandidateAvatar } from "~/components/candidate/CandidateAvatar";
+import { SourceCite } from "~/components/candidate/SourceCite";
 import { StatusBadge } from "~/components/candidate/StatusBadge";
 import {
   MAX_COMPARISON,
@@ -17,12 +19,12 @@ import { cn } from "~/lib/utils";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Comparar candidatos | Em Quem Votar?" },
-    {
-      name: "description",
-      content:
+    ...pageMeta({
+      title: "Comparar candidatos | Em Quem Votar?",
+      description:
         "Compare lado a lado as posições documentadas de até três candidatos à Presidência em 2026, tema por tema, com a fonte de cada afirmação.",
-    },
+      type: "website",
+    }),
     { name: "robots", content: "index,follow" },
   ];
 }
@@ -89,10 +91,13 @@ export default function Comparar({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const cols = `200px repeat(${candidates.length}, minmax(180px, 1fr))`;
+  // Largura natural mínima: coluna do tema (200px) + 180px por candidatura +
+  // o respiro de 10px entre células. Abaixo disso a região rola na horizontal.
+  // Os 20px extras da largura são devolvidos pela margem negativa abaixo.
+  const minTableWidth = 200 + candidates.length * 180 + (candidates.length + 2) * 10;
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="flex flex-col gap-3 pt-8 pb-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-[26px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[30px]">
@@ -130,7 +135,7 @@ export default function Comparar({ loaderData }: Route.ComponentProps) {
             <p className="text-base font-bold text-slate-600">
               Nenhum candidato selecionado
             </p>
-            <p className="text-[13.5px] text-slate-400">
+            <p className="text-[13.5px] text-slate-500">
               Escolha até {MAX_COMPARISON} na lista de candidatos, pelo botão +.
             </p>
             <Link
@@ -143,115 +148,164 @@ export default function Comparar({ loaderData }: Route.ComponentProps) {
         </Container>
       ) : (
         <>
-          <Container className="pt-4 pb-2">
-            <div className="overflow-x-auto pb-2">
-              <div className="grid min-w-[640px] gap-2.5">
-                <div className="grid gap-2.5" style={{ gridTemplateColumns: cols }}>
-                  <div />
-                  {candidates.map((candidate) => (
-                    <div
-                      key={candidate.id}
-                      className="relative rounded-2xl border border-slate-200 bg-white p-3.5 text-center"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => remove(candidate.id)}
-                        aria-label={`Remover ${candidate.displayName} da comparação`}
-                        className="absolute top-2 right-2.5 text-slate-400 transition-colors hover:text-red-700"
-                      >
-                        <X className="size-3.5" />
-                      </button>
-                      <CandidateAvatar
-                        name={candidate.displayName}
-                        photoUrl={candidate.photoUrl}
-                        size="sm"
-                        className="mx-auto"
-                      />
-                      <Link
-                        to={`/candidato/${candidate.id}`}
-                        prefetch="intent"
-                        className="mt-2 block text-[14.5px] font-bold text-slate-800 hover:text-indigo-600"
-                      >
-                        {candidate.displayName}
-                      </Link>
-                      <p className="text-xs text-slate-500">
-                        {candidate.party}
-                        {candidate.number != null
-                          ? ` · nº ${candidate.number}`
-                          : ""}
-                      </p>
-                      <div className="mt-2 flex justify-center">
-                        <StatusBadge
-                          status={candidate.registrationStatus}
-                          tseStatusLabel={candidate.tseStatusLabel}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <Container className="pt-1.5 pb-0">
+            {/*
+              Tabela de verdade, não grade de divs: cada célula é lida com o
+              nome do tema (cabeçalho de linha) e o da candidatura (cabeçalho
+              de coluna). Numa tela cujo propósito é comparar pessoas, ler as
+              células em sequência linear é ler outra coisa.
 
-                {topics.map((topic) => (
-                  <div
-                    key={topic.slug}
-                    className="grid gap-2.5"
-                    style={{ gridTemplateColumns: cols }}
-                  >
-                    <div className="flex items-center text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
-                      {topic.name}
-                    </div>
-                    {candidates.map((candidate) => {
-                      const position = candidate.positions[topic.slug];
-                      const documented =
-                        position && hasPosition(position.stance);
-                      return (
-                        <div
-                          key={`${candidate.id}-${topic.slug}`}
-                          className={cn(
-                            "flex flex-col justify-center gap-1 rounded-xl px-3.5 py-3 text-[13px] leading-snug",
-                            documented
-                              ? "border border-slate-200 bg-white text-slate-600"
-                              : "border border-dashed border-slate-300 bg-slate-50 text-slate-400",
-                          )}
+              A região rolável recebe tabIndex para que o teclado consiga
+              deslocá-la na horizontal sem depender de mouse.
+            */}
+            <div
+              role="region"
+              aria-label="Posições por tema, lado a lado"
+              tabIndex={0}
+              className="-mx-[10px] overflow-x-auto pb-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              {/*
+                `border-spacing` reproduz o antigo `gap-2.5` (10px) entre as
+                células — mas afasta os mesmos 10px da borda da tabela, que o
+                original não tinha. Quem devolve esses 10px é o `-mx` da
+                região rolável (e o `pt` reduzido acima), e não uma margem
+                negativa na tabela: essa criava 10px de rolagem fantasma.
+              */}
+              <table
+                className="w-full table-fixed border-separate border-spacing-[10px]"
+                style={{ minWidth: minTableWidth }}
+              >
+                <caption className="sr-only">
+                  Comparação de posições documentadas: uma linha por tema, uma
+                  coluna por candidatura.
+                </caption>
+                <colgroup>
+                  <col style={{ width: 200 }} />
+                  {candidates.map((candidate) => (
+                    <col key={candidate.id} />
+                  ))}
+                </colgroup>
+                {/*
+                  Uma faixa só (`tbody`), não `thead` + `tbody`: com bordas
+                  separadas o CSS aplica o espaçamento vertical DUAS vezes na
+                  fronteira entre faixas, e os 10px do layout original viravam
+                  20px sob os cartões. A associação de coluna vem do
+                  `scope="col"`, não da faixa.
+                */}
+                <tbody>
+                  <tr>
+                    <td />
+                    {candidates.map((candidate) => (
+                      <th
+                        key={candidate.id}
+                        scope="col"
+                        className="relative rounded-2xl border border-slate-200 bg-white p-3.5 text-center align-top font-normal"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => remove(candidate.id)}
+                          aria-label={`Remover ${candidate.displayName} da comparação`}
+                          className="absolute top-0.5 right-1 rounded-full p-1.5 text-slate-500 transition-colors hover:text-red-700"
                         >
-                          <span
+                          <X className="size-3.5" aria-hidden="true" />
+                        </button>
+                        <CandidateAvatar
+                          name={candidate.displayName}
+                          photoUrl={candidate.photoUrl}
+                          size="sm"
+                          className="mx-auto"
+                        />
+                        <Link
+                          to={`/candidato/${candidate.id}`}
+                          prefetch="intent"
+                          className="mt-2 block text-[14.5px] font-bold text-slate-800 hover:text-indigo-600"
+                        >
+                          {candidate.displayName}
+                        </Link>
+                        <p className="text-xs font-normal text-slate-500">
+                          {candidate.party}
+                          {candidate.number != null
+                            ? ` · nº ${candidate.number}`
+                            : ""}
+                        </p>
+                        <span className="mt-2 flex justify-center">
+                          <StatusBadge
+                            status={candidate.registrationStatus}
+                            tseStatusLabel={candidate.tseStatusLabel}
+                          />
+                        </span>
+                      </th>
+                    ))}
+                  </tr>
+
+                  {topics.map((topic) => (
+                    <tr key={topic.slug}>
+                      <th
+                        scope="row"
+                        className="text-left align-middle text-xs font-bold tracking-[0.06em] text-slate-500 uppercase"
+                      >
+                        {topic.name}
+                      </th>
+                      {candidates.map((candidate) => {
+                        const position = candidate.positions[topic.slug];
+                        const documented =
+                          position && hasPosition(position.stance);
+                        return (
+                          <td
+                            key={`${candidate.id}-${topic.slug}`}
                             className={cn(
-                              documented && "font-semibold text-slate-800",
+                              "rounded-xl px-3.5 py-3 align-middle text-[13px] leading-snug",
+                              documented
+                                ? "border border-slate-200 bg-white text-slate-600"
+                                : "border border-dashed border-slate-300 bg-slate-50 text-slate-500",
                             )}
                           >
-                            {candidateStanceLabel(position?.stance ?? null)}
-                          </span>
-                          {documented && position?.description && (
-                            <span className="line-clamp-3 text-[12px] text-slate-500">
-                              {position.description}
-                            </span>
-                          )}
-                          {documented && position?.sourceUrl && (
-                            <a
-                              href={position.sourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[11px] font-medium text-indigo-600 hover:underline"
-                            >
-                              {position.sourceDocument ?? "Ver fonte"}
-                              {position.sourcePage
-                                ? `, p. ${position.sourcePage}`
-                                : ""}
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
+                            <div className="flex flex-col gap-1">
+                              <span
+                                className={cn(
+                                  documented && "font-semibold text-slate-800",
+                                )}
+                              >
+                                {candidateStanceLabel(position?.stance ?? null)}
+                              </span>
+                              {documented && position?.description && (
+                                <span className="line-clamp-3 text-[12px] text-slate-500">
+                                  {position.description}
+                                </span>
+                              )}
+                              {/*
+                                Sempre pelo SourceCite: quando não há URL ele
+                                ainda nomeia o documento. Uma posição
+                                documentada não pode aparecer sem procedência
+                                só porque o link está faltando.
+                              */}
+                              {documented && position && (
+                                <SourceCite
+                                  source={{
+                                    sourceType: position.sourceType,
+                                    sourceUrl: position.sourceUrl,
+                                    sourceDocument: position.sourceDocument,
+                                    sourcePage: position.sourcePage,
+                                  }}
+                                />
+                              )}
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </Container>
 
           <Container className="pt-3 pb-10">
-            <p className="text-[12px] leading-relaxed text-slate-400">
-              Cada célula preenchida cita documento, página e link (TSE, Câmara,
-              Senado). Células “sem posição registrada” nunca são completadas por
-              inferência — a ausência de documento é exibida como ausência.
+            <p className="text-[12px] leading-relaxed text-slate-500">
+              Cada célula preenchida nomeia o documento citado — com página e
+              link quando o registro os tem (TSE, Câmara, Senado). Células “sem
+              posição registrada” nunca são completadas por inferência — a
+              ausência de documento é exibida como ausência.
             </p>
           </Container>
         </>

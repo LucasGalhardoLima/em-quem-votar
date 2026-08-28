@@ -27,7 +27,11 @@ export function CompareToggle({
         onToggle();
       }}
       className={cn(
-        "flex size-[26px] flex-none items-center justify-center rounded-full border transition-colors",
+        "relative flex size-[26px] flex-none items-center justify-center rounded-full border transition-colors",
+        // Alvo de toque de 32px sem engordar o círculo: o pseudo-elemento
+        // estende só a área clicável. É o controle principal de cada card na
+        // grade mobile, e 26px passava o piso da WCAG 2.2 por 2px.
+        "before:absolute before:-inset-[3px] before:content-['']",
         selected
           ? "border-indigo-600 bg-indigo-600/[0.08] text-indigo-600"
           : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300",

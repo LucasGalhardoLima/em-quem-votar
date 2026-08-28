@@ -81,7 +81,7 @@ export function SourceCite({
           {body}
         </a>
       ) : (
-        <span className="inline-flex w-fit items-center gap-1.5 text-[11.5px] font-medium text-slate-400">
+        <span className="inline-flex w-fit items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
           {body}
         </span>
       )}
@@ -92,7 +92,7 @@ export function SourceCite({
 /** Marcador exibido quando não existe documento sobre o tema. */
 export function NoSourceNotice({ className }: { className?: string }) {
   return (
-    <span className={cn("text-[11.5px] text-slate-400", className)}>
+    <span className={cn("text-[11.5px] text-slate-500", className)}>
       Nenhum documento oficial registrado sobre este tema.
     </span>
   );

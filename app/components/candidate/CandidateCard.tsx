@@ -69,7 +69,7 @@ export function CandidateCard({
       />
 
       {candidate.viceName && (
-        <p className="truncate text-[12px] text-slate-400">
+        <p className="truncate text-[12px] text-slate-500">
           Vice: {candidate.viceName}
           {candidate.viceParty ? ` (${candidate.viceParty})` : ""}
         </p>

@@ -3,7 +3,8 @@ import { Link, useSearchParams } from "react-router";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import type { Route } from "./+types/candidatos";
-import { Container } from "~/components/layout";
+import { pageMeta } from "~/root";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { CandidateCard } from "~/components/candidate/CandidateCard";
 import {
   MAX_COMPARISON,
@@ -34,13 +35,13 @@ export function meta({ data }: Route.MetaArgs) {
     ? `Candidatos 2026 em ${nome} | Em Quem Votar?`
     : "Candidatos 2026 | Em Quem Votar?";
   return [
-    { title: titulo },
-    {
-      name: "description",
-      content: nome
+    ...pageMeta({
+      title: titulo,
+      description: nome
         ? `Candidaturas à Presidência e ao governo de ${nome} em 2026, com partido, número, chapa e situação de registro conforme o TSE. Peso visual igual para todas.`
         : "Candidaturas à Presidência da República e aos governos estaduais em 2026, com partido, número, chapa e situação de registro conforme o TSE. Peso visual igual para todas.",
-    },
+      type: "website",
+    }),
     { name: "robots", content: "index,follow" },
   ];
 }
@@ -95,36 +96,60 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
   const selectedIds = useComparisonStore((s) => s.selectedIds);
   const toggleId = useComparisonStore((s) => s.toggleId);
 
-  const chips = useMemo(() => {
-    const present = REGISTRATION_STATUSES.filter((s) =>
-      statusCounts.some((c) => c.status === s && c.count > 0),
-    );
-    return [
-      { key: "todos", label: `Todos · ${total}`, title: "Todas as candidaturas registradas." },
-      ...present.map((s) => ({
-        key: s,
-        label: `${STATUS_PRESENTATION[s].label} · ${
-          statusCounts.find((c) => c.status === s)?.count ?? 0
-        }`,
-        title: statusDescription(s),
-      })),
-    ];
-  }, [statusCounts, total]);
+  // A busca é do cliente; o recorte de cargo/UF é do servidor. Os chips
+  // contam sobre o conjunto já filtrado pela busca — um contador que conta
+  // candidaturas invisíveis é pior que contador nenhum.
+  const searching = query.trim().length > 0;
 
-  const visible = useMemo(() => {
+  const searched = useMemo(() => {
     const q = normalize(query.trim());
-    return items.filter((c) => {
-      if (statusFilter !== "todos" && c.registrationStatus !== statusFilter)
-        return false;
-      if (!q) return true;
-      return (
+    if (!q) return items;
+    return items.filter(
+      (c) =>
         normalize(c.displayName).includes(q) ||
         normalize(c.name).includes(q) ||
         normalize(c.party).includes(q) ||
-        String(c.number ?? "").includes(q)
-      );
-    });
-  }, [items, query, statusFilter]);
+        String(c.number ?? "").includes(q),
+    );
+  }, [items, query]);
+
+  const chips = useMemo(() => {
+    // Sem busca, os números vêm do servidor: ele conta o escopo inteiro,
+    // inclusive o que ficou além do limite de itens carregados.
+    const countFor = (s: RegistrationStatus) =>
+      searching
+        ? searched.filter((c) => c.registrationStatus === s).length
+        : (statusCounts.find((c) => c.status === s)?.count ?? 0);
+
+    // O chip ativo continua visível mesmo zerado pela busca — sumir com ele
+    // deixaria a pessoa sem lista e sem o filtro que a esvaziou.
+    const present = REGISTRATION_STATUSES.filter(
+      (s) => countFor(s) > 0 || statusFilter === s,
+    );
+
+    return [
+      {
+        key: "todos",
+        label: `Todos · ${searching ? searched.length : total}`,
+        title: searching
+          ? "Todas as candidaturas que atendem à busca."
+          : "Todas as candidaturas registradas.",
+      },
+      ...present.map((s) => ({
+        key: s,
+        label: `${STATUS_PRESENTATION[s].label} · ${countFor(s)}`,
+        title: statusDescription(s),
+      })),
+    ];
+  }, [searched, searching, statusCounts, statusFilter, total]);
+
+  const visible = useMemo(
+    () =>
+      statusFilter === "todos"
+        ? searched
+        : searched.filter((c) => c.registrationStatus === statusFilter),
+    [searched, statusFilter],
+  );
 
   /**
    * Agrupa por disputa. Uma grade única misturando Presidente e Governador
@@ -209,7 +234,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
   }
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-9 pb-3">
         <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
           {ufNome ? `Candidatos 2026 — ${ufNome}` : "Candidatos 2026"}
@@ -273,7 +298,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
           <div className="relative flex-1">
             <Search
-              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-slate-500"
               aria-hidden="true"
             />
             <input
@@ -285,7 +310,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
               }}
               placeholder="Buscar por nome, partido ou número…"
               aria-label="Buscar candidatos"
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
             />
           </div>
 
@@ -325,7 +350,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
                 ? "Nenhuma candidatura sincronizada ainda"
                 : "Nenhum candidato encontrado"}
             </p>
-            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-400">
+            <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-500">
               {total === 0
                 ? "Os dados do TSE ainda não foram importados para este ambiente. Rode npm run sync:tse para popular a lista."
                 : "Tente outro nome, partido ou número — ou limpe os filtros."}
@@ -352,7 +377,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
                   <h2 className="font-heading text-[17px] font-bold text-slate-800">
                     {group.label}
                   </h2>
-                  <span className="text-[12.5px] text-slate-400">
+                  <span className="text-[12.5px] text-slate-500">
                     {group.items.length}{" "}
                     {group.items.length === 1 ? "candidatura" : "candidaturas"}
                   </span>
@@ -376,7 +401,7 @@ export default function Candidatos({ loaderData }: Route.ComponentProps) {
       </Container>
 
       <Container className="flex flex-col gap-4 pt-2 pb-7 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-[12px] leading-relaxed text-slate-400">
+        <p className="text-[12px] leading-relaxed text-slate-500">
           {attentionStatuses.length > 0
             ? attentionStatuses
                 .map((s) => `${STATUS_PRESENTATION[s].label} — ${statusDescription(s)}`)

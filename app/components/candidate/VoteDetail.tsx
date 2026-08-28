@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface VoteDetailProps {
   billId: string;
@@ -52,12 +52,18 @@ export function VoteDetail({
       )}
 
       <div className="flex justify-end">
+        {/*
+          Seta, não ícone de link externo: este Link navega dentro do próprio
+          site. O ícone de "abre em nova aba" prometia uma saída que não
+          acontece — e é a mesma marca usada aqui para fontes oficiais do TSE e
+          da Câmara, então reusá-la aqui desvaloriza o sinal onde ele importa.
+        */}
         <Link
           to={`/votacao/${billId}`}
           className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:underline"
         >
           Ver votação completa
-          <ExternalLink className="size-3" />
+          <ArrowRight className="size-3" aria-hidden="true" />
         </Link>
       </div>
     </div>

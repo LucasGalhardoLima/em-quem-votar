@@ -160,13 +160,19 @@ export const TOPICS: TopicSeed[] = [
       "Debate sobre a inclusão de temas de gênero e diversidade no currículo escolar, envolvendo argumentos pedagógicos, culturais e familiares.",
     order: 2,
   },
+  // Substituiu o tema de laicidade em 27/08/2026. A varredura dos 13 planos
+  // mostrou que a relação Estado-igreja praticamente não é tratada — laicidade
+  // em 3 de 13 (4 ocorrências), ensino religioso em 0, "Deus/cristão" em 0 —,
+  // enquanto o financiamento público de comunidades terapêuticas aparece em 4
+  // planos, com dois polos explícitos e opostos. O eixo existe; ele só não é
+  // religioso, é de política de drogas e saúde mental.
   {
-    name: "Liberdade Religiosa",
-    category: "Direitos e Costumes",
-    slug: "liberdade-religiosa",
+    name: "Comunidades Terapêuticas",
+    category: "Segurança Pública",
+    slug: "comunidades-terapeuticas",
     description:
-      "Discussão sobre a laicidade do Estado, influência religiosa na política, proteção a minorias religiosas e limites da liberdade de expressão religiosa.",
-    order: 3,
+      "Discussão sobre o financiamento público de comunidades terapêuticas para tratamento de dependência química, em contraste com a rede pública de saúde mental (CAPS e residências terapêuticas).",
+    order: 5,
   },
   // Democracia e Institucional
   {
@@ -178,7 +184,7 @@ export const TOPICS: TopicSeed[] = [
     order: 0,
   },
   {
-    name: "Independência do STF",
+    name: "Mandato nos tribunais superiores",
     category: "Democracia e Institucional",
     slug: "independencia-do-stf",
     description:
@@ -200,6 +206,45 @@ export const TOPICS: TopicSeed[] = [
     description:
       "Discussão sobre a atuação das Forças Armadas na política, operações de garantia da lei e da ordem, orçamento militar e defesa nacional.",
     order: 3,
+  },
+  // Saúde e Educação
+  // Adicionados em 27/08/2026 depois de varrer os 13 planos protocolados:
+  // educação aparece em 13 de 13 (1.007 ocorrências) e saúde em 13 de 13
+  // (928), e o quiz não perguntava nada sobre nenhuma das duas — enquanto
+  // perguntava sobre armamento civil, citado por 1 plano, uma vez.
+  // Os enunciados fogem do valor consensual ("melhorar a saúde") e fixam o
+  // eixo que de fato separa candidaturas: provisão pública x rede privada.
+  {
+    name: "Saúde Pública",
+    category: "Saúde e Educação",
+    slug: "saude-publica",
+    description:
+      "Discussão sobre o financiamento do SUS, contratação de serviços privados para reduzir filas e expansão da rede pública própria.",
+    order: 1,
+  },
+  {
+    name: "Educação Básica",
+    category: "Saúde e Educação",
+    slug: "educacao-basica",
+    description:
+      "Debate sobre financiamento da rede pública, bolsas em escolas privadas para famílias de baixa renda e prioridades da educação básica.",
+    order: 2,
+  },
+  {
+    name: "Legislação Trabalhista",
+    category: "Economia e Fiscal",
+    slug: "legislacao-trabalhista",
+    description:
+      "Discussão sobre a CLT, formas de contratação fora do vínculo tradicional e regulamentação do trabalho por aplicativo.",
+    order: 5,
+  },
+  {
+    name: "Exploração de Petróleo",
+    category: "Meio Ambiente e Agro",
+    slug: "exploracao-petroleo",
+    description:
+      "Debate sobre a abertura de novas fronteiras de exploração de petróleo, como a Margem Equatorial, e sua relação com as metas climáticas.",
+    order: 5,
   },
   ];
 
@@ -385,7 +430,7 @@ export const QUESTIONS: QuestionSeed[] = [
   },
   {
     topicSlug: "policiamento",
-    text: "As polícias militar e civil deveriam ser unificadas em uma única força policial, com treinamento focado em mediação de conflitos e respeito aos direitos humanos?",
+    text: "As polícias militar e civil deveriam ser unificadas em uma única força policial de ciclo completo?",
     order: 6,
   },
   {
@@ -401,12 +446,12 @@ export const QUESTIONS: QuestionSeed[] = [
   },
   {
     topicSlug: "creditos-de-carbono",
-    text: "O Brasil deveria estabelecer um mercado regulado de créditos de carbono com metas obrigatórias de redução de emissões para empresas?",
+    text: "O Brasil deveria implantar o mercado regulado de carbono, que impõe teto de emissões aos grandes emissores?",
     order: 9,
   },
   {
     topicSlug: "politica-agricola",
-    text: "O governo deveria direcionar mais recursos para a agricultura familiar e produção orgânica, mesmo que isso reduza o investimento no agronegócio de exportação?",
+    text: "O governo deveria ampliar o crédito público destinado à agricultura familiar?",
     order: 10,
   },
   {
@@ -417,7 +462,7 @@ export const QUESTIONS: QuestionSeed[] = [
   // Direitos e Costumes
   {
     topicSlug: "direitos-lgbtqia",
-    text: "O Estado deveria aprovar legislação que garanta explicitamente igualdade de direitos para pessoas LGBTQIA+, incluindo casamento, adoção e proteção contra discriminação?",
+    text: "O Estado deveria aprovar lei que garanta explicitamente igualdade de direitos para pessoas LGBTQIA+?",
     order: 12,
   },
   {
@@ -427,12 +472,12 @@ export const QUESTIONS: QuestionSeed[] = [
   },
   {
     topicSlug: "educacao-de-genero",
-    text: "As escolas deveriam incluir discussões sobre gênero e diversidade no currículo, visando combater o preconceito e promover o respeito às diferenças?",
+    text: "As escolas públicas deveriam incluir no currículo o debate sobre gênero e sexualidade?",
     order: 14,
   },
   {
-    topicSlug: "liberdade-religiosa",
-    text: "O Estado deveria ser estritamente laico, sem influência religiosa nas decisões políticas, mesmo que a maioria da população se identifique com alguma religião?",
+    topicSlug: "comunidades-terapeuticas",
+    text: "O Estado deveria financiar comunidades terapêuticas para tratamento de dependência química, em vez de concentrar o atendimento na rede pública de saúde mental?",
     order: 15,
   },
   // Democracia e Institucional
@@ -443,7 +488,7 @@ export const QUESTIONS: QuestionSeed[] = [
   },
   {
     topicSlug: "independencia-do-stf",
-    text: "Os ministros do STF deveriam ter mandatos fixos com limite de tempo, ao invés de permanecerem no cargo até a aposentadoria compulsória?",
+    text: "Os ministros dos tribunais superiores, incluindo o STF, deveriam cumprir mandato com prazo determinado em vez de permanecer no cargo até a aposentadoria compulsória?",
     order: 17,
   },
   {
@@ -455,5 +500,27 @@ export const QUESTIONS: QuestionSeed[] = [
     topicSlug: "papel-forcas-armadas",
     text: "As Forças Armadas deveriam ter um papel estritamente de defesa nacional, sem participação em operações de segurança interna ou questões políticas?",
     order: 19,
+  },
+
+  // Saúde, Educação, Trabalho e Energia
+  {
+    topicSlug: "saude-publica",
+    text: "O SUS deveria ampliar a contratação de serviços privados para reduzir filas, em vez de expandir a rede pública própria?",
+    order: 20,
+  },
+  {
+    topicSlug: "educacao-basica",
+    text: "O governo deveria financiar bolsas em escolas privadas para famílias de baixa renda, em vez de concentrar o investimento na rede pública?",
+    order: 21,
+  },
+  {
+    topicSlug: "legislacao-trabalhista",
+    text: "A legislação trabalhista deveria admitir mais formas de contratação fora da CLT, incluindo o trabalho por aplicativo?",
+    order: 22,
+  },
+  {
+    topicSlug: "exploracao-petroleo",
+    text: "O Brasil deveria acelerar a exploração de petróleo em novas fronteiras, como a Margem Equatorial?",
+    order: 23,
   },
   ];

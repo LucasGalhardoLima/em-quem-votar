@@ -32,7 +32,7 @@ export function VoteList({ votes }: { votes: Vote[] }) {
         <p className="text-[15px] font-bold text-slate-600">
           Nenhuma votação registrada
         </p>
-        <p className="mx-auto mt-2 max-w-lg text-[13.5px] text-slate-400">
+        <p className="mx-auto mt-2 max-w-lg text-[13.5px] text-slate-500">
           As votações nominais aparecem aqui conforme forem sincronizadas das
           bases da Câmara e do Senado.
         </p>
@@ -69,13 +69,13 @@ export function VoteList({ votes }: { votes: Vote[] }) {
                   </span>
                   <time
                     dateTime={vote.bill.voteDate}
-                    className="text-[10px] text-slate-400"
+                    className="text-[10px] text-slate-500"
                   >
                     {DATE_FMT.format(new Date(vote.bill.voteDate))}
                   </time>
                 </div>
               </div>
-              <span className="mt-1 shrink-0 text-slate-400">
+              <span className="mt-1 shrink-0 text-slate-500">
                 {isExpanded ? (
                   <ChevronUp className="size-4" />
                 ) : (

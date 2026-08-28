@@ -43,7 +43,7 @@ export function PositionsByTopic({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-[13.5px] text-slate-400">
+      <p className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-[13.5px] text-slate-500">
         Nenhum tema cadastrado ainda para esta eleição.
       </p>
     );
@@ -66,13 +66,13 @@ export function PositionsByTopic({
             </h3>
 
             <div className="min-w-0">
-              <p className="mb-0.5 text-[11px] text-slate-400">
+              <p className="mb-0.5 text-[11px] text-slate-500">
                 Posição do candidato
               </p>
               <p
                 className={cn(
                   "text-[13.5px] font-semibold",
-                  documented ? "text-slate-800" : "text-slate-400",
+                  documented ? "text-slate-800" : "text-slate-500",
                 )}
               >
                 {candidateStanceLabel(row.stance)}
@@ -101,12 +101,12 @@ export function PositionsByTopic({
             </div>
 
             <div className="min-w-0">
-              <p className="mb-0.5 text-[11px] text-slate-400">Sua resposta</p>
+              <p className="mb-0.5 text-[11px] text-slate-500">Sua resposta</p>
               <p
                 className={cn(
                   "text-[13.5px] font-semibold",
                   !hasQuiz || !hasPosition(userStance)
-                    ? "text-slate-400"
+                    ? "text-slate-500"
                     : "text-slate-800",
                 )}
               >

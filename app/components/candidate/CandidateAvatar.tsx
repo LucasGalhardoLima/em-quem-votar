@@ -32,7 +32,7 @@ export function CandidateAvatar({
   className?: string;
 }) {
   const base = cn(
-    "flex flex-none items-center justify-center overflow-hidden font-semibold text-slate-400",
+    "flex flex-none items-center justify-center overflow-hidden font-semibold text-slate-500",
     SIZES[size],
     className,
   );

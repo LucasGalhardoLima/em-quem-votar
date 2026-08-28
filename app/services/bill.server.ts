@@ -7,7 +7,64 @@ interface ListApprovedParams {
   limit?: number;
 }
 
+/**
+ * Chave canônica de um tipo de voto.
+ *
+ * POR QUE NORMALIZAR EM VEZ DE COMPARAR COM `===`
+ *
+ * As duas tabelas alimentam o MESMO placar, e a grafia que chega depende da
+ * fonte. `VoteLog` vem de `scripts/sync-votacoes.ts`, que grava
+ * `voto.tipoVoto.toUpperCase()` — verificado no banco em 27/08/2026:
+ * `SIM` 12.666 · `NÃO` 9.720 · `ABSTENÇÃO` 73 · `OBSTRUÇÃO` 27 ·
+ * `ARTIGO 17` 38. `VoteRecord` está vazia e o schema agora documenta a mesma
+ * convenção em caixa alta; a normalização continua sendo o certo porque o
+ * acento e a caixa vêm da API da Câmara, não de uma escolha nossa — a Câmara
+ * pode devolver "Não" amanhã sem avisar ninguém.
+ *
+ * Comparar com `===` contra UMA das convenções zera a outra: era exatamente
+ * isso que fazia a página da PEC 45/2019 anunciar "Abstenção: 0" com duas
+ * abstenções na lista nominal logo abaixo. Normalizar (sem acento, sem caixa,
+ * sem espaço sobrando) faz o placar tolerar as duas grafias sem que nenhum dos
+ * dois modelos precise mudar.
+ */
+function voteKey(raw: string): string {
+  return raw
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
 export const BillService = {
+  /**
+   * Só o que o `<head>` de `/votacao/:id` precisa — título, resumo e casa.
+   *
+   * Existe porque `meta()` roda ANTES de qualquer promise deferida resolver:
+   * a rota não consegue ler o `bill` que está streamando, e sem isto as
+   * páginas de votação saíam todas com o mesmo `<title>`. A saída é uma
+   * deferição parcial, e este é o lado resolvido dela: uma consulta por
+   * chave primária, sem os milhares de votos nominais que `getById` junta.
+   *
+   * Mesmo recorte `status: "approved"` de `getById`, de propósito: uma
+   * votação ainda não publicada não pode ganhar `<title>` e descrição de
+   * página existente enquanto o corpo mostra "não encontrada".
+   */
+  async getHead(id: string) {
+    return db.bill.findFirst({
+      where: { id, status: "approved" },
+      select: {
+        title: true,
+        simplifiedTitle: true,
+        // `simplifiedDescription` vem junto porque a descrição da página é
+        // ela OU `description` como reserva — sem as duas, metade das
+        // votações cairia no texto genérico.
+        simplifiedDescription: true,
+        description: true,
+        sourceType: true,
+      },
+    });
+  },
+
   async getById(id: string) {
     const bill = await db.bill.findFirst({
       where: {
@@ -64,9 +121,38 @@ export const BillService = {
       },
     }));
 
-    const countVotes = (type: string) =>
-      candidateVotes.filter((v) => v.voteType === type).length +
-      legacyVotes.filter((v) => v.voteType === type).length;
+    // Um único apanhado dos dois modelos, agrupado pela chave canônica. A
+    // primeira grafia encontrada é guardada como rótulo: o que a página exibir
+    // sobre um voto é a redação literal da fonte, nunca uma paráfrase nossa.
+    const tally = new Map<string, { label: string; count: number }>();
+    for (const raw of [
+      ...candidateVotes.map((v) => v.voteType),
+      ...legacyVotes.map((v) => v.voteType),
+    ]) {
+      const key = voteKey(raw);
+      const entry = tally.get(key);
+      if (entry) entry.count += 1;
+      else tally.set(key, { label: raw, count: 1 });
+    }
+
+    const countVotes = (key: string) => tally.get(key)?.count ?? 0;
+
+    /**
+     * Todo tipo de voto que não cabe nos quatro cards conhecidos.
+     *
+     * NÃO PODE SUMIR. O caso real é `ARTIGO 17`: 38 registros no banco,
+     * espalhados por 37 votações, um por votação em 36 delas (verificado em
+     * 27/08/2026). É a grafia literal que a Câmara devolve em `tipoVoto` e que
+     * `sync-votacoes.ts` grava em caixa alta. Enquanto os quatro cards fixos
+     * eram a única saída, esses votos eram lidos do banco e descartados em
+     * silêncio — a soma do placar não fechava com a lista nominal e nada na
+     * tela dizia por quê. Aqui eles saem com o rótulo da fonte e a contagem,
+     * para a página mostrar em vez de esconder.
+     */
+    const outros = Array.from(tally.entries())
+      .filter(([key]) => !["SIM", "NAO", "ABSTENCAO", "OBSTRUCAO"].includes(key))
+      .map(([, entry]) => entry)
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "pt-BR"));
 
     return {
       id: bill.id,
@@ -84,9 +170,13 @@ export const BillService = {
       legacyVotes,
       summary: {
         sim: countVotes("SIM"),
-        nao: countVotes("NÃO"),
-        abstencao: countVotes("Abstenção"),
-        obstrucao: countVotes("Obstrução"),
+        nao: countVotes("NAO"),
+        abstencao: countVotes("ABSTENCAO"),
+        obstrucao: countVotes("OBSTRUCAO"),
+        /** Rótulo literal da fonte + contagem, para o que não é um dos quatro acima. */
+        outros,
+        /** Todos os votos registrados nesta votação. `sim+nao+abstencao+obstrucao+outros` fecha com ele. */
+        total: candidateVotes.length + legacyVotes.length,
       },
     };
   },

@@ -1,32 +1,51 @@
 import { Link } from "react-router";
 import { ArrowRight, Sparkles } from "lucide-react";
 import type { Route } from "./+types/home";
-import { Container, CountdownBanner } from "~/components/layout";
+import { pageMeta } from "~/root";
+import {
+  Container,
+  CountdownBanner,
+  MAIN_CONTENT_ID,
+} from "~/components/layout";
 import { countdownCopy } from "~/lib/election";
-import { RUNNING_STATUSES } from "~/lib/candidate-status";
 import { db } from "~/utils/db.server";
 import { ArticleService } from "~/services/article.server";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Em Quem Votar? | Vote com consciência" },
-    {
-      name: "description",
-      content:
+    ...pageMeta({
+      title: "Em Quem Votar? | Vote com consciência",
+      description:
         "Compare os candidatos à Presidência em 2026 por posições documentadas, votações nominais e gastos declarados ao TSE. Sem viés, sem propaganda — toda afirmação tem fonte.",
-    },
+      type: "website",
+    }),
     { name: "robots", content: "index,follow" },
   ];
 }
 
+/**
+ * Para onde o número da home aponta.
+ *
+ * A home fala só da disputa presidencial ("Compare os candidatos à
+ * Presidência"), mas `/candidatos` lista presidente E os 27 governos — 211
+ * candidaturas hoje. O CTA prometia "Ver os 13 candidatos" e entregava 211.
+ *
+ * Corrigido pelo lado da contagem: o número é o do recorte que o destino
+ * exibe, e o destino já vem recortado. Duas coisas seguem juntas de
+ * propósito — mudar uma sem a outra reabre a divergência.
+ *
+ * A contagem NÃO filtra por situação. `/candidatos` mostra toda candidatura
+ * registrada, com o badge de situação de cada uma; contar só as que estão na
+ * disputa (`RUNNING_STATUSES`) faria o número encolher abaixo do que a página
+ * lista no dia em que um registro for indeferido — a mesma promessa quebrada,
+ * só que mais difícil de perceber.
+ */
+const HOME_RACE = "presidential";
+const HOME_RACE_HREF = `/candidatos?cargo=${HOME_RACE}`;
+
 export async function loader({}: Route.LoaderArgs) {
   const [candidateCount, recentBills, articles] = await Promise.all([
-    db.candidate.count({
-      where: {
-        electionType: "presidential",
-        registrationStatus: { in: RUNNING_STATUSES },
-      },
-    }),
+    db.candidate.count({ where: { electionType: HOME_RACE } }),
     db.bill.findMany({
       where: { status: "approved" },
       orderBy: { voteDate: "desc" },
@@ -83,11 +102,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   const candidatesLabel =
     candidateCount > 0
-      ? `${candidateCount} candidatura${candidateCount === 1 ? "" : "s"} registrada${candidateCount === 1 ? "" : "s"} no TSE`
-      : "candidaturas registradas no TSE";
+      ? `${candidateCount} candidatura${candidateCount === 1 ? "" : "s"} à Presidência`
+      : "candidaturas à Presidência";
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <CountdownBanner {...countdown} />
 
       <Container className="flex flex-col items-center gap-7 px-6 pt-14 pb-12 text-center sm:pt-16">
@@ -120,13 +139,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <ArrowRight className="size-[18px]" aria-hidden="true" />
           </Link>
           <Link
-            to="/candidatos"
+            to={HOME_RACE_HREF}
             prefetch="intent"
             className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-8 py-4 text-[15px] font-semibold text-slate-600 transition-colors hover:border-slate-300"
           >
             {candidateCount > 0
-              ? `Ver os ${candidateCount} candidatos`
-              : "Ver os candidatos"}
+              ? `Ver as ${candidateCount} candidaturas à Presidência`
+              : "Ver as candidaturas à Presidência"}
           </Link>
         </div>
 
@@ -198,7 +217,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 )}
                 <time
                   dateTime={bill.voteDate}
-                  className="mt-auto pt-2 text-[12px] text-slate-400"
+                  className="mt-auto pt-2 text-[12px] text-slate-500"
                 >
                   {new Intl.DateTimeFormat("pt-BR", {
                     day: "2-digit",
