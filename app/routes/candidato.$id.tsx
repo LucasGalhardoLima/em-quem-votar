@@ -318,7 +318,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
               {candidate.dataSource === "press" && (
                 <span
                   title="Registro apurado em fonte jornalística enquanto a sincronização com o TSE não roda neste ambiente."
-                  className="inline-flex w-fit items-center rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800"
+                  className="inline-flex w-fit items-center rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-1 text-[12px] font-semibold text-amber-800"
                 >
                   Dado de imprensa — aguardando TSE
                 </span>
@@ -358,7 +358,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
                 >
                   Fazer o quiz →
                 </Link>
-                <p className="text-[11.5px] text-slate-500">
+                <p className="text-[12px] text-slate-500">
                   para ver sua compatibilidade
                 </p>
               </>
@@ -434,7 +434,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
         >
           {activeTab === "posicoes" && (
             <>
-              <h2 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              <h2 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500">
                 {hasQuiz ? "COMPATIBILIDADE POR TEMA" : "POSIÇÕES POR TEMA"}
               </h2>
               <PositionsByTopic
@@ -458,7 +458,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
 
           {activeTab === "votacoes" && (
             <>
-              <h2 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              <h2 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500">
                 VOTAÇÕES NOMINAIS
               </h2>
               {candidate.hasLegislativeRecord || candidate.votes.length > 0 ? (
@@ -486,7 +486,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
 
           {activeTab === "gastos" && (
             <>
-              <h2 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              <h2 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500">
                 GASTOS E BENS DECLARADOS
               </h2>
               {spendingDetails.length > 0 ? (
@@ -507,9 +507,35 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
                   <DeclaredAssets assets={declaredAssets} />
                 </div>
               ) : fichaLida ? (
+                /*
+                  Esta cópia já afirmou "a ficha foi lida e não lista bem
+                  algum". A página não tem como saber isso.
+
+                  O pipeline distingue AUSENTE de VAZIO — `parseDivulgaDetail`
+                  devolve `bens: null` quando a ficha respondeu sem a chave e
+                  `[]` quando trouxe a lista vazia, e `applyDivulgaDetails` só
+                  escreve no segundo caso —, mas essa distinção morre no
+                  processo do sync: no banco os dois viram a mesma coisa,
+                  nenhuma linha de patrimônio. Some-se a isso que um bem sem
+                  data é descartado na escrita (`assetsSkippedNoDate`), e a
+                  antiga redação afirmava, sobre uma pessoa real, que o
+                  documento oficial não lista patrimônio algum — em dois casos
+                  em que a ficha pode muito bem listar.
+
+                  Então o texto recua para o que é verdade daqui: não há o que
+                  exibir. Não devolva a afirmação sobre o conteúdo da ficha sem
+                  antes ter no banco o dado que a sustenta.
+
+                  shortcut: a página não sabe se a ficha trouxe a chave `bens`
+                  — `assetsAbsent`, que sabe, só existe no processo do sync —
+                  upgrade: persistir esse sinal (uma coluna booleana em
+                  Candidate, escrita junto com `tseProcessNumber`) devolve a
+                  redação forte, e só ela, ao caso em que a lista veio mesmo
+                  vazia.
+                */
                 <EmptyPanel
-                  title="Nenhum bem declarado na ficha do TSE"
-                  body={`A ficha de registro de ${candidate.displayName} no DivulgaCandContas foi lida e não lista bem algum. A ausência aqui é a do documento oficial — não uma estimativa nossa, nem dado que faltou importar.`}
+                  title="Nada a exibir em bens e gastos"
+                  body={`Não há bem declarado nem gasto de campanha de ${candidate.displayName} para exibir nesta página. Isso é o que a plataforma tem — não é uma afirmação sobre o que a ficha do TSE traz: o dado guardado aqui não distingue uma ficha que não declara bem algum de uma leitura que não trouxe essa lista. Nada aqui é estimado.`}
                 />
               ) : (
                 <EmptyPanel
@@ -522,7 +548,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
 
           {activeTab === "historico" && (
             <>
-              <h2 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              <h2 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500">
                 CANDIDATURAS ANTERIORES
               </h2>
               {candidate.electionHistory.length > 0 ? (
@@ -536,9 +562,18 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
                   </p>
                 </>
               ) : fichaLida ? (
+                /*
+                  Mesma cautela dos bens, por outro motivo: `parseDivulgaDetail`
+                  descarta a linha de histórico que chega sem id, ano, cargo ou
+                  resultado. Uma lista vazia aqui pode ser "o TSE não registra
+                  candidatura anterior" ou "as linhas que vieram não tinham o
+                  suficiente para montar uma linha honesta" — e a página não
+                  distingue as duas. Afirmar a primeira seria alegar sobre uma
+                  pessoa real algo que a leitura não sustenta.
+                */
                 <EmptyPanel
-                  title="Sem candidatura anterior no TSE"
-                  body={`A ficha de ${candidate.displayName} no DivulgaCandContas não registra candidatura anterior a 2026. A ausência é a do registro oficial — não é falta de informação sobre a pessoa.`}
+                  title="Nenhuma candidatura anterior para exibir"
+                  body={`Não há candidatura anterior de ${candidate.displayName} para exibir nesta página. A plataforma não afirma que a Justiça Eleitoral não registre nenhuma: linhas da ficha que chegam incompletas — sem ano, cargo ou resultado — são descartadas na leitura, em vez de exibidas pela metade.`}
                 />
               ) : (
                 <EmptyPanel
@@ -551,7 +586,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
 
           {activeTab === "proposta" && (
             <>
-              <h2 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500">
+              <h2 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500">
                 PROPOSTA DE GOVERNO
               </h2>
               {candidate.governmentPlanUrl ? (
@@ -568,7 +603,10 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
                     className="mt-4 inline-flex items-center gap-2 rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900"
                   >
                     Abrir a proposta no TSE
-                    <ExternalLink className="size-4" />
+                    <ExternalLink className="size-4" aria-hidden="true" />
+                    {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                        enxerga. Vale para os três links externos desta página. */}
+                    <span className="sr-only">(abre em nova aba)</span>
                   </a>
                 </div>
               ) : (
@@ -587,6 +625,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
                     className="font-semibold text-indigo-600 hover:underline"
                   >
                     {candidate.officialSiteUrl.replace(/^https?:\/\//, "")}
+                    <span className="sr-only"> (abre em nova aba)</span>
                   </a>
                 </p>
               )}
@@ -609,6 +648,7 @@ export default function CandidatoPage({ loaderData }: Route.ComponentProps) {
               {candidate.dataSource === "tse"
                 ? "consultar no TSE"
                 : "ver a fonte deste registro"}
+              <span className="sr-only"> (abre em nova aba)</span>
             </a>
             {/* O nº do processo (RCand) é o que permite conferir a decisão da
                 Justiça Eleitoral na fonte, em vez de acreditar no badge. */}
