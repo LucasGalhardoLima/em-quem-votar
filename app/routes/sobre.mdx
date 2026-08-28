@@ -18,7 +18,7 @@ import { Container } from "../components/layout";
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Sobre o projeto
         </span>
         <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
@@ -139,6 +139,9 @@ import { Container } from "../components/layout";
           >
             <Github className="size-4" aria-hidden="true" />
             Ver no GitHub
+            {/* Ver `SourceCite`: sem este texto, quem usa leitor de tela não
+                sabe que saiu do site. */}
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
           <a
             href="mailto:contato@emquemvotar.app"

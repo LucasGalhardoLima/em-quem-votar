@@ -180,7 +180,7 @@ export default function AdminLogin({
           </Form>
         )}
 
-        <p className="mt-4 text-[11.5px] leading-relaxed text-slate-500">
+        <p className="mt-4 text-[12px] leading-relaxed text-slate-500">
           A sessão dura 8 horas e vale só para /admin. Nada do que você faz
           aqui aparece para o público antes de ser aprovado.
         </p>

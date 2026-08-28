@@ -204,7 +204,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 prefetch="intent"
                 className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-indigo-300"
               >
-                <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+                <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
                   {bill.sourceType === "senado" ? "Senado" : "Câmara"}
                 </span>
                 <span className="text-[15px] leading-snug font-bold text-pretty text-slate-800">
@@ -258,7 +258,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 prefetch="intent"
                 className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-5 transition-colors hover:border-indigo-300"
               >
-                <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+                <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
                   {article.category}
                 </span>
                 <span className="text-[15px] leading-snug font-bold text-pretty text-slate-800">

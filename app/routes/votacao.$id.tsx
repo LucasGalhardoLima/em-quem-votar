@@ -226,7 +226,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           >
             ← Votações
           </Link>
-          <span className="flex-none text-slate-300" aria-hidden="true">
+          <span className="flex-none text-slate-500" aria-hidden="true">
             /
           </span>
           <span className="truncate text-slate-500">{title}</span>
@@ -240,7 +240,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           <time dateTime={bill.voteDate}>
             {dateFormatter.format(new Date(bill.voteDate))}
           </time>
-          <span className="text-slate-300" aria-hidden="true">
+          <span className="text-slate-500" aria-hidden="true">
             ·
           </span>
           {/*
@@ -257,6 +257,9 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
             >
               Fonte oficial · {sourceLabel}
               <ExternalLink className="size-3" aria-hidden="true" />
+              {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                  enxerga. */}
+              <span className="sr-only">(abre em nova aba)</span>
             </a>
           ) : (
             <span>Fonte: {sourceLabel}</span>
@@ -268,7 +271,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
         {/* Description */}
         {(bill.simplifiedDescription || bill.description) && (
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+            <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
               Sobre a votação
             </h2>
             <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-line text-slate-600">
@@ -282,7 +285,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {bill.voteSimDetails && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Votar Sim significa
                 </h2>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
@@ -292,7 +295,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
             )}
             {bill.voteNaoDetails && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Votar Não significa
                 </h2>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
@@ -322,7 +325,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
               <p className="text-[22px] font-bold text-slate-800 tabular-nums">
                 {item.count}
               </p>
-              <p className="mt-0.5 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              <p className="mt-0.5 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                 {item.label}
               </p>
             </div>
@@ -377,7 +380,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
             </div>
             {candidateOther.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h3 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Abstenção / Obstrução
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -386,7 +389,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
                       key={v.candidateId}
                       to={`/candidato/${v.candidateId}`}
                       prefetch="intent"
-                      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition-colors hover:border-indigo-300"
+                      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600 transition-colors hover:border-indigo-300"
                     >
                       {v.candidateName} · {v.voteType}
                     </Link>
@@ -475,7 +478,7 @@ function VoteColumn({
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       {/* Chip neutro: o rótulo do voto não recebe cor de aprovação/reprovação. */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
           {title}
         </span>
         <span className="text-[12px] text-slate-500 tabular-nums">

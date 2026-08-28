@@ -30,7 +30,7 @@ export function VoteDetail({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {voteSimDetails && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              <span className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                 Votar Sim significa
               </span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -40,7 +40,7 @@ export function VoteDetail({
           )}
           {voteNaoDetails && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              <span className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
                 Votar Não significa
               </span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -60,7 +60,7 @@ export function VoteDetail({
         */}
         <Link
           to={`/votacao/${billId}`}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:underline"
+          className="inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600 hover:underline"
         >
           Ver votação completa
           <ArrowRight className="size-3" aria-hidden="true" />

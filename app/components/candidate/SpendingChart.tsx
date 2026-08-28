@@ -35,7 +35,7 @@ export function SpendingChart({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       {heading && (
-        <h3 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+        <h3 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
           {heading}
         </h3>
       )}
@@ -44,7 +44,8 @@ export function SpendingChart({
           <div key={item.category}>
             <div className="flex items-baseline justify-between gap-3 text-[12.5px]">
               <span className="truncate text-slate-600">{item.category}</span>
-              <span className="flex-none font-semibold text-slate-800">
+              {/* Ver `SpendingSummary`: valores empilhados numa coluna. */}
+              <span className="flex-none font-semibold text-slate-800 tabular-nums">
                 {BRL.format(item.amount)}
               </span>
             </div>

@@ -91,7 +91,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const CHIP =
-  "rounded-full border px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap";
+  "rounded-full border px-2 py-0.5 text-[12px] font-medium whitespace-nowrap";
 /** Mesmo botão discreto do editor de candidato (`BTN_QUIET`). */
 const BTN_QUIET =
   "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[12.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800 focus-visible:border-indigo-300 focus-visible:ring-2 focus-visible:ring-indigo-600/20 focus-visible:outline-none";
@@ -158,7 +158,7 @@ export default function AdminIndex() {
               <p className="font-heading text-[26px] font-bold tabular-nums text-slate-800">
                 {stat.value}
               </p>
-              <p className="mt-0.5 text-[10.5px] tracking-[0.06em] text-slate-500 uppercase">
+              <p className="mt-0.5 text-[12px] tracking-[0.04em] text-slate-500 uppercase">
                 {stat.label}
               </p>
             </div>
@@ -166,7 +166,10 @@ export default function AdminIndex() {
         </div>
 
         {blockedPositions > 0 && (
-          <p className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-800">
+          <p
+            role="status"
+            className="mt-4 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] leading-relaxed text-amber-800"
+          >
             <TriangleAlert className="mt-0.5 size-4 flex-none" aria-hidden="true" />
             <span>
               {blockedPositions} de {pendingPositions.length} posições da fila
@@ -223,7 +226,7 @@ export default function AdminIndex() {
                     </p>
                   </div>
                   <ChevronRight
-                    className="size-4 flex-none text-slate-300 transition-colors group-hover:text-slate-500"
+                    className="size-4 flex-none text-slate-500 transition-colors group-hover:text-slate-700"
                     aria-hidden="true"
                   />
                 </Link>
@@ -270,7 +273,7 @@ export default function AdminIndex() {
                     </div>
                   </div>
                   <ChevronRight
-                    className="size-4 flex-none text-slate-300 transition-colors group-hover:text-slate-500"
+                    className="size-4 flex-none text-slate-500 transition-colors group-hover:text-slate-700"
                     aria-hidden="true"
                   />
                 </Link>
@@ -287,7 +290,7 @@ function EmptyState({ label }: { label: string }) {
   return (
     <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-10 text-center">
       <CheckCircle2
-        className="mx-auto mb-2 size-6 text-slate-300"
+        className="mx-auto mb-2 size-6 text-slate-500"
         aria-hidden="true"
       />
       <p className="text-[13.5px] text-slate-500">{label}</p>

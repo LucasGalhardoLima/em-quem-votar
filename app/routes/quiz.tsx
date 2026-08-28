@@ -202,7 +202,13 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
       </Container>
 
       <div className="mx-auto w-full max-w-[640px] px-5 pt-9 pb-14 sm:px-10">
-        <span className="inline-block rounded-full border border-indigo-600/[0.12] bg-indigo-600/[0.06] px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        {/*
+          Tracking 0.04em, e não os 0.06em usados nos demais rótulos em caixa
+          alta: a 12px o nome de tema mais longo ("Mandato nos tribunais
+          superiores") passa dos 280px úteis num viewport de 320px e a pílula
+          quebra em duas linhas. Estreitar o tracking devolve a folga.
+        */}
+        <span className="inline-block rounded-full border border-indigo-600/[0.12] bg-indigo-600/[0.06] px-2.5 py-1 text-[12px] font-bold tracking-[0.04em] text-indigo-600 uppercase">
           {question.topicName}
         </span>
 

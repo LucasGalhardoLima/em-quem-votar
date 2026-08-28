@@ -21,7 +21,7 @@ import { Container } from "../components/layout";
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Guia Prático
         </span>
         <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
@@ -63,15 +63,15 @@ import { Container } from "../components/layout";
           <p>Use ferramentas oficiais para investigar:</p>
           <ul className="grid gap-2.5">
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">1</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">1</span>
               <span>Acesse o <strong className="font-semibold text-slate-800">DivulgaCandContas</strong> do TSE para ver patrimônio e contas.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">2</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">2</span>
               <span>Pesquise se o candidato responde a processos judiciais.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">3</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">3</span>
               <span>Veja se ele já ocupou cargos públicos e o que entregou.</span>
             </li>
           </ul>
@@ -98,10 +98,14 @@ import { Container } from "../components/layout";
           <a href="https://divulgacandcontas.tse.jus.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
             TSE — DivulgaCand
             <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
           <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
             Politize!
             <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
         </div>
       </section>

@@ -76,16 +76,20 @@ export function SpendingSummary({
             key={group.type}
             className="rounded-2xl border border-slate-200 bg-white p-5"
           >
-            <h3 className="text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+            <h3 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
               {config.label}
             </h3>
-            <p className="font-heading mt-2 text-[26px] font-bold text-slate-800">
+            {/* `tabular-nums` porque estes cards ficam lado a lado num grid:
+                sem largura fixa de dígito, "R$ 1.118,00" e "R$ 44.907,31"
+                desalinham as colunas vizinhas. Mesma escolha de
+                `DeclaredAssets`, que também mostra valor em reais. */}
+            <p className="font-heading mt-2 text-[26px] font-bold text-slate-800 tabular-nums">
               {BRL.format(group.totalAmount)}
             </p>
             <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
               {config.description}
             </p>
-            <p className="mt-2 text-[11.5px] text-slate-500">
+            <p className="mt-2 text-[12px] text-slate-500">
               Período: {formatPeriod(group.periodStart, group.periodEnd)}
             </p>
             {group.sourceUrl ? (
@@ -93,13 +97,16 @@ export function SpendingSummary({
                 href={group.sourceUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] font-medium text-indigo-600 hover:underline"
+                className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600 hover:underline"
               >
                 Fonte: {group.source}
-                <ExternalLink className="size-3" />
+                <ExternalLink className="size-3" aria-hidden="true" />
+                {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                    enxerga. */}
+                <span className="sr-only">(abre em nova aba)</span>
               </a>
             ) : (
-              <p className="mt-1.5 text-[11.5px] text-slate-500">
+              <p className="mt-1.5 text-[12px] text-slate-500">
                 Fonte: {group.source}
               </p>
             )}

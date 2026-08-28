@@ -177,7 +177,7 @@ export default function VotacoesIndex() {
                   texto simples. O link para a fonte oficial fica na página da
                   votação, onde sourceUrl está disponível.
                 */}
-                <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+                <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
                   {SOURCE_LABELS[bill.sourceType] ?? bill.sourceType}
                 </span>
                 <span className="text-[15px] leading-snug font-bold text-pretty text-slate-800">

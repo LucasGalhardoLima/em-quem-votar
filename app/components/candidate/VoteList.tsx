@@ -64,23 +64,36 @@ export function VoteList({ votes }: { votes: Vote[] }) {
                 <div className="mt-1.5 flex items-center gap-2">
                   {/* Chip neutro de propósito: colorir o voto de alguém é
                       emitir juízo sobre a pessoa, não relatar um fato. */}
-                  <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                  <span className="rounded-full border border-slate-200 px-2 py-0.5 text-[12px] font-bold text-slate-600">
                     {vote.voteType}
                   </span>
                   <time
                     dateTime={vote.bill.voteDate}
-                    className="text-[10px] text-slate-500"
+                    className="text-[12px] text-slate-500"
                   >
                     {DATE_FMT.format(new Date(vote.bill.voteDate))}
                   </time>
                 </div>
               </div>
               <span className="mt-1 shrink-0 text-slate-500">
+                {/* A seta é decorativa: quem não a enxerga precisa da AÇÃO,
+                    não do desenho. O texto invisível abaixo se soma ao título
+                    para formar o nome acessível do botão ("… Expandir os
+                    detalhes desta votação") e troca junto com o estado, então
+                    o leitor de tela anuncia o que o próximo clique faz — e não
+                    apenas "botão". Padrão já usado em `StatusBadge`: `sr-only`
+                    somado ao conteúdo, em vez de `aria-label`, que apagaria o
+                    título visível do nome. */}
                 {isExpanded ? (
-                  <ChevronUp className="size-4" />
+                  <ChevronUp className="size-4" aria-hidden="true" />
                 ) : (
-                  <ChevronDown className="size-4" />
+                  <ChevronDown className="size-4" aria-hidden="true" />
                 )}
+                <span className="sr-only">
+                  {isExpanded
+                    ? ". Recolher os detalhes desta votação"
+                    : ". Expandir os detalhes desta votação"}
+                </span>
               </span>
             </button>
 

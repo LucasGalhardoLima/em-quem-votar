@@ -156,7 +156,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const LABEL =
-    "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
+    "mb-1.5 block text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
 const INPUT =
     "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
 
@@ -203,7 +203,7 @@ export default function AdminVotacaoDetail() {
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <span
                         className={cn(
-                            "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                            "rounded-full border px-2.5 py-0.5 text-[12px] font-semibold",
                             status.className
                         )}
                     >
@@ -282,6 +282,9 @@ export default function AdminVotacaoDetail() {
                                 >
                                     Conferir a votação original
                                     <ExternalLink className="size-3.5" aria-hidden="true" />
+                                    {/* Ver `SourceCite`: o ícone de nova aba só
+                                        comunica a quem enxerga. */}
+                                    <span className="sr-only">(abre em nova aba)</span>
                                 </a>
                                 <p className="mt-1 text-[12px] text-slate-500">
                                     Confirme os detalhes na fonte antes de aprovar.
@@ -419,7 +422,7 @@ export default function AdminVotacaoDetail() {
                                         </span>
                                         <span
                                             className={cn(
-                                                "flex-none rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                                                "flex-none rounded-full border px-2.5 py-0.5 text-[12px] font-semibold",
                                                 vote.voteType === "SIM"
                                                     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                     : vote.voteType === "NÃO" || vote.voteType === "NAO"

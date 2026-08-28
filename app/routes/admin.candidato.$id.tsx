@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import {
   useLoaderData,
   useActionData,
@@ -323,7 +324,7 @@ const STATUS_OPTIONS = REGISTRATION_STATUSES.map((value) => ({
 
 const CARD = "rounded-2xl border border-slate-200 bg-white";
 const LABEL =
-  "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
+  "mb-1.5 block text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
 const INPUT =
   "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
 const BTN_PRIMARY =
@@ -382,7 +383,10 @@ export default function AdminCandidatoPage() {
             rel="noopener noreferrer"
           >
             Ver página pública
-            <ExternalLink className="size-3.5" />
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
           </Link>
         </div>
 
@@ -514,7 +518,7 @@ function CandidateForm({
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
+        <legend className="text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Campos do TSE
         </legend>
         <p className="text-[12.5px] leading-relaxed text-slate-500">
@@ -565,7 +569,7 @@ function CandidateForm({
       </fieldset>
 
       <fieldset className="space-y-3 border-t border-slate-100 pt-5">
-        <legend className="text-[11px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
+        <legend className="text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Curadoria editorial
         </legend>
         <p className="text-[12.5px] leading-relaxed text-slate-500">
@@ -687,6 +691,75 @@ type LoaderData = Awaited<ReturnType<typeof loader>>;
 type CandidateView = LoaderData["candidate"];
 type PositionView = LoaderData["positions"][number];
 
+/**
+ * Excluir uma posição apaga curadoria humana — a posição, o tipo de fonte, a
+ * URL, o documento, a página e a citação — e o banco não tem lixeira: não há
+ * como desfazer. Um clique acidental num ícone de 14px não pode custar isso,
+ * então a exclusão pede confirmação em dois passos: o primeiro clique só arma
+ * o botão (`type="button"`, portanto NÃO submete), e o segundo — aí sim
+ * `type="submit"` — envia o `<Form method="post">` normalmente.
+ *
+ * Não usamos `confirm()` de propósito: o diálogo nativo trava a página inteira,
+ * aparece longe do que vai sumir e não dá para dizer nele *qual* posição está
+ * em jogo. A confirmação acontece no próprio botão, onde o olhar já está.
+ *
+ * E o botão se desarma sozinho, por clique fora ou depois de 5s: um botão
+ * armado esquecido na tela é a mesma armadilha de um clique só, adiada.
+ */
+function DeletePositionButton({
+  positionId,
+  isSubmitting,
+}: {
+  positionId: string;
+  isSubmitting: boolean;
+}) {
+  const [armed, setArmed] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (!armed) return;
+
+    const disarm = () => setArmed(false);
+    const timer = window.setTimeout(disarm, 5_000);
+    const onPointerDown = (event: PointerEvent) => {
+      if (!formRef.current?.contains(event.target as Node)) disarm();
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [armed]);
+
+  return (
+    <Form method="post" ref={formRef}>
+      <input type="hidden" name="intent" value="delete-position" />
+      <input type="hidden" name="positionId" value={positionId} />
+      <button
+        // O `type` é o mecanismo: enquanto não estiver armado o clique não
+        // chega a ser um submit, então não existe caminho de um clique só.
+        type={armed ? "submit" : "button"}
+        disabled={isSubmitting}
+        onClick={() => setArmed(true)}
+        className={cn(
+          "inline-flex items-center justify-center gap-1.5 rounded-xl border p-2 text-[12.5px] font-semibold transition-colors disabled:opacity-50",
+          armed
+            ? "border-rose-300 bg-rose-50 px-3 text-rose-700"
+            : "border-slate-200 bg-white text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
+        )}
+      >
+        <Trash2 className="size-3.5" aria-hidden="true" />
+        {armed ? (
+          "Confirmar exclusão?"
+        ) : (
+          <span className="sr-only">Remover posição</span>
+        )}
+      </button>
+    </Form>
+  );
+}
+
 function PositionCard({
   position,
   isSubmitting,
@@ -703,21 +776,21 @@ function PositionCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+            <h3 className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
               {position.topicName}
             </h3>
-            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10.5px] font-medium text-slate-500">
+            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[12px] font-medium text-slate-500">
               {position.topicCategory}
             </span>
             {position.isApproved ? (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[12px] font-semibold text-emerald-700">
                 Aprovada
                 {position.approvedAt
                   ? ` · ${new Date(position.approvedAt).toLocaleDateString("pt-BR")}`
                   : ""}
               </span>
             ) : (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10.5px] font-semibold text-amber-800">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-800">
                 Pendente
               </span>
             )}
@@ -736,7 +809,7 @@ function PositionCard({
 
           {/* Prévia exata do que o leitor vê na página pública. */}
           <div className="mt-2">
-            <p className="mb-1 text-[10.5px] tracking-[0.06em] text-slate-500 uppercase">
+            <p className="mb-1 text-[12px] tracking-[0.06em] text-slate-500 uppercase">
               Como o leitor vê
             </p>
             <SourceCite source={position} />
@@ -770,7 +843,7 @@ function PositionCard({
                   "inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-[12.5px] font-semibold transition-colors",
                   canApprove
                     ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                    : "cursor-not-allowed border border-slate-200 bg-white text-slate-300"
+                    : "cursor-not-allowed border border-slate-200 bg-white text-slate-500"
                 )}
               >
                 <CheckCircle2 className="size-3.5" />
@@ -779,18 +852,10 @@ function PositionCard({
             </Form>
           )}
 
-          <Form method="post">
-            <input type="hidden" name="intent" value="delete-position" />
-            <input type="hidden" name="positionId" value={position.id} />
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              title="Remover posição"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
-          </Form>
+          <DeletePositionButton
+            positionId={position.id}
+            isSubmitting={isSubmitting}
+          />
         </div>
       </div>
 
@@ -1013,7 +1078,7 @@ function SourceFields({
           placeholder="Copie e cole a frase do documento. Nunca parafraseie."
           className={cn(INPUT, "resize-y leading-relaxed")}
         />
-        <p className="mt-1 text-[11.5px] text-slate-500">
+        <p className="mt-1 text-[12px] text-slate-500">
           O trecho aparece entre aspas na página do candidato, exatamente como
           digitado aqui.
         </p>

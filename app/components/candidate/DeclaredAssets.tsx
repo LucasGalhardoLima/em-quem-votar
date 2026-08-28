@@ -42,7 +42,7 @@ export function DeclaredAssets({ assets }: { assets: DeclaredAsset[] }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <h3 className="mb-3 text-[11px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+      <h3 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
         Bens declarados, item a item
       </h3>
       <ul className="divide-y divide-slate-100">
@@ -61,7 +61,7 @@ export function DeclaredAssets({ assets }: { assets: DeclaredAsset[] }) {
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-[11.5px] text-slate-500">
+                <p className="mt-0.5 text-[12px] text-slate-500">
                   {asset.category ?? "Tipo não informado"}
                   {declaredAt ? ` · declarado em ${declaredAt}` : ""}
                 </p>
@@ -73,7 +73,7 @@ export function DeclaredAssets({ assets }: { assets: DeclaredAsset[] }) {
           );
         })}
       </ul>
-      <p className="mt-3 text-[11.5px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-[12px] leading-relaxed text-slate-500">
         Valores conforme a declaração de bens entregue ao TSE no registro da
         candidatura. A descrição de cada item é a do próprio declarante.
       </p>

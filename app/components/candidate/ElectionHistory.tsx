@@ -44,7 +44,7 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
                 <span className="tabular-nums">{election.year}</span> ·{" "}
                 {election.office}
               </p>
-              <p className="mt-0.5 text-[11.5px] text-slate-500">
+              <p className="mt-0.5 text-[12px] text-slate-500">
                 {election.party ?? "Partido não informado"}
                 {election.ue ? (
                   <>
@@ -55,7 +55,7 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
               </p>
             </div>
             <div className="flex flex-none items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11.5px] font-semibold text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
                 {election.resultLabel}
               </span>
               {election.sourceUrl && (
@@ -63,10 +63,13 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
                   href={election.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11.5px] font-medium text-indigo-600 hover:underline"
+                  className="inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600 hover:underline"
                 >
                   Ficha
-                  <ExternalLink className="size-3" />
+                  <ExternalLink className="size-3" aria-hidden="true" />
+                  {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                      enxerga. */}
+                  <span className="sr-only">(abre em nova aba)</span>
                 </a>
               )}
             </div>

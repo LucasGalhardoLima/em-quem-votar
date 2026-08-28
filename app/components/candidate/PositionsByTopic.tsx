@@ -61,12 +61,12 @@ export function PositionsByTopic({
             key={row.topicSlug}
             className="grid gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 sm:px-[22px] lg:grid-cols-[150px_1fr_1fr_130px] lg:items-center lg:gap-[18px]"
           >
-            <h3 className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+            <h3 className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
               {row.topicName}
             </h3>
 
             <div className="min-w-0">
-              <p className="mb-0.5 text-[11px] text-slate-500">
+              <p className="mb-0.5 text-[12px] text-slate-500">
                 Posição do candidato
               </p>
               <p
@@ -101,7 +101,7 @@ export function PositionsByTopic({
             </div>
 
             <div className="min-w-0">
-              <p className="mb-0.5 text-[11px] text-slate-500">Sua resposta</p>
+              <p className="mb-0.5 text-[12px] text-slate-500">Sua resposta</p>
               <p
                 className={cn(
                   "text-[13.5px] font-semibold",
@@ -120,13 +120,20 @@ export function PositionsByTopic({
 
             <span
               className={cn(
-                "w-fit rounded-full border px-3 py-1.5 text-[11.5px] font-bold lg:justify-self-end",
+                "w-fit rounded-full border px-3 py-1.5 text-[12px] font-bold lg:justify-self-end",
                 AGREEMENT_CHIP_CLASS[agreement.kind],
               )}
             >
-              {agreement.kind === "close" && "✓ "}
-              {agreement.kind === "distant" && "✕ "}
-              {agreement.kind === "not-comparable" && "— "}
+              {/* Glifo decorativo, escondido da tecnologia assistiva: o
+                  rótulo ao lado já diz a mesma coisa em palavras. Sem isto o
+                  leitor de tela anuncia "✕" como "sinal de multiplicação"
+                  antes de "Discorda" — ruído que atrapalha justamente quem
+                  depende só do áudio para comparar posições. */}
+              <span aria-hidden="true">
+                {agreement.kind === "close" && "✓ "}
+                {agreement.kind === "distant" && "✕ "}
+                {agreement.kind === "not-comparable" && "— "}
+              </span>
               {agreement.label}
             </span>
           </article>

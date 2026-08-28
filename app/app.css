@@ -147,3 +147,46 @@
 .bento-card:hover {
   @apply border-slate-300 shadow-sm;
 }
+
+/* ------------------------------------------------------------------
+   Movimento reduzido
+   ------------------------------------------------------------------
+   Regra global, e não uma guarda por componente, de propósito: rotação
+   contínua provoca náusea e tontura de verdade em quem tem sensibilidade
+   vestibular, e o sistema operacional já expõe essa escolha. Uma guarda por
+   componente só protege o componente que alguém lembrou de guardar — esta
+   pega também `resultado.tsx`, os primitivos de `ui/` e todo código futuro.
+
+   `0.01ms` em vez de `none` porque animações com duração zero não disparam
+   `animationend`/`transitionend`, e código que espera esse evento trava. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exceção: os indicadores de carregamento. Um spinner congelado vira um
+     ícone sem significado — a pessoa deixa de saber que algo está em curso.
+     Trocamos a rotação por um pulso de opacidade: opacidade não desloca nada
+     no campo visual, então não é o que dispara o enjoo. A especificidade de
+     classe vence a regra universal acima. */
+  .animate-spin,
+  .animate-pulse {
+    animation: reduced-motion-fade 1.6s ease-in-out infinite !important;
+    transform: none !important;
+  }
+
+  @keyframes reduced-motion-fade {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
+}

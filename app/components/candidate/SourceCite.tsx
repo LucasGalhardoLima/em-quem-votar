@@ -59,7 +59,13 @@ export function SourceCite({
       <FileText className="size-3 flex-none" aria-hidden="true" />
       <span>{parts.join(" · ")}</span>
       {source.sourceUrl && (
-        <ExternalLink className="size-3 flex-none" aria-hidden="true" />
+        <>
+          <ExternalLink className="size-3 flex-none" aria-hidden="true" />
+          {/* O ícone avisa de nova aba só para quem enxerga. Sem este texto,
+              quem usa leitor de tela perde o contexto e volta ao site com o
+              botão "voltar", que não funciona numa aba recém-aberta. */}
+          <span className="sr-only">(abre em nova aba)</span>
+        </>
       )}
     </>
   );
@@ -76,12 +82,12 @@ export function SourceCite({
           href={source.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-fit items-center gap-1.5 text-[11.5px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
         >
           {body}
         </a>
       ) : (
-        <span className="inline-flex w-fit items-center gap-1.5 text-[11.5px] font-medium text-slate-500">
+        <span className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-slate-500">
           {body}
         </span>
       )}
@@ -92,7 +98,7 @@ export function SourceCite({
 /** Marcador exibido quando não existe documento sobre o tema. */
 export function NoSourceNotice({ className }: { className?: string }) {
   return (
-    <span className={cn("text-[11.5px] text-slate-500", className)}>
+    <span className={cn("text-[12px] text-slate-500", className)}>
       Nenhum documento oficial registrado sobre este tema.
     </span>
   );
