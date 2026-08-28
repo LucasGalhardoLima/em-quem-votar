@@ -240,7 +240,7 @@ No loader change — MDX routes are static.
 
 MDX routes — no loader changes needed.
 
-### `/api/newsletter` — Newsletter API (resource route)
+### `/api/newsletter` — Newsletter API (resource route) — DROPPED 2026-08-28
 
 **Action**: `POST`
 ```typescript

@@ -107,6 +107,9 @@ All existing educational articles, FAQ, about page, and methodology pages are ma
 
 ### User Story 7 - Newsletter & Engagement (Priority: P3)
 
+> **DROPPED 2026-08-28** — Newsletter cut from the product: `app/routes/api.newsletter.ts`, `app/services/newsletter.server.ts` and the `Subscriber` table were removed (the table had 0 rows).
+> Kept below as a dated record of what was planned — do not build it.
+
 Voters can subscribe to a newsletter to receive updates about new candidates, voting records, and election timeline updates.
 
 **Why this priority**: Retention mechanism. Lower priority because it's a secondary engagement feature.
@@ -142,7 +145,7 @@ Voters can subscribe to a newsletter to receive updates about new candidates, vo
 - **FR-007**: System MUST display spending data (CEAP for legislators, campaign spending from TSE when available) with source attribution.
 - **FR-008**: System MUST display voting records for candidates with legislative history, including simplified bill explanations.
 - **FR-009**: System MUST maintain all existing static content (articles, FAQ, about, methodology) in the new design.
-- **FR-010**: System MUST provide a newsletter subscription mechanism.
+- **FR-010**: System MUST provide a newsletter subscription mechanism. — DROPPED 2026-08-28
 - **FR-011**: System MUST gracefully handle missing data (no photo, no voting record, no spending data) with clear user-facing messages in Portuguese.
 - **FR-012**: System MUST be accessible in Portuguese (pt-BR) throughout.
 - **FR-013**: System MUST include an admin interface for managing candidate data and approving AI-classified positions.

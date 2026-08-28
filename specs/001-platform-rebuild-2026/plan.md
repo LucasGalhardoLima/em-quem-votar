@@ -71,7 +71,7 @@ app/
 │   ├── admin._index.tsx            # Refactored: Candidate management
 │   ├── admin.candidato.$id.tsx     # NEW: Candidate editor
 │   ├── admin.votacao.$id.tsx       # Updated
-│   ├── api.newsletter.ts           # Preserved
+│   ├── api.newsletter.ts           # Preserved — DROPPED 2026-08-28
 │   ├── resources.og.$id.tsx        # Updated for candidates
 │   └── sitemap.xml.ts              # Updated routes
 ├── components/
@@ -83,7 +83,7 @@ app/
 │   ├── Footer.tsx                  # Preserved
 │   ├── ComparisonFloatingBar.tsx   # Preserved (adapted)
 │   ├── SkeletonLoader.tsx          # Updated skeletons
-│   └── NewsletterForm.tsx          # Preserved
+│   └── NewsletterForm.tsx          # Preserved — DROPPED 2026-08-28 (never built)
 ├── services/
 │   ├── candidate.server.ts         # NEW (replaces politician.server.ts)
 │   ├── position.server.ts          # NEW
@@ -91,7 +91,7 @@ app/
 │   ├── spending.server.ts          # NEW
 │   ├── bill.server.ts              # Updated (multi-source)
 │   ├── article.server.ts           # Preserved
-│   ├── newsletter.server.ts        # Preserved
+│   ├── newsletter.server.ts        # Preserved — DROPPED 2026-08-28
 │   └── vote-classifier.server.ts   # Preserved (adapted)
 ├── data/
 │   ├── archetypes.ts               # Updated for presidential context

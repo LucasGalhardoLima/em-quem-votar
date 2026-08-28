@@ -212,7 +212,7 @@ PoliticalTopic ──1:N──> QuizQuestion
 
 ---
 
-### Subscriber (preserved)
+### Subscriber (preserved) — DROPPED 2026-08-28
 
 | Field | Type | Description |
 |-------|------|-------------|
