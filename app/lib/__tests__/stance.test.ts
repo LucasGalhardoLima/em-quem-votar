@@ -213,6 +213,18 @@ describe("getMultiplier", () => {
     expect(getMultiplier("low")).toBeLessThan(getMultiplier("medium"));
     expect(getMultiplier("medium")).toBeLessThan(getMultiplier("high"));
   });
+
+  it("valor corrompido no localStorage cai em 'medium', nunca em undefined", () => {
+    // O peso vem do quizStore persistido; localStorage devolve o que
+    // escreveram nele. Estes valores atravessam o tipo em tempo de execução e
+    // antes saíam como undefined, contaminando a soma até virar "NaN%".
+    const corrompidos = ["HIGH", "Alta", "", "1.5", "null"];
+    for (const valor of corrompidos) {
+      const peso = getMultiplier(valor as never);
+      expect(Number.isFinite(peso)).toBe(true);
+      expect(peso).toBe(IMPORTANCE_MULTIPLIERS.medium);
+    }
+  });
 });
 
 describe("níveis de importância", () => {

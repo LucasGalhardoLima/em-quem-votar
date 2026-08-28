@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import type { Route } from "./+types/resultado";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { CandidateAvatar } from "~/components/candidate/CandidateAvatar";
 import { useQuizHydration, useQuizStore } from "~/stores/quizStore";
 import {
@@ -15,6 +15,27 @@ import { CandidateService } from "~/services/candidate.server";
 import { db } from "~/utils/db.server";
 import { cn } from "~/lib/utils";
 
+/**
+ * Única rota pública SEM bloco Open Graph, e é decisão, não esquecimento.
+ *
+ * Uma tag `og:` existe para uma pessoa que ainda não abriu a página: é o que o
+ * WhatsApp mostra a quem RECEBE o link. E este endereço não carrega resultado
+ * nenhum — as respostas vivem no localStorage de quem respondeu, o servidor
+ * nunca as vê (ver /metodologia §5). Quem receber `/resultado` colado num
+ * grupo cai no estado vazio "Você ainda não respondeu ao quiz".
+ *
+ * Um card anunciando "Seu resultado — compatibilidade entre as suas respostas
+ * e as posições documentadas" seria, para todo destinatário, uma promessa que
+ * o destino não cumpre. Preencher com o que a página não tem é exatamente o
+ * que esta plataforma não faz com dado de candidato; não vamos fazer com o
+ * próprio card.
+ *
+ * O compartilhamento previsto existe e é outro: `copySummary()` copia os
+ * percentuais como TEXTO e aponta o link para `/quiz` — que tem card completo.
+ *
+ * O <title> e a description continuam aqui porque servem a quem JÁ está na
+ * página: aba do navegador, histórico e favoritos de quem respondeu.
+ */
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Seu resultado | Em Quem Votar?" },
@@ -81,7 +102,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
 
   if (!quizReady) {
     return (
-      <main className="flex-1">
+      <main id={MAIN_CONTENT_ID} className="flex-1">
         <Container className="py-20">
           <div className="h-8 w-64 animate-pulse rounded-lg bg-slate-200" />
           <div className="mt-6 grid gap-2.5">
@@ -99,7 +120,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
 
   if (answered === 0) {
     return (
-      <main className="flex-1">
+      <main id={MAIN_CONTENT_ID} className="flex-1">
         <Container className="py-20 text-center">
           <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800">
             Você ainda não respondeu ao quiz
@@ -150,17 +171,24 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
       ...lines,
       "",
       `Baseado em ${answered} de ${totalQuestions} perguntas.`,
-      "Faça o seu em https://emquemvotar.com.br/quiz",
+      "Faça o seu em https://emquemvotar.app/quiz",
     ].join("\n");
 
-    navigator.clipboard
+    // Em contexto não-seguro `navigator.clipboard` é undefined e o acesso
+    // estoura um TypeError SÍNCRONO — que nenhum `.catch()` de promise pega.
+    const clipboard = navigator.clipboard;
+    if (!clipboard?.writeText) {
+      toast.error("Seu navegador não permite copiar automaticamente aqui");
+      return;
+    }
+    clipboard
       .writeText(text)
       .then(() => toast.success("Resumo copiado — só os percentuais"))
       .catch(() => toast.error("Não foi possível copiar"));
   }
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="grid items-start gap-7 py-8 lg:grid-cols-[1fr_300px]">
         <div>
           <h1 className="font-heading text-[26px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[30px]">
@@ -203,8 +231,10 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
                       </div>
                       <div className="text-right">
                         {matchPercentage === null ? (
-                          <span className="text-[12.5px] font-semibold text-slate-400">
-                            Sem dados
+                          <span className="text-[12.5px] font-semibold text-slate-500">
+                            {result.insufficientBase
+                              ? "Base insuficiente"
+                              : "Sem dados"}
                           </span>
                         ) : (
                           <span
@@ -233,7 +263,9 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
                       <span className="text-slate-500">
                         {result.comparableCount === 0
                           ? "Nenhum tema com posição documentada ainda"
-                          : `Concordância em ${result.agreeCount} de ${result.comparableCount} temas comparáveis`}
+                          : result.insufficientBase
+                            ? `Só ${result.comparableCount} tema${result.comparableCount === 1 ? "" : "s"} comparáve${result.comparableCount === 1 ? "l" : "is"} — pouco para calcular compatibilidade`
+                            : `Concordância em ${result.agreeCount} de ${result.comparableCount} temas comparáveis`}
                       </span>
                       <Link
                         to={`/candidato/${candidate.id}`}
@@ -270,7 +302,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
                 posição registrada com fonte ainda — e sem as duas pontas não
                 existe percentual de compatibilidade.
               </p>
-              <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-pretty text-slate-400">
+              <p className="mx-auto mt-2.5 max-w-md text-[12px] leading-relaxed text-pretty text-slate-500">
                 Preferimos não mostrar lista nenhuma a mostrar uma ordenada por
                 critério que não seja a sua resposta. Assim que houver posições
                 aprovadas, o cálculo aparece aqui sem você refazer o quiz.
@@ -306,7 +338,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               <p className="mt-1.5 text-[12.5px] leading-relaxed text-slate-600">
                 {archetype.description}
               </p>
-              <p className="mt-2 text-[11.5px] leading-relaxed text-slate-400">
+              <p className="mt-2 text-[11.5px] leading-relaxed text-slate-500">
                 É uma leitura das suas próprias respostas — não diz nada sobre
                 os candidatos nem sugere em quem votar.
               </p>
@@ -323,7 +355,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
               posição registrada ficam de fora da conta — por isso o total de
               temas comparáveis varia de candidato para candidato.
             </p>
-            <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-400">
+            <p className="mt-2.5 text-[11.5px] leading-relaxed text-slate-500">
               Fontes: propostas de governo protocoladas no TSE e votações
               nominais da Câmara e do Senado.{" "}
               <Link to="/metodologia" className="font-semibold text-indigo-600">
@@ -363,7 +395,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
                 Refazer o quiz
               </Link>
               {anyComparable && (
-                <p className="text-center text-[11.5px] text-slate-400">
+                <p className="text-center text-[11.5px] text-slate-500">
                   O resumo traz só os percentuais — suas respostas não saem do
                   aparelho.
                 </p>

@@ -72,7 +72,7 @@ export const ARCHETYPES: Archetype[] = [
 ];
 
 /**
- * As 5 categorias temáticas presidenciais e como cada uma
+ * As 6 categorias temáticas presidenciais e como cada uma
  * contribui para os eixos do compasso político.
  */
 interface AxisMapping {
@@ -98,11 +98,20 @@ const CATEGORY_AXIS_MAP: Record<string, AxisMapping[]> = {
   "democracia-e-institucional": [
     { axis: "social", direction: 1, weight: 0.7 },
   ],
+  // Saúde e educação entram no eixo ECONÔMICO, não num eixo próprio: as duas
+  // perguntas são sobre provisão pública x contratação de rede privada, que é
+  // a mesma disputa de privatização. A categoria existe separada de "Economia
+  // e Fiscal" pelo peso, não pelo eixo — quem considera saúde decisiva e
+  // política tributária secundária precisa conseguir dizer isso no quiz.
+  "saude-e-educacao": [
+    { axis: "economic", direction: 1, weight: 1.0 },
+  ],
 };
 
 /** Todas as categorias temáticas presidenciais */
 export const THEMATIC_CATEGORIES = [
   "Economia e Fiscal",
+  "Saúde e Educação",
   "Segurança Pública",
   "Meio Ambiente e Agro",
   "Direitos e Costumes",
@@ -114,6 +123,7 @@ export type ThematicCategory = (typeof THEMATIC_CATEGORIES)[number];
 /** Mapa de slug para nome legível */
 const CATEGORY_SLUG_TO_NAME: Record<string, ThematicCategory> = {
   "economia-e-fiscal": "Economia e Fiscal",
+  "saude-e-educacao": "Saúde e Educação",
   "seguranca-publica": "Segurança Pública",
   "meio-ambiente-e-agro": "Meio Ambiente e Agro",
   "direitos-e-costumes": "Direitos e Costumes",

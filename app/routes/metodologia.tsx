@@ -1,26 +1,26 @@
 import type { Route } from "./+types/metodologia";
+import { pageMeta } from "~/root";
 import { useEffect, useState, type ReactNode } from "react";
 import { useLoaderData } from "react-router";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { cn } from "~/lib/utils";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Metodologia — Em Quem Votar?" },
-    {
-      name: "description",
-      content:
+    ...pageMeta({
+      title: "Metodologia — Em Quem Votar?",
+      description:
         "Como a plataforma coleta dados oficiais do TSE, da Câmara e do Senado, extrai posições com documento e página citados, calcula a compatibilidade do quiz e protege a neutralidade e a privacidade de quem responde.",
-    },
+    }),
     { name: "robots", content: "index,follow" },
   ];
 }
 
 export async function loader(): Promise<{ updatedAt: string; version: string }> {
   return {
-    version: "2.1",
+    version: "2.3",
     // Data da última revisão desta metodologia (ISO 8601).
-    updatedAt: "2026-08-25",
+    updatedAt: "2026-08-27",
   };
 }
 
@@ -160,7 +160,36 @@ const SECTIONS: MethodologySection[] = [
           já que a maior diferença ao quadrado na escala é (5 − 1)² = 16:
         </p>
         <p className="rounded-lg border border-slate-200 bg-white px-3.5 py-3 font-mono text-[12.5px] leading-[1.55] text-slate-700">
-          matchPercentage = round((1 − somaPonderada / (pesoTotal × 16)) × 100)
+          matchPercentage = round((1 − (somaPonderada + 3 × 4) / ((pesoTotal + 3)
+          × 16)) × 100)
+        </p>
+        <p>
+          Os dois “+ 3” da fórmula são{" "}
+          <strong className="font-semibold text-slate-800">
+            três temas virtuais
+          </strong>
+          , e eles existem para corrigir um defeito que medimos no nosso próprio
+          algoritmo. Uma média tirada de poucos temas oscila muito mais que uma
+          tirada de muitos, e uma lista ordenada premia justamente quem oscila
+          para cima. Na prática, isso fazia a candidatura com{" "}
+          <strong className="font-semibold text-slate-800">menos</strong>{" "}
+          posições registradas liderar o resultado com mais frequência — o
+          oposto do que esta plataforma existe para fazer. Mantendo as respostas
+          e as concorrentes fixas e variando só quantas posições de uma
+          candidatura estavam documentadas, a chance dela aparecer em primeiro
+          caía de 16,6% (com três temas) para 2,2% (com treze), sem que a
+          compatibilidade real mudasse.
+        </p>
+        <p>
+          Cada tema virtual vale 4, que é a distância quadrática esperada entre
+          duas respostas quaisquer da escala — o equivalente a{" "}
+          <strong className="font-semibold text-slate-800">75%</strong>, o ponto
+          de “não sabemos nada sobre esta candidatura”. Quanto mais temas
+          documentados, menos peso eles têm; com poucos temas, o percentual é
+          puxado para esse meio. A consequência aparece na tela e é intencional:
+          a escala aperta quando há pouca evidência. Concordância total em três
+          temas dá 88%, não 100%, porque 100% afirmaria uma certeza que três
+          temas não sustentam. Com dezoito, o teto sobe para 95%.
         </p>
         <p>
           Temas sem posição documentada{" "}
@@ -174,6 +203,23 @@ const SECTIONS: MethodologySection[] = [
           percentual alto apoiado em 6 temas não vale o mesmo que um percentual
           alto apoiado em 20 — e a plataforma diz isso na cara do resultado, em
           vez de esconder.
+        </p>
+        <p>
+          Há um piso, e ele existe porque a desigualdade de cobertura é real.
+          As propostas protocoladas variam muito: algumas tratam quase todos os
+          temas, outras são documentos genéricos que quase não se pronunciam.
+          Quando conseguimos comparar{" "}
+          <strong className="font-semibold text-slate-800">
+            menos de três temas
+          </strong>{" "}
+          — ou menos da metade do que você respondeu, se você respondeu menos de
+          seis —, a plataforma{" "}
+          <strong className="font-semibold text-slate-800">
+            não publica percentual nenhum
+          </strong>{" "}
+          e diz “base insuficiente”. Um número tirado de um único tema pareceria
+          tão preciso quanto um tirado de vinte, e ocuparia o topo da lista do
+          mesmo jeito. Preferimos dizer que não sabemos.
         </p>
         <p>
           O algoritmo é aberto e auditável. Não há ajuste manual, curadoria de
@@ -392,7 +438,7 @@ export default function Metodologia() {
   }, []);
 
   return (
-    <main>
+    <main id={MAIN_CONTENT_ID}>
       <Container className="py-10">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[240px_1fr]">
           {/* Trilha lateral */}
@@ -400,7 +446,7 @@ export default function Metodologia() {
             aria-label="Nesta página"
             className="hidden content-start gap-2.5 lg:sticky lg:top-24 lg:grid lg:self-start"
           >
-            <span className="text-[11px] font-bold tracking-[0.06em] text-slate-400">
+            <span className="text-[11px] font-bold tracking-[0.06em] text-slate-500">
               NESTA PÁGINA
             </span>
             {SECTIONS.map((section) => {

@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Check } from "lucide-react";
 import type { Route } from "./+types/quiz";
-import { Container } from "~/components/layout";
+import { pageMeta } from "~/root";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { useQuizHydration, useQuizStore } from "~/stores/quizStore";
 import {
   IMPORTANCE_LABELS,
@@ -15,12 +16,12 @@ import { cn } from "~/lib/utils";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "Quiz — descubra quais candidaturas mais se aproximam de você" },
-    {
-      name: "description",
-      content:
+    ...pageMeta({
+      title: "Quiz — descubra quais candidaturas mais se aproximam de você",
+      description:
         "Responda ao quiz e compare suas respostas com as posições documentadas dos candidatos à Presidência. Sem cadastro: as respostas ficam no seu aparelho.",
-    },
+      type: "website",
+    }),
     { name: "robots", content: "index,follow" },
   ];
 }
@@ -58,6 +59,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
   const hydrated = useQuizHydration();
 
   const [index, setIndex] = useState(0);
+  const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const answers = useQuizStore((s) => s.answers);
   const weights = useQuizStore((s) => s.weights);
   const setAnswer = useQuizStore((s) => s.setAnswer);
@@ -78,7 +80,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
 
   if (total === 0) {
     return (
-      <main className="flex-1">
+      <main id={MAIN_CONTENT_ID} className="flex-1">
         <Container className="py-20 text-center">
           <h1 className="font-heading text-2xl font-bold text-slate-800">
             O quiz ainda não está disponível
@@ -122,8 +124,55 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
     goNext();
   }
 
+  /**
+   * Roving tabindex + setas — o contrato de um `role="radiogroup"`. Sem isso
+   * o grupo consome uma parada de tabulação por opção e o leitor de tela
+   * anuncia "radio 1 de 5" enquanto as setas não fazem nada. A seta seleciona
+   * ao mover, como num grupo de rádio nativo.
+   */
+  const answeredIndex = question.options.findIndex(
+    (o) => o.stanceValue === answer,
+  );
+  const rovingIndex = answeredIndex >= 0 ? answeredIndex : 0;
+
+  function selectOption(position: number) {
+    const option = question.options[position];
+    if (!option) return;
+    setAnswer(question.topicSlug, option.stanceValue);
+    optionRefs.current[position]?.focus();
+  }
+
+  function onOptionKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    position: number,
+  ) {
+    const count = question.options.length;
+    if (count === 0) return;
+    let next: number;
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        next = (position + 1) % count;
+        break;
+      case "ArrowUp":
+      case "ArrowLeft":
+        next = (position - 1 + count) % count;
+        break;
+      case "Home":
+        next = 0;
+        break;
+      case "End":
+        next = count - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    selectOption(next);
+  }
+
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-3">
         <div className="mb-1.5 flex justify-between text-[12px] text-slate-500">
           <span>
@@ -166,14 +215,19 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
           role="radiogroup"
           aria-label="Sua resposta"
         >
-          {question.options.map((option) => {
+          {question.options.map((option, position) => {
             const selected = answer === option.stanceValue;
             return (
               <button
                 key={option.id}
+                ref={(el) => {
+                  optionRefs.current[position] = el;
+                }}
                 type="button"
                 role="radio"
                 aria-checked={selected}
+                tabIndex={position === rovingIndex ? 0 : -1}
+                onKeyDown={(event) => onOptionKeyDown(event, position)}
                 onClick={() => setAnswer(question.topicSlug, option.stanceValue)}
                 className={cn(
                   "flex items-center justify-between gap-3 rounded-xl px-[18px] text-left text-[14.5px] transition-colors",
@@ -185,7 +239,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
                 <span>
                   {option.label}
                   {option.description && (
-                    <span className="mt-0.5 block text-[12.5px] font-normal text-slate-400">
+                    <span className="mt-0.5 block text-[12.5px] font-normal text-slate-500">
                       {option.description}
                     </span>
                   )}
@@ -239,7 +293,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
           <button
             type="button"
             onClick={skip}
-            className="text-[13px] text-slate-400 transition-colors hover:text-slate-500"
+            className="text-[13px] text-slate-500 transition-colors hover:text-slate-700"
           >
             Pular este tema
           </button>
@@ -250,7 +304,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
             className={cn(
               "rounded-xl px-7 py-3 text-[14.5px] font-bold transition-colors",
               answer === undefined
-                ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                ? "cursor-not-allowed bg-slate-200 text-slate-500"
                 : "bg-slate-800 text-white hover:bg-slate-900",
             )}
           >
@@ -258,7 +312,7 @@ export default function Quiz({ loaderData }: Route.ComponentProps) {
           </button>
         </div>
 
-        <p className="mt-7 text-center text-[12px] text-slate-400">
+        <p className="mt-7 text-center text-[12px] text-slate-500">
           Sair e continuar depois — as respostas ficam no aparelho. Nada é
           enviado ao servidor.
         </p>

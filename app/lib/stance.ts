@@ -84,8 +84,13 @@ export function agreementFor(
 export const AGREEMENT_CHIP_CLASS: Record<AgreementKind, string> = {
   close: "border-green-600/25 bg-green-600/[0.07] text-green-700",
   distant: "border-red-600/20 bg-red-600/[0.06] text-red-700",
-  "not-comparable": "border-slate-200 bg-slate-50 text-slate-400",
-  "no-quiz": "border-slate-200 bg-slate-50 text-slate-400",
+  // `slate-500` e não `slate-400`: sobre `slate-50` o 400 dá 2,51:1 e reprova
+  // o AA. São os dois chips de AUSÊNCIA, e eles aparecem 16 vezes na ficha de
+  // uma candidatura pouco documentada — a maior concentração de texto ilegível
+  // que restava no site, justamente no texto que a metodologia trata como o
+  // mais importante: o que diz que não sabemos.
+  "not-comparable": "border-slate-200 bg-slate-50 text-slate-500",
+  "no-quiz": "border-slate-200 bg-slate-50 text-slate-500",
 };
 
 /** Peso que a pessoa atribui a cada eixo temático. */
@@ -104,6 +109,19 @@ export const IMPORTANCE_MULTIPLIERS: Record<ImportanceLevel, number> = {
   low: 0.5,
 };
 
+/**
+ * Peso do eixo, com "médio" como padrão.
+ *
+ * A validação é deliberadamente mais larga que o tipo. O peso chega do
+ * `quizStore` persistido em localStorage, e localStorage devolve o que
+ * escreveram nele — versão antiga do store, edição manual, dado truncado. O
+ * TypeScript garante o formato em tempo de compilação e nada em tempo de
+ * execução, então um `"HIGH"` atravessa o tipo, sai daqui como `undefined` e
+ * contamina o cálculo inteiro: a soma vira NaN e a pessoa lê "NaN%" com a
+ * barra cheia. Checar a chave contra o mapa custa uma linha e fecha a porta
+ * para qualquer valor, não só para `null`/`undefined`.
+ */
 export function getMultiplier(level: ImportanceLevel | undefined): number {
-  return IMPORTANCE_MULTIPLIERS[level ?? "medium"];
+  const multiplier = level == null ? undefined : IMPORTANCE_MULTIPLIERS[level];
+  return multiplier ?? IMPORTANCE_MULTIPLIERS.medium;
 }
