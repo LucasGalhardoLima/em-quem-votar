@@ -47,9 +47,48 @@ export function candidateStanceLabel(stance: number | null | undefined): string 
   return CANDIDATE_STANCE_LABELS[stance] ?? NO_POSITION_LABEL;
 }
 
+/**
+ * Existe posição (ou resposta) utilizável neste ponto?
+ *
+ * A checagem é por TIPO antes de ser por faixa, e isso não é preciosismo. Os
+ * dois lados que passam por aqui vêm de fora do TypeScript: as respostas do
+ * quiz voltam do localStorage do navegador (metodologia §5) e as posições vêm
+ * do banco por JSON. Operador relacional COAGE o outro lado — `true >= 1`,
+ * `"5" <= 5` e `[3] >= 1` são todos verdadeiros —, então um resto de
+ * serialização atravessava a faixa 1–5, virava `Math.abs(5 - true)` e saía na
+ * tela como discordância documentada de uma pessoa real. `Number.isInteger`
+ * fecha a porta de uma vez: rejeita não-número, NaN, Infinity e fracionário
+ * (a escala no banco é `Int`), é a mesma disciplina que `match.ts` já aplica
+ * antes de publicar um percentual.
+ *
+ * O 0 continua fora, e por outro motivo: ele significa "sem posição
+ * registrada" e NUNCA é o ponto médio da escala.
+ */
 export function hasPosition(stance: number | null | undefined): stance is number {
-  return stance != null && stance >= STANCE_MIN && stance <= STANCE_MAX;
+  return (
+    typeof stance === "number" &&
+    Number.isInteger(stance) &&
+    stance >= STANCE_MIN &&
+    stance <= STANCE_MAX
+  );
 }
+
+/**
+ * Distância máxima (na escala) ainda considerada "próximo".
+ *
+ * Mora aqui, no vocabulário de domínio, porque DUAS respostas dependem dela e
+ * a pessoa vê as duas na mesma sessão: o chip "próximo"/"distante" de
+ * `agreementFor()`, na ficha da candidatura, e o `agreeCount` de `match.ts`
+ * ("concordância em X de Y temas"), no resultado do quiz. Enquanto o limiar era
+ * a constante `CLOSE_THRESHOLD` lá e um literal `1` aqui, mudar um sem o outro
+ * fazia a contagem e os chips discordarem sobre o MESMO par de respostas — uma
+ * divergência que nada no código acusaria e que só a pessoa lendo a tela veria.
+ *
+ * A direção da unificação segue a das dependências: `match.ts` importa deste
+ * módulo e nunca o contrário, então o limiar desce para cá e sobe de volta como
+ * reexport, sem ciclo.
+ */
+export const CLOSE_THRESHOLD = 1;
 
 export type AgreementKind = "close" | "distant" | "not-comparable" | "no-quiz";
 
@@ -62,8 +101,9 @@ export interface Agreement {
 
 /**
  * Um tema só é comparável quando existem AS DUAS pontas: posição
- * documentada e resposta da pessoa. "Próximo" é distância <= 1 na escala
- * de 5 pontos — o mesmo limiar usado no texto da metodologia.
+ * documentada e resposta da pessoa. "Próximo" é distância <= CLOSE_THRESHOLD
+ * na escala de 5 pontos — o mesmo limiar do texto da metodologia e o mesmo que
+ * `match.ts` usa para contar `agreeCount`.
  */
 export function agreementFor(
   candidateStance: number | null | undefined,
@@ -75,7 +115,7 @@ export function agreementFor(
     return { kind: "not-comparable", distance: null, label: "fora da conta" };
   }
   const distance = Math.abs(candidateStance - userStance);
-  return distance <= 1
+  return distance <= CLOSE_THRESHOLD
     ? { kind: "close", distance, label: "próximo" }
     : { kind: "distant", distance, label: "distante" };
 }

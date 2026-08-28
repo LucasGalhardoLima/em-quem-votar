@@ -18,9 +18,9 @@ export function meta({}: Route.MetaArgs) {
 
 export async function loader(): Promise<{ updatedAt: string; version: string }> {
   return {
-    version: "2.3",
+    version: "2.5",
     // Data da última revisão desta metodologia (ISO 8601).
-    updatedAt: "2026-08-27",
+    updatedAt: "2026-08-28",
   };
 }
 
@@ -156,15 +156,18 @@ const SECTIONS: MethodologySection[] = [
           <strong className="font-semibold text-slate-800">alta = 1,5</strong>,{" "}
           <strong className="font-semibold text-slate-800">média = 1,0</strong>{" "}
           e <strong className="font-semibold text-slate-800">baixa = 0,5</strong>
-          . A soma ponderada é então normalizada pela distância máxima possível,
-          já que a maior diferença ao quadrado na escala é (5 − 1)² = 16:
+          . Dividindo a soma ponderada pelo peso total chega-se à distância
+          média, e é ela que normalizamos pela maior diferença ao quadrado
+          possível na escala, (5 − 1)² = 16:
         </p>
         <p className="rounded-lg border border-slate-200 bg-white px-3.5 py-3 font-mono text-[12.5px] leading-[1.55] text-slate-700">
-          matchPercentage = round((1 − (somaPonderada + 3 × 4) / ((pesoTotal + 3)
-          × 16)) × 100)
+          distânciaMédia² = somaPonderada / pesoTotal
+          <br />
+          matchPercentage = round((1 − (nTemas × distânciaMédia² + 3 × 4) /
+          ((nTemas + 3) × 16)) × 100)
         </p>
         <p>
-          Os dois “+ 3” da fórmula são{" "}
+          Os dois “3” da fórmula são{" "}
           <strong className="font-semibold text-slate-800">
             três temas virtuais
           </strong>
@@ -188,8 +191,34 @@ const SECTIONS: MethodologySection[] = [
           documentados, menos peso eles têm; com poucos temas, o percentual é
           puxado para esse meio. A consequência aparece na tela e é intencional:
           a escala aperta quando há pouca evidência. Concordância total em três
-          temas dá 88%, não 100%, porque 100% afirmaria uma certeza que três
-          temas não sustentam. Com dezoito, o teto sobe para 95%.
+          temas dá <strong className="font-semibold text-slate-800">88%</strong>,
+          não 100%, porque 100% afirmaria uma certeza que três temas não
+          sustentam. Com treze temas comparados o teto é 95%; com dezoito, 96%;
+          com vinte e quatro, 97%. O piso acompanha na outra ponta: discordância
+          total em três temas é 38%, e só chega a 8% com vinte e quatro. Na
+          menor base que a plataforma publica — dois temas — o teto é 85% e o
+          piso, 45%. Em forma fechada, com n temas comparados, o teto é
+          100 − 75/(n+3) e o piso é 225/(n+3), válido de n = 2 em diante, que é
+          onde o piso descrito adiante autoriza publicar.
+        </p>
+        <p>
+          Repare onde o peso{" "}
+          <strong className="font-semibold text-slate-800">não</strong> entra:
+          os três temas virtuais são contados{" "}
+          <strong className="font-semibold text-slate-800">em temas</strong>,
+          ao lado de nTemas, e nunca ao lado do peso total. A importância que
+          você declara serve para ordenar os temas entre si, não para dizer
+          quanta evidência existe — afirmar que Saúde importa muito para você
+          não documenta nenhuma posição a mais, logo não pode comprar certeza
+          sobre ninguém. Nas versões anteriores desta metodologia essa separação
+          não existia no código: os temas virtuais eram somados ao peso, e por
+          isso uma concordância total em três temas exibia 83%, 88% ou 90%
+          conforme a importância que você tivesse dado ao eixo em que a
+          candidatura por acaso se pronunciou. Duas candidaturas igualmente
+          alinhadas podiam ser ordenadas pelo acaso documental. Está corrigido:
+          o teto e o piso passaram a depender apenas de quantos temas foram
+          efetivamente comparados, e os números do parágrafo acima valem para
+          qualquer combinação de importâncias.
         </p>
         <p>
           Temas sem posição documentada{" "}
@@ -212,14 +241,31 @@ const SECTIONS: MethodologySection[] = [
           <strong className="font-semibold text-slate-800">
             menos de três temas
           </strong>{" "}
-          — ou menos da metade do que você respondeu, se você respondeu menos de
-          seis —, a plataforma{" "}
+          — ou menos de dois, se você respondeu quatro perguntas ou menos —, a
+          plataforma{" "}
           <strong className="font-semibold text-slate-800">
             não publica percentual nenhum
           </strong>{" "}
           e diz “base insuficiente”. Um número tirado de um único tema pareceria
           tão preciso quanto um tirado de vinte, e ocuparia o topo da lista do
           mesmo jeito. Preferimos dizer que não sabemos.
+        </p>
+        <p>
+          O piso acompanha o tamanho do quiz, para não punir quem respondeu
+          pouco: comparar dois temas de três respondidos é cobertura de dois
+          terços e vira percentual. Mas ele para de descer em{" "}
+          <strong className="font-semibold text-slate-800">dois temas</strong> e
+          nunca chega a um, por mais curto que tenha sido o quiz. Um tema
+          comparável é uma comparação só — não existe uma segunda para
+          confirmá-la ou desmenti-la, e a média de uma comparação tem a
+          aparência de medida sem o conteúdo. A consequência merece ser dita com
+          todas as letras: se você respondeu{" "}
+          <strong className="font-semibold text-slate-800">
+            uma única pergunta
+          </strong>
+          , não haverá percentual para candidatura nenhuma, porque nem no melhor
+          caso existe um segundo tema para comparar. A tela diz “base
+          insuficiente”, que é verdade, no lugar de um número que não seria.
         </p>
         <p>
           O algoritmo é aberto e auditável. Não há ajuste manual, curadoria de
