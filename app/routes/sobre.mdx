@@ -2,6 +2,15 @@
 title: "Sobre o Projeto | Em Quem Votar?"
 description: "Nossa missão é democratizar o acesso à informação política com dados reais e apartidários."
 ---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: frontmatter.title, description: frontmatter.description });
+
 import { Github, Mail } from "lucide-react";
 import { Container } from "../components/layout";
 

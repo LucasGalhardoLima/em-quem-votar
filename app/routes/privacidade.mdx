@@ -2,6 +2,15 @@
 title: "Política de Privacidade | Em Quem Votar"
 description: "Entenda como tratamos os dados e garantimos sua privacidade"
 ---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: frontmatter.title, description: frontmatter.description });
+
 import { Eye, EyeOff } from "lucide-react";
 import { Container } from "../components/layout";
 
@@ -67,7 +76,7 @@ import { Container } from "../components/layout";
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2.5">
-              <EyeOff className="size-4 flex-none text-slate-400" aria-hidden="true" />
+              <EyeOff className="size-4 flex-none text-slate-500" aria-hidden="true" />
               <h3 className="text-[14px] font-bold text-slate-800">O que NÃO vemos</h3>
             </div>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">

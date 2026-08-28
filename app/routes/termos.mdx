@@ -2,6 +2,15 @@
 title: "Termos de Uso | Em Quem Votar"
 description: "Regras e condições para uso da plataforma"
 ---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: frontmatter.title, description: frontmatter.description });
+
 import { AlertCircle } from "lucide-react";
 import { Container } from "../components/layout";
 

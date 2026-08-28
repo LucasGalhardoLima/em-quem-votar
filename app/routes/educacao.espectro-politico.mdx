@@ -7,12 +7,14 @@ category: "Conceitos Básicos"
 image: "/images/espectro-politico.jpg"
 ---
 
-export const meta = () => {
-  return [
-    { title: "Esquerda, Direita ou Centro? | Em Quem Votar" },
-    { name: "description", content: "Entenda as diferenças entre esquerda, direita e centro na política brasileira." },
-  ];
-};
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
 import { Container } from "../components/layout";
 
 <main className="flex-1">

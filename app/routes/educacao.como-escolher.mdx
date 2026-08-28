@@ -5,6 +5,15 @@ image: "/images/escolher-candidato.jpg"
 date: "2025-10-02"
 category: "Guia Prático"
 ---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
 import { ExternalLink } from "lucide-react";
 import { Container } from "../components/layout";
 

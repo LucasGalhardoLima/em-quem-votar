@@ -2,6 +2,15 @@
 title: "Perguntas Frequentes | Em Quem Votar?"
 description: "Tire suas dúvidas sobre a origem dos dados, classificações e transparência da plataforma."
 ---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: frontmatter.title, description: frontmatter.description });
+
 import { Container } from "../components/layout";
 
 <main className="flex-1">

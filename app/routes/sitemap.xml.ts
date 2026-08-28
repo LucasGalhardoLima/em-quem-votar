@@ -42,7 +42,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       (c) => `
     <url>
       <loc>${baseUrl}/candidato/${c.id}</loc>
-      <lastmod>${c.updatedAt.toISOString()}</lastmod>
+      <lastmod>${c.updatedAt}</lastmod>
       <changefreq>daily</changefreq>
       <priority>0.9</priority>
     </url>`

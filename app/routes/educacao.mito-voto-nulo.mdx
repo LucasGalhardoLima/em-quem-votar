@@ -6,12 +6,14 @@ date: "2025-10-05"
 category: "Mitos Eleitorais"
 ---
 
-export const meta = () => {
-  return [
-    { title: "Voto Nulo Anula Eleição? | Em Quem Votar" },
-    { name: "description", content: "A verdade sobre o voto nulo no Brasil: ele cancela a eleição? Saiba aqui." },
-  ];
-};
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
 import { Container } from "../components/layout";
 
 <main className="flex-1">
