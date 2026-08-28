@@ -1,0 +1,21 @@
+-- Remove a tabela da newsletter, que ficou órfã.
+--
+-- A newsletter saiu por inteiro: `app/routes/api.newsletter.ts` (a única
+-- escrita) e `app/services/newsletter.server.ts` (a única leitura) foram
+-- apagados, e não sobrou nenhum import de `newsletter.server` no código.
+-- Sem rota e sem service, "Subscriber" era uma tabela que ninguém lê nem
+-- escreve — e um schema com tabela morta faz quem chegar depois procurar o
+-- código que a alimenta.
+--
+-- POR QUE ISTO NÃO PERDE DADO. A tabela foi conferida antes do drop:
+-- `SELECT count(*) FROM "Subscriber"` = 0 em 2026-08-28. O formulário de
+-- inscrição nunca chegou a ir ao ar nesta versão do site (não existe
+-- NewsletterForm em `app/components/`), então nunca houve o que coletar.
+-- Se algum dia isto voltar, volta como tabela nova; não há inscrito a
+-- migrar.
+--
+-- Este arquivo é aplicado em produção pelo `prisma migrate deploy` que roda
+-- antes do sync do TSE (`.github/workflows/sync-tse-2026.yml`), 4x/dia.
+
+-- DropTable
+DROP TABLE "Subscriber";

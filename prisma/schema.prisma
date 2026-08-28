@@ -108,6 +108,26 @@ model Candidate {
   tseStatusLabel     String?
   tseStatusDetail    String?
   tseId              String?            @unique
+  /// Aptidão da candidatura segundo o TSE, em TRÊS estados:
+  ///   `true`  — apta (a Justiça Eleitoral deferiu o registro)
+  ///   `false` — inapta (indeferido, cassado, renúncia)
+  ///   `null`  — AINDA NÃO JULGADA
+  ///
+  /// O `null` não é dado faltando: é o estado real da maioria das
+  /// candidaturas durante boa parte do período eleitoral, e apagá-lo seria
+  /// afirmar um veredito que não existe.
+  ///
+  /// ARMADILHA, verificada em 27/08/2026 nas 13 candidaturas presidenciais:
+  /// o DivulgaCandContas devolve `candidatoApto: false` E
+  /// `isCandidatoInapto: false` ao mesmo tempo para quem está "Aguardando
+  /// julgamento" — 11 das 13. Ler `candidatoApto` como booleano marcaria 11
+  /// pessoas como inaptas sem que nenhuma decisão tenha sido proferida. A
+  /// derivação dos três estados mora em app/lib/candidate-status.ts.
+  tseApto            Boolean?
+  /// Número do processo de registro de candidatura (RCand) no TSE. É o que
+  /// permite ao leitor abrir a decisão da Justiça Eleitoral e conferir a
+  /// situação na fonte, em vez de acreditar no nosso badge.
+  tseProcessNumber   String?
   /// Cargo em disputa: "presidential" | "governor".
   /// Só esses dois: são os únicos cargos desta eleição para os quais a Lei
   /// 9.504/97 (art. 11, §1º, IX) obriga o registro de proposta de governo —
@@ -115,8 +135,33 @@ model Candidate {
   electionType       String             @default("presidential")
   /// UF da disputa. `null` para Presidente, que é de âmbito nacional.
   /// Para governador é obrigatória: o número de urna se repete entre estados,
-  /// então (electionType, uf, number) é o que identifica a chapa, não o número.
+  /// então o recorte de listagem e de filtro é (electionType, uf), nunca o
+  /// número sozinho.
   uf                 String?
+  /// Número de urna. NÃO identifica a chapa, nem sequer junto de
+  /// (electionType, uf) — e é por isso que não existe `@@unique` aqui.
+  ///
+  /// Verificado no banco em 27/08/2026: 4 colisões reais em (electionType,
+  /// uf, number), de duas naturezas diferentes.
+  ///
+  ///   Substituição de chapa — o número fica com o partido, a pessoa muda, e
+  ///   as duas linhas coexistem porque a antiga guarda a decisão do TSE:
+  ///     PA nº 16 (PSTU)  José Cleber Barros Rabelo (Renúncia)
+  ///                      × Wellingta Josyane Siqueira Macedo (Aguardando)
+  ///     CE nº 30 (NOVO)  Pedro Felipe Pinheiro Brito (Renúncia)
+  ///                      × Vera Lucia da Silva (Aguardando)
+  ///     BA nº 27 (DC)    Ariel da Silva Capistrano (Deferido com recurso)
+  ///                      × José Estêvão dos Santos Barbosa (Indeferido em
+  ///                        prazo recursal ou com recurso)
+  ///
+  ///   Registro duplicado do próprio TSE — a MESMA pessoa em dois SQ_CANDIDATO:
+  ///     MT nº 36 (AGIR)  Laudicerio Aguiar Machado, tseId 110002553937
+  ///                      e 110002554073, ambos "Aguardando julgamento"
+  ///
+  /// Um `@@unique` faria o `npm run sync:tse` falhar na linha e parar de
+  /// importar as candidaturas seguintes — ou, pior, obrigaria o script a
+  /// escolher qual das duas apagar, decidindo por conta própria o desfecho de
+  /// um registro real. A chave de upsert é `tseId`, e só ela.
   number             Int?
 
   // Chapa
@@ -141,6 +186,7 @@ model Candidate {
   legislativeLink CandidateLegislativeLink?
   spendingRecords SpendingRecord[]
   votes           VoteRecord[]
+  electionHistory CandidateElectionHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -229,6 +275,47 @@ model CandidateLegislativeLink {
   @@unique([sourceType, sourceId])
 }
 
+/// Disputas eleitorais anteriores, como o próprio TSE as registra
+/// (`eleicoesAnteriores` no DivulgaCandContas). Responde "esta pessoa já
+/// disputou alguma coisa, e o que aconteceu?" sem que a plataforma precise
+/// julgar carreira de ninguém.
+///
+/// `resultLabel` guarda a redação LITERAL do TSE e nunca é reescrita, pela
+/// mesma razão de `tseStatusLabel`. Isso importa mais do que parece: em
+/// 27/08/2026 o TSE registra a candidatura presidencial de 2018 de uma das
+/// 13 como "Concorrendo", quando o registro havia sido indeferido. Traduzir
+/// isso para "concorreu" publicaria uma afirmação falsa; exibir a palavra do
+/// TSE ao lado do link para o registro deixa o leitor conferir a fonte.
+model CandidateElectionHistory {
+  id          String  @id @default(uuid())
+  candidateId String
+  /// `id` daquela candidatura antiga no TSE (SQ_CANDIDATO). É a chave que
+  /// torna o sync idempotente — ano+cargo não bastam, porque a mesma pessoa
+  /// pode disputar dois cargos no mesmo ano.
+  tsePriorId  String
+  year        Int
+  /// Cargo disputado, redação do TSE: "Presidente", "Senador",
+  /// "Deputado Estadual", "Vice-Prefeito"…
+  office      String
+  /// Unidade eleitoral do TSE. Nem sempre é UF: para cargo municipal vem o
+  /// código do município (ex.: "71072"), e é assim que fica guardado.
+  ue          String?
+  party       String?
+  /// Literal do TSE: "Eleito", "Não eleito", "Eleito por QP", "Concorrendo".
+  resultLabel String
+  /// Link do TSE para aquele registro, quando a API o fornece.
+  sourceUrl   String?
+
+  candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([candidateId, tsePriorId])
+  @@index([candidateId])
+  @@index([year])
+}
+
 model Bill {
   id             String   @id
   title          String
@@ -266,7 +353,21 @@ model VoteRecord {
   id          String @id @default(uuid())
   candidateId String
   billId      String
-  voteType    String // "Sim", "Não", "Abstenção", "Obstrução"
+  /// Redação da fonte em CAIXA ALTA, como `scripts/sync-votacoes.ts` grava
+  /// (`voto.tipoVoto.toUpperCase()`): "SIM", "NÃO", "ABSTENÇÃO",
+  /// "OBSTRUÇÃO", "ARTIGO 17". Uma convenção só, e é esta — o comentário
+  /// anterior documentava Title Case ("Sim", "Não") e nenhuma linha do banco
+  /// jamais foi gravada assim.
+  ///
+  /// A lista NÃO é fechada: "ARTIGO 17" é a grafia literal que a Câmara
+  /// devolve e tem 38 registros em `VoteLog` (27/08/2026). Quem consome
+  /// agrupa pela chave canônica de `voteKey()` em `app/services/bill.server.ts`
+  /// (sem acento, sem caixa) e exibe o rótulo literal — comparar com `===`
+  /// contra uma das grafias já zerou um placar em produção.
+  ///
+  /// A tabela está VAZIA hoje (0 linhas, verificado em 27/08/2026); quem a
+  /// popular segue esta convenção, não a antiga.
+  voteType    String
   sourceType  String @default("camara") // "camara" | "senado"
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
@@ -287,6 +388,13 @@ model SpendingRecord {
   category    String?
   source      String
   sourceUrl   String?
+  /// Descrição do item como o próprio declarante a escreveu, ex.: "50% DO
+  /// APARTAMENTO LOCALIZADO EM SÃO BERNARDO DO CAMPO". Existe para os bens
+  /// declarados (`DECLARED_ASSETS`), onde a `category` guarda só o tipo do
+  /// bem ("Apartamento", "Terreno") e o item perderia o sentido sem o texto.
+  /// Copiada literal do TSE — descrever um bem com nossas palavras seria
+  /// interpretar patrimônio de uma pessoa real.
+  description String?      @db.Text
 
   candidate Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 
@@ -321,27 +429,4 @@ model QuizOption {
   question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@index([questionId])
-}
-
-// ============================================================
-// Preserved models
-// ============================================================
-
-model Subscriber {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-}
-
-model UserProfile {
-  id       String  @id @default(uuid())
-  email    String  @unique
-  name     String?
-  photoUrl String?
-
-  quizAnswers     Json?
-  politicalVector Json?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
