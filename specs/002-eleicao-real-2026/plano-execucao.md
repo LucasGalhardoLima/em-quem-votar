@@ -75,9 +75,11 @@ do admin e acessibilidade não existem para ninguém fora deste laptop.
         presente, contador em "Faltam 33 dias".
 
       O check do GitGuardian entrou vermelho no merge, como previsto: os 3
-      incidentes de fixture seguem presos ao commit `1dd3d8c` do histórico do
-      PR. A `main` está limpa desde `841d6eb`. Fechar os incidentes no
-      dashboard continua pendente e só o Lucas tem acesso.
+      incidentes de fixture estavam presos ao commit `1dd3d8c` do histórico do
+      PR, que nenhum commit novo alcança. A `main` está limpa desde `841d6eb`
+      e o Lucas fechou os 3 incidentes no dashboard em 01/09 — incidente
+      fechado não é mais levantado por check run, então o assunto está
+      encerrado dos dois lados: no código e no scanner.
 
 ## Bloco 2 — Fase B: posições com fonte (SC-102 e SC-103)
 
