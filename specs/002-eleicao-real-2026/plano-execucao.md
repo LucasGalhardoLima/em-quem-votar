@@ -132,3 +132,27 @@ Hoje só há bens declarados. Receita e despesa de campanha são zero, e
 - [ ] **5.3** SC-105: metodologia descrevendo o pipeline de fontes **antes** de
       qualquer divulgação do relançamento.
 - [ ] **5.4** 29/09: congelamento de features. Só dado e estabilidade até 04/10.
+- [ ] **5.5** Canal de contato. `contato@emquemvotar.app` está em `/sobre`,
+      `/faq`, `/privacidade` e `/metodologia`, e o domínio **não existe**
+      (NXDOMAIN, medido em 01/09) — quem escrever recebe bounce silencioso.
+      Pesa mais na `/privacidade`, que é onde a LGPD espera um canal real para
+      pedido de titular. **Adiado por decisão do Lucas em 01/09**, com o
+      terreno já levantado para não redescobrir:
+      - A conta do Resend tem **1 domínio verificado**, `contact.kise-app.com`
+        (sa-east-1): envio habilitado, **recebimento desabilitado**. Não há
+        `emquemvotar.app` lá, e o Resend não dá caixa postal em domínio que
+        não se possui — ele entra depois do registro, não no lugar dele.
+      - Caminho A, sem comprar nada: formulário na página → `action` envia via
+        Resend para uma caixa definida por variável de ambiente. Precisa de
+        cota (`checkQuota` já existe) e antiabuso, porque formulário público é
+        alvo de spam.
+      - Caminho B: registrar o domínio, verificar no Resend, ligar Receiving
+        (MX). Aí o `mailto:` das 4 páginas volta a ser verdade **sem tocar em
+        código**, e a caixa fica legível pelas ferramentas do Resend.
+      - Descartado: usar `contato@contact.kise-app.com` no site. Endereço de
+        outro projeto numa plataforma que promete neutralidade e
+        rastreabilidade levanta a pergunta errada.
+
+      As outras duas menções ao domínio morto **já foram consertadas** em
+      `d707d44` (robots.txt e o texto do "Copiar resumo"), então o que resta
+      aqui é só o e-mail.
