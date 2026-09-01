@@ -50,6 +50,7 @@ export default [
   // Resources
   route("resources/og/:id", "routes/resources.og.$id.tsx"),
   route("sitemap.xml", "routes/sitemap.xml.ts"),
+  route("robots.txt", "routes/robots.txt.ts"),
 
   // Legacy redirects (preserve old URLs)
   route("busca", "routes/busca.tsx"),

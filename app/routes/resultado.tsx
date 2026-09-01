@@ -298,7 +298,7 @@ export default function Resultado({ loaderData }: Route.ComponentProps) {
       ...lines,
       "",
       `Baseado em ${answered} de ${totalQuestions} perguntas.`,
-      "Faça o seu em https://emquemvotar.app/quiz",
+      `Faça o seu em ${window.location.origin}/quiz`,
     ].join("\n");
 
     // Em contexto não-seguro `navigator.clipboard` é undefined e o acesso
