@@ -538,6 +538,34 @@ describe("parseDivulgaDetail", () => {
     expect(parseDivulgaDetail("1", { bens: [] }).bens).toEqual([]);
   });
 
+  it("`bensDeclarados` carrega a distinção AUSENTE ≠ VAZIO até a página", () => {
+    // `bens` morre no banco: uma ficha sem a chave e uma ficha com lista vazia
+    // deixam as duas zero linha de patrimônio. Este número é o que sobrevive —
+    // e é dele que a página tira o direito de afirmar "o TSE não lista bem
+    // algum". `null` = não sabemos; `0` = a ficha diz que não há.
+    expect(parseDivulgaDetail("1", {}).bensDeclarados).toBeNull();
+    expect(parseDivulgaDetail("1", { bens: null }).bensDeclarados).toBeNull();
+    expect(parseDivulgaDetail("1", { bens: "nenhum" }).bensDeclarados).toBeNull();
+    expect(parseDivulgaDetail("1", { bens: [] }).bensDeclarados).toBe(0);
+  });
+
+  it("a contagem de bens sai do payload CRU, não de `bens` já filtrado", () => {
+    // NÃO troque isto por `bens.length`. `parseAssets` descarta item sem
+    // descrição ou sem valor: aqui a ficha lista TRÊS bens e só um sobrevive
+    // ao parser. Contando depois do filtro, uma ficha que veio com lista
+    // seria lida como ficha que não veio com lista — e a página afirmaria
+    // "o TSE não lista bem algum" sobre quem declarou três.
+    const ficha = parseDivulgaDetail("1", {
+      bens: [
+        { descricao: "Sem valor" },
+        { valor: 100 },
+        { descricao: "Terreno", valor: "1500,75" },
+      ],
+    });
+    expect(ficha.bens).toHaveLength(1);
+    expect(ficha.bensDeclarados).toBe(3);
+  });
+
   it("lê um bem declarado preservando a descrição do próprio candidato", () => {
     const ficha = parseDivulgaDetail("1", {
       bens: [
@@ -609,6 +637,59 @@ describe("parseDivulgaDetail", () => {
         sourceUrl: "https://divulgacandcontas.tse.jus.br/…",
       },
     ]);
+    // E a contagem também é sem ela: duas linhas cruas, um antecedente.
+    expect(ficha.eleicoesAnterioresDeclaradas).toBe(1);
+  });
+
+  it("`eleicoesAnterioresDeclaradas` desconta a própria candidatura, e só ela", () => {
+    // Sem o desconto, quem disputa 2026 pela primeira vez teria contagem 1 —
+    // e a página diria "a ficha lista 1 candidatura anterior que não pudemos
+    // exibir" sobre quem não tem antecedente nenhum. O TSE devolve a
+    // candidatura atual dentro de `eleicoesAnteriores` (mesmo id).
+    const estreante = parseDivulgaDetail("280000605409", {
+      eleicoesAnteriores: [
+        {
+          id: "280000605409",
+          nrAno: 2026,
+          cargo: "Presidente",
+          situacaoTotalizacao: "Concorrendo",
+        },
+      ],
+    });
+    expect(estreante.eleicoesAnteriores).toEqual([]);
+    expect(estreante.eleicoesAnterioresDeclaradas).toBe(0);
+
+    // Id numérico é o mesmo id: o desconto usa a mesma normalização do parse.
+    const numerico = parseDivulgaDetail("42", {
+      eleicoesAnteriores: [{ id: 42, nrAno: 2026, cargo: "Governador" }],
+    });
+    expect(numerico.eleicoesAnterioresDeclaradas).toBe(0);
+
+    // Ausência da chave continua sendo ausência, não "declara zero".
+    expect(parseDivulgaDetail("1", {}).eleicoesAnterioresDeclaradas).toBeNull();
+    expect(
+      parseDivulgaDetail("1", { eleicoesAnteriores: "nenhuma" })
+        .eleicoesAnterioresDeclaradas,
+    ).toBeNull();
+    expect(
+      parseDivulgaDetail("1", { eleicoesAnteriores: [] }).eleicoesAnterioresDeclaradas,
+    ).toBe(0);
+  });
+
+  it("a contagem do histórico também sai do CRU: linha incompleta conta", () => {
+    // Quatro linhas cruas, uma só montável. A contagem é 4 — é ela que
+    // permite à página dizer "a ficha lista 4 e nenhuma pôde ser exibida"
+    // em vez de afirmar que o TSE não registra candidatura anterior.
+    const ficha = parseDivulgaDetail("atual", {
+      eleicoesAnteriores: [
+        { nrAno: 2018, cargo: "Senador", situacaoTotalizacao: "Eleito" },
+        { id: "a", cargo: "Senador", situacaoTotalizacao: "Eleito" },
+        { id: "b", nrAno: 2018, situacaoTotalizacao: "Eleito" },
+        { id: "c", nrAno: 2018, cargo: "Senador" },
+      ],
+    });
+    expect(ficha.eleicoesAnteriores).toEqual([]);
+    expect(ficha.eleicoesAnterioresDeclaradas).toBe(4);
   });
 
   it("descarta eleição anterior sem id, ano, cargo ou resultado", () => {
@@ -665,7 +746,9 @@ describe("parseDivulgaDetail", () => {
         totalDeBens: null,
         atualizadoEm: null,
         bens: null,
+        bensDeclarados: null,
         eleicoesAnteriores: [],
+        eleicoesAnterioresDeclaradas: null,
         processosCassacao: 0,
         processosDesconstituicao: 0,
       });

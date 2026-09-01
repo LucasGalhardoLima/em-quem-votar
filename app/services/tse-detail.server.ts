@@ -104,6 +104,24 @@ export interface DetailWriteResult {
   }>;
 }
 
+/**
+ * O que uma ficha lida pode escrever em `Candidate`.
+ *
+ * `tseApto` é o único campo sempre presente: ele tem os três estados dentro do
+ * próprio valor (`true`/`false`/`null`), então gravá-lo nunca é um chute. Os
+ * outros três são OPCIONAIS de propósito — a chave só existe quando a ficha
+ * trouxe o dado. Uma chave ausente não sobrescreve; uma chave com `null`
+ * sobrescreveria, e é justamente isso que não pode acontecer aqui.
+ */
+interface CandidateDetailUpdate {
+  tseApto: boolean | null;
+  tseProcessNumber?: string;
+  /** Quantos bens a ficha declara. `0` é afirmação; ausência é omissão. */
+  tseAssetsDeclared?: number;
+  /** Idem, para candidaturas anteriores (já sem a própria candidatura). */
+  tsePriorElectionsDeclared?: number;
+}
+
 interface AssetRow {
   candidateId: string;
   type: "DECLARED_ASSETS";
@@ -165,7 +183,9 @@ function chunked<T>(items: T[], size: number): T[][] {
  *    mesma regra da (1) um nível abaixo: resposta incompleta não é declaração
  *    de patrimônio zero. Só `bens: []` — a lista vazia explícita — apaga.
  * 3. `tseProcessNumber` só é gravado quando a ficha o traz. Ausência de um
- *    campo numa resposta não apaga o número já conferido.
+ *    campo numa resposta não apaga o número já conferido. Vale igual para
+ *    `tseAssetsDeclared`/`tsePriorElectionsDeclared`: a contagem só é escrita
+ *    quando a ficha trouxe a lista — `null` fica de fora do update.
  * 4. Nada é parafraseado: `descricao` do bem e `situacaoTotalizacao` da
  *    eleição anterior vão literais para o banco.
  * 5. O que não mudou não é reescrito. Além de barato, é o que mantém o
@@ -221,7 +241,13 @@ export async function applyDivulgaDetails(
   const [storedCandidates, storedAssets, storedHistory] = await Promise.all([
     prisma.candidate.findMany({
       where: { id: { in: ids } },
-      select: { id: true, tseApto: true, tseProcessNumber: true },
+      select: {
+        id: true,
+        tseApto: true,
+        tseProcessNumber: true,
+        tseAssetsDeclared: true,
+        tsePriorElectionsDeclared: true,
+      },
     }),
     prisma.spendingRecord.findMany({
       // `source` no filtro, aqui e no `deleteMany` lá embaixo, e nos dois pelo
@@ -256,7 +282,7 @@ export async function applyDivulgaDetails(
 
   const candidateUpdates: Array<{
     id: string;
-    data: { tseApto: boolean | null; tseProcessNumber?: string };
+    data: CandidateDetailUpdate;
   }> = [];
   const assetRewriteIds: string[] = [];
   const assetRows: AssetRow[] = [];
@@ -280,10 +306,20 @@ export async function applyDivulgaDetails(
     else if (apto === false) result.apto.unapt++;
     else result.apto.undecided++;
 
-    const data: { tseApto: boolean | null; tseProcessNumber?: string } = { tseApto: apto };
+    const data: CandidateDetailUpdate = { tseApto: apto };
     if (detail.numeroProcesso) {
       data.tseProcessNumber = detail.numeroProcesso;
       result.processNumbers++;
+    }
+
+    // As duas contagens seguem a MESMA regra do número do processo (recusa 3):
+    // só entram no update quando a ficha as trouxe. `bensDeclarados === null`
+    // é "a ficha respondeu sem a chave `bens`" — gravar isso apagaria uma
+    // contagem já conferida e devolveria a página ao estado em que ela não
+    // sabe se pode afirmar "o TSE não lista bem algum".
+    if (detail.bensDeclarados !== null) data.tseAssetsDeclared = detail.bensDeclarados;
+    if (detail.eleicoesAnterioresDeclaradas !== null) {
+      data.tsePriorElectionsDeclared = detail.eleicoesAnterioresDeclaradas;
     }
 
     const stored = storedCandidateById.get(target.id);
@@ -291,7 +327,19 @@ export async function applyDivulgaDetails(
     const processDiffers =
       data.tseProcessNumber !== undefined &&
       (!stored || stored.tseProcessNumber !== data.tseProcessNumber);
-    if (aptoDiffers || processDiffers) candidateUpdates.push({ id: target.id, data });
+    // Sem estas duas, uma execução em que SÓ a contagem mudou — a pessoa
+    // retificou a declaração, o total de bens caiu a zero, a aptidão continua
+    // a mesma — não gravaria nada, e a página seguiria exibindo a contagem
+    // velha como se fosse a da ficha atual.
+    const assetsCountDiffers =
+      data.tseAssetsDeclared !== undefined &&
+      (!stored || stored.tseAssetsDeclared !== data.tseAssetsDeclared);
+    const priorCountDiffers =
+      data.tsePriorElectionsDeclared !== undefined &&
+      (!stored || stored.tsePriorElectionsDeclared !== data.tsePriorElectionsDeclared);
+    if (aptoDiffers || processDiffers || assetsCountDiffers || priorCountDiffers) {
+      candidateUpdates.push({ id: target.id, data });
+    }
 
     // ---- bens ----
     //
@@ -410,14 +458,14 @@ export async function applyDivulgaDetails(
 
   if (dryRun) return result;
 
-  // A ORDEM IMPORTA. Bens e histórico primeiro, `tseProcessNumber` por último.
-  // A interface usa o número do processo como evidência de que a ficha já foi
-  // lida (`fichaLida` em `/candidato/:id`) para decidir entre "não declarou
-  // bens" e "ainda não sincronizado". Escrevendo-o depois, uma interrupção no
-  // meio da etapa deixa o número ausente — e a página diz "ainda não
-  // sincronizado", que é a leitura verdadeira. Na ordem inversa, ela afirmaria
-  // "não declarou bens" sobre uma pessoa cujos bens não chegaram a ser
-  // gravados.
+  // A ORDEM IMPORTA. Bens e histórico primeiro, o update de `Candidate` por
+  // último. É nesse update que vão as duas CONTAGENS, e é delas que
+  // `/candidato/:id` tira o direito de afirmar "a ficha do TSE não lista bem
+  // algum". Escrevendo-as depois das linhas, uma interrupção no meio da etapa
+  // deixa a contagem ausente — e a página cai na redação fraca, que é a
+  // leitura verdadeira. Na ordem inversa, ela afirmaria sobre uma pessoa real
+  // que o TSE não lista patrimônio algum enquanto o patrimônio dela apenas
+  // não chegou a ser gravado.
 
   // Apaga e recria na MESMA transação, e só de quem mudou: em nenhum instante
   // a candidatura fica sem os bens que declarou.

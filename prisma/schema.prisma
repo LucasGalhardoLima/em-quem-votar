@@ -128,6 +128,33 @@ model Candidate {
   /// permite ao leitor abrir a decisão da Justiça Eleitoral e conferir a
   /// situação na fonte, em vez de acreditar no nosso badge.
   tseProcessNumber   String?
+  /// Quantos bens a FICHA do TSE declara, em TRÊS estados:
+  ///   `N > 0` — a ficha lista N bens
+  ///   `0`     — a ficha respondeu com a lista VAZIA: não declara bem algum
+  ///   `null`  — NÃO SABEMOS: ou a ficha nunca foi lida para esta
+  ///             candidatura, ou respondeu sem a chave `bens`
+  ///
+  /// SEM `@default`, e isso não é descuido: `0` aqui é uma AFIRMAÇÃO sobre
+  /// uma pessoa real — "o TSE não lista bem algum" —, então carimbar zero na
+  /// criação faria o banco alegar isso sobre as 211 candidaturas antes de
+  /// qualquer leitura. Ausência tem de continuar parecendo ausência.
+  ///
+  /// A contagem sai do payload CRU, dentro de `parseDivulgaDetail`, e NUNCA
+  /// de `detail.bens.length`: o parser descarta item sem descrição ou sem
+  /// valor, e a escrita descarta bem sem data (`assetsSkippedNoDate`).
+  /// Contar depois de qualquer um dos dois filtros diria "a lista não veio"
+  /// sobre uma ficha que veio com lista — que é exatamente o erro que esta
+  /// coluna existe para impedir.
+  tseAssetsDeclared  Int?
+  /// Quantas candidaturas ANTERIORES a ficha do TSE declara, nos mesmos três
+  /// estados de `tseAssetsDeclared` e sem `@default` pela mesma razão.
+  ///
+  /// É a contagem crua MENOS as linhas cujo id é o da própria candidatura:
+  /// o DivulgaCandContas devolve a candidatura de 2026 dentro de
+  /// `eleicoesAnteriores` (verificado nas 13 presidenciais em 27/08/2026).
+  /// Contar cru faria a página dizer "a ficha lista 1 candidatura anterior
+  /// que não pudemos exibir" sobre quem não tem antecedente nenhum.
+  tsePriorElectionsDeclared Int?
   /// Cargo em disputa: "presidential" | "governor".
   /// Só esses dois: são os únicos cargos desta eleição para os quais a Lei
   /// 9.504/97 (art. 11, §1º, IX) obriga o registro de proposta de governo —

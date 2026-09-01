@@ -275,8 +275,28 @@ export interface DivulgaDetail {
    * grava zero bens, `null` não toca em nada. Ver `parseDivulgaDetail`.
    */
   bens: DivulgaAsset[] | null;
+  /**
+   * Quantos bens a ficha declara, contados no payload CRU: `null` quando a
+   * chave `bens` não veio, `0` quando veio vazia, `N` quando veio com N itens.
+   *
+   * NÃO é `bens.length`. `parseAssets` descarta item sem descrição ou sem
+   * valor, e quem escreve descarta bem sem data — então uma ficha que veio
+   * COM lista pode render zero itens em `bens`, e derivar a contagem de lá
+   * diria "a lista não veio" sobre ela. Esta contagem é o único número que
+   * distingue "a ficha não trouxe a lista" de "a ficha trouxe e está vazia",
+   * e é dela que a página tira o direito de afirmar a segunda coisa.
+   */
+  bensDeclarados: number | null;
   /** Só as ANTERIORES: a candidatura atual é removida — ver o parser. */
   eleicoesAnteriores: DivulgaPriorElection[];
+  /**
+   * Quantas candidaturas anteriores a ficha declara, nos mesmos três estados
+   * de `bensDeclarados` — mas já DESCONTADA a própria candidatura, que o TSE
+   * devolve dentro de `eleicoesAnteriores`. Sem o desconto, a página diria
+   * "a ficha lista 1 candidatura anterior que não pudemos exibir" sobre quem
+   * não tem antecedente nenhum.
+   */
+  eleicoesAnterioresDeclaradas: number | null;
   /** Contagens só para relatório. Vazias nas 13 presidenciais em 27/08/2026. */
   processosCassacao: number;
   processosDesconstituicao: number;
@@ -360,15 +380,37 @@ function parseAssets(raw: unknown): DivulgaAsset[] | null {
  * depois: em 27/08/2026, 38 das 211 fichas declaram `bens: []` de verdade.
  * É a mesma regra que o CLAUDE.md já exige para a situação — falha de API
  * nunca reescreve dado —, agora valendo para o patrimônio.
+ *
+ * `bensDeclarados` e `eleicoesAnterioresDeclaradas` são essa mesma distinção
+ * em forma de NÚMERO, para que ela sobreviva até a página: no banco, "a ficha
+ * não trouxe a lista" e "a ficha trouxe a lista vazia" davam as duas o mesmo
+ * nada. As duas contagens saem do payload cru, antes de qualquer filtro deste
+ * parser — o motivo está em cada campo na interface.
  */
 export function parseDivulgaDetail(tseId: string, raw: unknown): DivulgaDetail {
   const body = (raw ?? {}) as Record<string, unknown>;
 
   const bens = parseAssets(body.bens);
+  // A contagem sai do CRU, e não de `bens.length`, porque `parseAssets` já
+  // filtrou (item sem descrição ou sem valor cai fora). Contar depois do
+  // filtro faria uma ficha que VEIO com lista ser lida como "não veio".
+  const bensDeclarados = Array.isArray(body.bens) ? body.bens.length : null;
 
-  const eleicoesAnteriores: DivulgaPriorElection[] = (
-    Array.isArray(body.eleicoesAnteriores) ? body.eleicoesAnteriores : []
-  )
+  const eleicoesAnterioresCruas = Array.isArray(body.eleicoesAnteriores)
+    ? body.eleicoesAnteriores
+    : null;
+
+  // Mesma contagem crua, com UM desconto: a própria candidatura, que o TSE
+  // devolve aqui dentro (ver a nota do cabeçalho). Sem ele, quem não tem
+  // antecedente nenhum apareceria com "1 candidatura anterior" declarada.
+  const eleicoesAnterioresDeclaradas =
+    eleicoesAnterioresCruas === null
+      ? null
+      : eleicoesAnterioresCruas.filter(
+          item => asString(((item ?? {}) as Record<string, unknown>).id) !== tseId,
+        ).length;
+
+  const eleicoesAnteriores: DivulgaPriorElection[] = (eleicoesAnterioresCruas ?? [])
     .map(item => {
       const eleicao = (item ?? {}) as Record<string, unknown>;
       const tsePriorId = asString(eleicao.id);
@@ -399,7 +441,9 @@ export function parseDivulgaDetail(tseId: string, raw: unknown): DivulgaDetail {
     totalDeBens: asNumber(body.totalDeBens),
     atualizadoEm: asString(body.dataUltimaAtualizacao),
     bens,
+    bensDeclarados,
     eleicoesAnteriores,
+    eleicoesAnterioresDeclaradas,
     processosCassacao: asCount(body.processosCassacao),
     processosDesconstituicao: asCount(body.processosDesconstituicao),
   };

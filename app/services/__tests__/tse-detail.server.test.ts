@@ -32,7 +32,14 @@ import {
 // ============================================================
 
 interface Guardado {
-  candidates?: Array<{ id: string; tseApto: boolean | null; tseProcessNumber: string | null }>;
+  candidates?: Array<{
+    id: string;
+    tseApto: boolean | null;
+    tseProcessNumber: string | null;
+    /** Opcionais: a maioria dos testes não fala das contagens. */
+    tseAssetsDeclared?: number | null;
+    tsePriorElectionsDeclared?: number | null;
+  }>;
   assets?: Array<{
     candidateId: string;
     amount: number;
@@ -125,7 +132,11 @@ function ficha(over: Partial<DivulgaDetail> = {}): DivulgaDetail {
     totalDeBens: null,
     atualizadoEm: null,
     bens: null,
+    // Como `parseDivulgaDetail` devolve para uma ficha sem a chave: não
+    // sabemos quantos bens ela declara. Quem testa contagem passa o número.
+    bensDeclarados: null,
     eleicoesAnteriores: [],
+    eleicoesAnterioresDeclaradas: null,
     processosCassacao: 0,
     processosDesconstituicao: 0,
     ...over,
@@ -408,6 +419,228 @@ describe("recusa 3: `tseProcessNumber` só é gravado quando a ficha o traz", ()
 });
 
 // ============================================================
+// CONTAGEM DO QUE A FICHA DECLARA — e por que não é um booleano
+// ============================================================
+
+describe("contagem do que a ficha declara", () => {
+  /**
+   * `tseAssetsDeclared` / `tsePriorElectionsDeclared` existem para que a
+   * distinção AUSENTE ≠ VAZIO chegue à página: no banco, "a ficha não trouxe
+   * a lista" e "a ficha trouxe a lista vazia" davam as duas o mesmo nada, e a
+   * redação tinha de recuar para algo mais fraco do que a evidência sustenta.
+   *
+   * São CONTAGENS, não booleanos, e o teste que trava isso é o dos bens sem
+   * data: um booleano diria "a lista veio" e a página voltaria a afirmar,
+   * sobre uma pessoa real, que o TSE não lista bem algum.
+   */
+
+  it("`bens: []` grava contagem 0 — a afirmação de que o TSE não lista nada", async () => {
+    const { prisma, args } = prismaFalso({
+      candidates: [{ id: "c1", tseApto: null, tseProcessNumber: null }],
+    });
+
+    await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas(["t1", ficha({ bens: [], bensDeclarados: 0 })]),
+    );
+
+    expect(args("candidate.update")[0].data.tseAssetsDeclared).toBe(0);
+  });
+
+  it("`bens` ausente deixa a chave FORA do update — ausência não sobrescreve", async () => {
+    // Mesma regra do `tseProcessNumber` (recusa 3): gravar `null` aqui
+    // apagaria uma contagem já conferida e devolveria a página ao estado em
+    // que ela não pode afirmar nada sobre o conteúdo da ficha.
+    const { prisma, args } = prismaFalso({
+      candidates: [
+        { id: "c1", tseApto: null, tseProcessNumber: null, tseAssetsDeclared: 4 },
+      ],
+    });
+
+    await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      // `candidatoApto: true` só para forçar um update em que a chave da
+      // contagem PODERIA aparecer — e não aparece.
+      fichas(["t1", ficha({ candidatoApto: true, bens: null, bensDeclarados: null })]),
+    );
+
+    const data = args("candidate.update")[0].data;
+    expect(Object.keys(data)).toEqual(["tseApto"]);
+    expect(Object.keys(data)).not.toContain("tseAssetsDeclared");
+  });
+
+  it("ficha com 2 bens SEM DATA grava contagem 2 e zero linha — o motivo de não ser booleano", async () => {
+    // ESTE é o caso que quebra o booleano. A ficha lista dois bens, os dois
+    // sem data em nenhum dos dois níveis, então nenhuma linha de patrimônio é
+    // gravada. Um sinal booleano ("a lista veio") faria a página cair na
+    // redação forte e afirmar "o TSE não lista bem algum" sobre alguém cuja
+    // ficha lista dois. Com a contagem, a página tem um terceiro caso: a
+    // ficha lista 2, e nenhum pôde ser exibido.
+    const { prisma, args, espiao } = prismaFalso({
+      candidates: [{ id: "c1", tseApto: null, tseProcessNumber: null }],
+    });
+
+    const resultado = await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas([
+        "t1",
+        ficha({
+          atualizadoEm: null,
+          bens: [
+            bem({ descricao: "CASA SEM DATA", atualizadoEm: null }),
+            bem({ descricao: "CARRO SEM DATA", atualizadoEm: null }),
+          ],
+          bensDeclarados: 2,
+        }),
+      ]),
+    );
+
+    expect(espiao.spendingRecord.createMany).not.toHaveBeenCalled();
+    expect(resultado.assetsWritten).toBe(0);
+    expect(resultado.assetsSkippedNoDate).toHaveLength(2);
+    expect(args("candidate.update")[0].data.tseAssetsDeclared).toBe(2);
+  });
+
+  it("execução em que SÓ a contagem mudou ainda produz update", async () => {
+    // Sem `assetsCountDiffers`/`priorCountDiffers` na guarda, uma retificação
+    // que só muda o número — mesma aptidão, mesmo processo, e nenhum bem
+    // gravável — não escreveria nada, e a página seguiria exibindo a contagem
+    // velha como se fosse a da ficha de hoje.
+    const { prisma, args } = prismaFalso({
+      candidates: [
+        {
+          id: "c1",
+          tseApto: true,
+          tseProcessNumber: "0600123-45",
+          tseAssetsDeclared: 3,
+          tsePriorElectionsDeclared: 1,
+        },
+      ],
+    });
+
+    const resultado = await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas([
+        "t1",
+        ficha({
+          candidatoApto: true,
+          numeroProcesso: "0600123-45",
+          bens: [],
+          bensDeclarados: 0,
+          eleicoesAnteriores: [],
+          eleicoesAnterioresDeclaradas: 1,
+        }),
+      ]),
+    );
+
+    expect(resultado.candidatesUpdated).toBe(1);
+    expect(args("candidate.update")[0].data).toEqual({
+      tseApto: true,
+      tseProcessNumber: "0600123-45",
+      tseAssetsDeclared: 0,
+      tsePriorElectionsDeclared: 1,
+    });
+  });
+
+  it("contagem idêntica não gera update — o que não mudou não é reescrito", async () => {
+    const { prisma, espiao } = prismaFalso({
+      candidates: [
+        {
+          id: "c1",
+          tseApto: true,
+          tseProcessNumber: "0600123-45",
+          tseAssetsDeclared: 0,
+          tsePriorElectionsDeclared: 2,
+        },
+      ],
+    });
+
+    const resultado = await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas([
+        "t1",
+        ficha({
+          candidatoApto: true,
+          numeroProcesso: "0600123-45",
+          bens: [],
+          bensDeclarados: 0,
+          eleicoesAnterioresDeclaradas: 2,
+        }),
+      ]),
+    );
+
+    expect(espiao.candidate.update).not.toHaveBeenCalled();
+    expect(resultado.candidatesUpdated).toBe(0);
+  });
+
+  it("`eleicoesAnteriores` só com a própria candidatura grava 0", async () => {
+    // O desconto é do parser (`parseDivulgaDetail` remove a linha cujo id é o
+    // da própria candidatura, e a contagem sai já sem ela). O que este teste
+    // trava é o lado da ESCRITA: `0` chega ao banco como afirmação — "o TSE
+    // não registra candidatura anterior" —, não como ausência.
+    const { prisma, args } = prismaFalso({
+      candidates: [{ id: "c1", tseApto: null, tseProcessNumber: null }],
+    });
+
+    await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas([
+        "t1",
+        ficha({ eleicoesAnteriores: [], eleicoesAnterioresDeclaradas: 0 }),
+      ]),
+    );
+
+    expect(args("candidate.update")[0].data.tsePriorElectionsDeclared).toBe(0);
+  });
+
+  it("histórico ausente deixa a chave FORA do update", async () => {
+    const { prisma, args } = prismaFalso({
+      candidates: [
+        {
+          id: "c1",
+          tseApto: null,
+          tseProcessNumber: null,
+          tsePriorElectionsDeclared: 7,
+        },
+      ],
+    });
+
+    await applyDivulgaDetails(
+      prisma,
+      [alvo()],
+      fichas([
+        "t1",
+        ficha({ candidatoApto: true, eleicoesAnterioresDeclaradas: null }),
+      ]),
+    );
+
+    expect(Object.keys(args("candidate.update")[0].data)).toEqual(["tseApto"]);
+  });
+
+  it("as duas contagens são lidas do banco para poder comparar", async () => {
+    // Sem as colunas no `select`, `stored.tseAssetsDeclared` seria sempre
+    // `undefined` e TODA execução veria diferença: 211 updates por run, e o
+    // relatório mentindo sobre o que mudou.
+    const { prisma, args } = prismaFalso({
+      candidates: [{ id: "c1", tseApto: null, tseProcessNumber: null }],
+    });
+
+    await applyDivulgaDetails(prisma, [alvo()], fichas(["t1", ficha()]));
+
+    expect(args("candidate.findMany")[0].select).toMatchObject({
+      tseAssetsDeclared: true,
+      tsePriorElectionsDeclared: true,
+    });
+  });
+});
+
+// ============================================================
 // ORDEM DE ESCRITA
 // ============================================================
 
@@ -433,12 +666,12 @@ describe("ordem de escrita", () => {
   });
 
   it("bens e histórico são gravados ANTES de `candidate.update`", async () => {
-    // A interface usa `tseProcessNumber` como evidência de que a ficha foi
-    // lida, para decidir entre "não declarou bens" e "ainda não sincronizado".
-    // Escrevendo-o por último, uma interrupção no meio da etapa deixa a página
-    // dizendo "ainda não sincronizado" — a leitura verdadeira. Na ordem
-    // inversa ela afirmaria "não declarou bens" sobre alguém cujos bens não
-    // chegaram a ser gravados.
+    // É no `candidate.update` que vão as CONTAGENS, e é delas que a página
+    // tira o direito de afirmar "a ficha do TSE não lista bem algum".
+    // Escrevendo-as por último, uma interrupção no meio da etapa deixa a
+    // contagem ausente e a página cai na redação fraca — a leitura verdadeira.
+    // Na ordem inversa ela afirmaria que o TSE não lista patrimônio algum
+    // sobre alguém cujos bens não chegaram a ser gravados.
     const { prisma, ops } = prismaFalso({
       candidates: [{ id: "c1", tseApto: null, tseProcessNumber: null }],
     });

@@ -303,6 +303,17 @@ export const CandidateService = {
       // Nº do processo de registro (RCand): é o que permite ao leitor abrir a
       // decisão da Justiça Eleitoral e conferir a situação na fonte.
       tseProcessNumber: candidate.tseProcessNumber,
+      /*
+        Quantos bens e quantas candidaturas anteriores a FICHA do TSE declara,
+        em três estados cada (`null` = não sabemos, `0` = a ficha declara zero,
+        `N` = a ficha declara N). São o que permite à página distinguir "a
+        ficha não trouxe a lista" de "a ficha trouxe a lista vazia" — sem eles
+        as duas chegam aqui como a mesma coisa, nenhuma linha, e a página não
+        pode afirmar nem uma nem outra. Ver o comentário das colunas no
+        schema.
+      */
+      tseAssetsDeclared: candidate.tseAssetsDeclared,
+      tsePriorElectionsDeclared: candidate.tsePriorElectionsDeclared,
       lastSyncedAt: candidate.lastSyncedAt?.toISOString() ?? null,
       /** Candidaturas anteriores, redação do TSE. Nunca parafraseada. */
       electionHistory: candidate.electionHistory.map((e) => ({
