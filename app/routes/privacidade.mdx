@@ -12,30 +12,30 @@ export const meta = () =>
   pageMeta({ title: frontmatter.title, description: frontmatter.description });
 
 import { Eye, EyeOff } from "lucide-react";
-import { Container } from "../components/layout";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Documento legal
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           Política de Privacidade
         </h1>
-        <p className="text-[14px] text-slate-500">
+        <p className="text-sm text-slate-500">
           Última atualização: {new Date().toLocaleDateString('pt-BR')}
         </p>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
           Transparência é nosso pilar fundamental. Aqui explicamos quais dados coletamos e como (não) os usamos.
         </p>
       </header>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">1.</span> Coleta de Dados Pessoais
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             <strong className="font-semibold text-slate-800">Nós não coletamos dados pessoais identificáveis.</strong>
           </p>
@@ -56,10 +56,10 @@ import { Container } from "../components/layout";
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">2.</span> Dados de Navegação (Analytics)
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Utilizamos ferramentas de análise anônima (Vercel Analytics) apenas para entender como a plataforma é usada e melhorar a experiência.
           </p>
@@ -68,48 +68,48 @@ import { Container } from "../components/layout";
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2.5">
               <Eye className="size-4 flex-none text-indigo-600" aria-hidden="true" />
-              <h3 className="text-[14px] font-bold text-slate-800">O que vemos</h3>
+              <h3 className="text-sm font-bold text-slate-800">O que vemos</h3>
             </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
               "100 pessoas acessaram a página do deputado X hoje."
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex items-center gap-2.5">
               <EyeOff className="size-4 flex-none text-slate-500" aria-hidden="true" />
-              <h3 className="text-[14px] font-bold text-slate-800">O que NÃO vemos</h3>
+              <h3 className="text-sm font-bold text-slate-800">O que NÃO vemos</h3>
             </div>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
               "O João da Silva acessou a página do deputado X."
             </p>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">3.</span> Cookies e Armazenamento Local
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Usamos o <em>Local Storage</em> do seu navegador para duas coisas: lembrar quais candidaturas você colocou na comparação e guardar <strong className="font-semibold text-slate-800">as suas respostas do quiz</strong>. As respostas do quiz ficam exclusivamente no seu aparelho — o cálculo de compatibilidade roda no próprio navegador, e elas nunca são enviadas ao nosso servidor. Não existe, do nosso lado, um banco de respostas para vazar, ser intimado ou ser vendido.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">4.</span> Dados Públicos
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Os dados exibidos sobre candidaturas e parlamentares são de origem pública e oficial (TSE, Câmara dos Deputados e Senado Federal). A plataforma atua apenas como organizadora dessas informações, conforme a Lei de Acesso à Informação (Lei nº 12.527/2011).
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">5.</span> Contato
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Se tiver dúvidas sobre esta política, entre em contato pelo e-mail:{" "}
             <a href="mailto:contato@emquemvotar.app" className="font-medium text-indigo-600 underline underline-offset-2">contato@emquemvotar.app</a>.

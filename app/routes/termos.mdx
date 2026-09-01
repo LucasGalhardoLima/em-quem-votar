@@ -12,45 +12,45 @@ export const meta = () =>
   pageMeta({ title: frontmatter.title, description: frontmatter.description });
 
 import { AlertCircle } from "lucide-react";
-import { Container } from "../components/layout";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Documento legal
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           Termos de Uso
         </h1>
-        <p className="text-[14px] text-slate-500">
+        <p className="text-sm text-slate-500">
           Última atualização: {new Date().toLocaleDateString('pt-BR')}
         </p>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
           Ao usar o <strong className="font-semibold text-slate-800">Em Quem Votar?</strong>, você concorda com as seguintes condições.
         </p>
       </header>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">1.</span> Objetivo da Plataforma
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             O <strong className="font-semibold text-slate-800">Em Quem Votar?</strong> é uma ferramenta de consulta e visualização de dados públicos. Nosso objetivo é facilitar o acesso a informações sobre o legislativo brasileiro. Não representamos nenhuma entidade governamental.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">2.</span> Uso dos Dados
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             As informações apresentadas (posições, votações, gastos e bens declarados) são extraídas de fontes oficiais. Embora nos esforcemos para garantir a precisão, <strong className="font-semibold text-slate-800">não garantimos que os dados estejam livres de erros pontuais</strong> provenientes da fonte ou do processamento.
           </p>
         </div>
-        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <div className="mt-3 flex items-start gap-3 rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
           <AlertCircle className="mt-0.5 size-4 flex-none text-indigo-600" aria-hidden="true" />
           <span>
             Recomendamos sempre conferir informações críticas diretamente nos portais oficiais do TSE, da Câmara dos Deputados e do Senado Federal.
@@ -58,30 +58,30 @@ import { Container } from "../components/layout";
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">3.</span> Isenção de Responsabilidade
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             A equipe do projeto não se responsabiliza por decisões tomadas com base nas informações aqui apresentadas. As classificações (tags) são geradas por algoritmos baseados em padrões de votação e não refletem opinião pessoal dos desenvolvedores.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">4.</span> Propriedade Intelectual
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             O código-fonte desta plataforma é aberto (Open Source) e está disponível no GitHub. Você é livre para auditar, copiar e contribuir, respeitando a licença MIT especificada no repositório. Os dados dos parlamentares são públicos.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">5.</span> Alterações nos Termos
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Podemos atualizar estes termos a qualquer momento para refletir mudanças na legislação ou na plataforma. O uso contínuo do site implica na aceitação dos novos termos.
           </p>
