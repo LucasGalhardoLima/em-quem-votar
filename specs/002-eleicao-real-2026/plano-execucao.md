@@ -88,13 +88,33 @@ O gargalo real do produto: **1 candidatura de 211** tem posição publicada. O q
 (`scripts/import-positions.ts`, que exige documento, página e trecho literal) e
 os 206 PDFs já estão no Blob — o que falta é a leitura.
 
-- [ ] **2.1** Definir a fila de prioridade (presidenciais primeiro, por intenção
-      de voto) e o teto de candidaturas por rodada.
+      **Medido em 01/09, e muda a premissa do bloco:** a extração das 13
+      presidenciais **já está feita** — 122 posições gravadas, todas com
+      página e citação literal, criadas em 27/08. O que trava o `/resultado`
+      não é leitura: são **114 posições pendentes de aprovação**. Só as 8 do
+      LULA estão publicadas. O gargalo é o 2.4, não o 2.2.
+
+- [x] **2.1** Fila de prioridade. Resolvida pelo estado real: a rodada 1 é
+      **revisar as 114 pendentes das 13 presidenciais**, que já existem, antes
+      de extrair qualquer governador. Aprovar o que está pronto leva o quiz de
+      1 para 13 candidaturas comparáveis; extrair governador não muda o
+      `/resultado` enquanto essas 114 seguirem invisíveis.
 - [ ] **2.2** Extrair posições dos planos de governo para JSON no formato do
       script — um arquivo por candidatura, com página e citação literal.
       É a etapa paralelizável (candidata natural a workflow multi-agente).
 - [ ] **2.3** `import-positions.ts --dry-run` e depois import real. Tudo entra
-      **pendente**; nada publica.
+      **pendente**; nada publica. (Não é necessário para as presidenciais: já
+      estão no banco.)
+
+- [x] **2.3b** Auditoria das citações contra o PDF — `scripts/audit-positions.ts`.
+      Exigir citação literal não é conferir citação literal: nada impedia que
+      o trecho gravado não estivesse na página, ou no documento. O script baixa
+      o plano, extrai o texto da página citada e procura o trecho.
+      **Resultado das 114 pendentes: 109 conferem na página citada, 5 parciais
+      (75%–91%, diferença de transcrição), 0 ausentes.** Nenhuma citação
+      inventada. Três falsos alarmes foram corrigidos no próprio script e estão
+      documentados nele: `-layout` embaralhando PDF de duas colunas, o número
+      do fólio despejado no meio da frase, e o `[sic]` do transcritor.
 - [ ] **2.4** **[PORTÃO HUMANO]** aprovar em `/admin/candidato/:id`. Publicar uma
       afirmação sobre uma pessoa real é ato deliberado de quem edita, por design.
 - [ ] **2.5** Nanicos: fallback partidário com disclosure explícito, ou assumir a
