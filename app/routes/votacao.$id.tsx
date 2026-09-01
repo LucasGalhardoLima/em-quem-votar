@@ -1,9 +1,13 @@
 import type { Route } from "./+types/votacao.$id";
-import { useLoaderData, Link, Await } from "react-router";
+import {
+  useLoaderData,
+  Link,
+  Await,
+  isRouteErrorResponse,
+} from "react-router";
 import { BillService } from "~/services/bill.server";
-import { db } from "~/utils/db.server";
 import { ExternalLink, Search, User } from "lucide-react";
-import { useState, Suspense } from "react";
+import { useDeferredValue, useMemo, useState, Suspense } from "react";
 import { Container, MAIN_CONTENT_ID } from "~/components/layout";
 import { VoteDetailsSkeleton } from "~/components/SkeletonLoader";
 
@@ -33,7 +37,7 @@ export function meta({ data }: Route.MetaArgs) {
   const description = truncate(
     head.simplifiedDescription ||
       head.description ||
-      `Como cada parlamentar votou nesta votação nominal na ${casa}, com link para a fonte oficial.`
+      `Como cada parlamentar votou nesta votação nominal na ${casa}, com link para a fonte oficial.`,
   );
 
   return [
@@ -62,28 +66,51 @@ export async function loader({ params }: Route.LoaderArgs) {
     `meta()` roda ANTES de qualquer promise deferida resolver — por isso não
     conseguia ler `bill` e as 8 páginas de votação saíam com o mesmo <title>.
     A saída é uma deferição parcial: os campos que o <head> precisa vêm
-    resolvidos numa consulta por chave primária (barata, sem os 3.012 votos),
-    e a lista de votos continua streamando.
-
-    shortcut: os campos do cabeçalho são lidos duas vezes (aqui e dentro de
-    BillService.getById) — upgrade: um BillService.getHead(id) devolveria só
-    isto e o getById passaria a recebê-lo, mas bill.server.ts é de outro dono
-    nesta rodada.
+    resolvidos numa consulta por chave primária (barata, sem os ~450 votos
+    nominais da votação), e a lista de votos continua streamando.
   */
-  const head = await db.bill.findFirst({
-    where: { id: params.id, status: "approved" },
-    select: {
-      title: true,
-      simplifiedTitle: true,
-      description: true,
-      simplifiedDescription: true,
-      sourceType: true,
-    },
-  });
+  const head = await BillService.getHead(params.id);
 
-  if (!head) return { head: null, bill: null };
+  /*
+    404, e não um estado vazio dentro de um 200.
+
+    A tela certa já existia — "Votação não encontrada" —, mas a resposta saía
+    com status 200: para o Google, `/votacao/qualquer-coisa` era uma página
+    válida, e havia infinitas delas. É o mesmo defeito visto do outro lado por
+    quem monitora o site: nenhum 404 aparece no log porque nenhum é emitido.
+    O corpo continua o mesmo, renderizado pelo `ErrorBoundary` abaixo; muda o
+    cabeçalho HTTP, que é o que máquina lê.
+  */
+  if (!head) {
+    throw new Response("Votação não encontrada", { status: 404 });
+  }
 
   return { head, bill: BillService.getById(params.id) };
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return (
+      <VotePanel title="Votação não encontrada">
+        O endereço pode estar incorreto ou a votação ainda não foi publicada.
+      </VotePanel>
+    );
+  }
+
+  if (isRouteErrorResponse(error) && error.status === 400) {
+    return (
+      <VotePanel title="Endereço inválido">
+        Falta o identificador da votação no endereço.
+      </VotePanel>
+    );
+  }
+
+  return (
+    <VotePanel title="Não foi possível abrir esta votação">
+      Algo falhou ao carregar a página. Nada aqui foi estimado — recarregue
+      para tentar de novo.
+    </VotePanel>
+  );
 }
 
 type BillData = NonNullable<Awaited<ReturnType<typeof BillService.getById>>>;
@@ -96,9 +123,7 @@ const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
 });
 
 export default function VotacaoRoute() {
-  const { head, bill } = useLoaderData<typeof loader>();
-
-  if (!head || !bill) return <VoteNotFound />;
+  const { bill } = useLoaderData<typeof loader>();
 
   return (
     <Suspense fallback={<VoteDetailsSkeleton />}>
@@ -107,55 +132,56 @@ export default function VotacaoRoute() {
         ErrorBoundary do root e troca a página inteira — o leitor perde o
         cabeçalho e a trilha de navegação por causa de uma consulta que falhou.
       */}
-      <Await resolve={bill} errorElement={<VoteLoadError />}>
-        {(resolvedBill) => {
-          if (!resolvedBill) return <VoteNotFound />;
-          return <VoteDetailsContent bill={resolvedBill} />;
-        }}
+      <Await
+        resolve={bill}
+        errorElement={
+          <VotePanel title="Não foi possível carregar os votos">
+            A lista de votos desta votação falhou ao carregar. Nada aqui foi
+            estimado — recarregue a página para tentar de novo.
+          </VotePanel>
+        }
+      >
+        {(resolvedBill) =>
+          resolvedBill ? (
+            <VoteDetailsContent bill={resolvedBill} />
+          ) : (
+            // `getHead` já achou a votação com o mesmo recorte de `getById`,
+            // então só uma despublicação entre as duas consultas chega aqui.
+            <VotePanel title="Votação não encontrada">
+              O endereço pode estar incorreto ou a votação ainda não foi
+              publicada.
+            </VotePanel>
+          )
+        }
       </Await>
     </Suspense>
   );
 }
 
-function VoteNotFound() {
+/**
+ * A tela inteira quando não há votação para mostrar — não encontrada, endereço
+ * inválido ou falha ao carregar. Eram três blocos com a mesma marcação e três
+ * cópias do mesmo botão; aqui muda só o texto, que é a única coisa que de fato
+ * mudava entre eles.
+ */
+function VotePanel({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="py-16">
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-          <p className="text-base font-bold text-slate-600">
-            Votação não encontrada
-          </p>
-          <p className="mx-auto mt-2 max-w-md text-[13.5px] text-slate-500">
-            O endereço pode estar incorreto ou a votação ainda não foi
-            publicada.
+          <p className="text-base font-bold text-slate-600">{title}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+            {children}
           </p>
           <Link
             to="/votacoes"
-            className="mt-4 inline-block rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900"
-          >
-            Ver todas as votações
-          </Link>
-        </div>
-      </Container>
-    </main>
-  );
-}
-
-function VoteLoadError() {
-  return (
-    <main id={MAIN_CONTENT_ID} className="flex-1">
-      <Container className="py-16">
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-          <p className="text-base font-bold text-slate-600">
-            Não foi possível carregar os votos
-          </p>
-          <p className="mx-auto mt-2 max-w-md text-[13.5px] leading-relaxed text-slate-500">
-            A lista de votos desta votação falhou ao carregar. Nada aqui foi
-            estimado — recarregue a página para tentar de novo.
-          </p>
-          <Link
-            to="/votacoes"
-            className="mt-4 inline-block rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900"
+            className="focus-ring mt-4 inline-block rounded-xl bg-slate-800 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900"
           >
             Ver todas as votações
           </Link>
@@ -168,61 +194,76 @@ function VoteLoadError() {
 function VoteDetailsContent({ bill }: { bill: BillData }) {
   const [filter, setFilter] = useState("");
 
-  const filterText = filter.trim().toLowerCase();
+  /*
+    POR QUE `useDeferredValue` E NÃO OS 300ms DE `/votacoes`
+
+    O índice espera 300ms porque cada tecla lá vira uma navegação e um
+    `contains` no Postgres — atrasar economiza viagens de rede. Aqui a filtragem
+    é local, sobre os votos nominais já carregados (447 na maior votação
+    publicada), e o custo não é a busca: é reconstruir a árvore das colunas a
+    cada tecla. Um `setTimeout` não resolveria isso — o campo é controlado, e
+    `setFilter` re-renderiza o componente inteiro na mesma tecla, atraso ou não.
+
+    O que corta o trabalho é o par abaixo: o valor deferido só muda numa
+    passada de baixa prioridade (o campo responde na hora, a lista alcança
+    depois e a renderização é interrompível) e o `useMemo` amarra as listas a
+    ele, então a re-renderização urgente do campo não refaz varredura nenhuma.
+  */
+  const deferredFilter = useDeferredValue(filter);
+  const filterText = deferredFilter.trim().toLowerCase();
   const isFiltering = filterText.length > 0;
   const title = bill.simplifiedTitle || bill.title;
   const sourceLabel = bill.sourceType === "senado" ? "Senado" : "Câmara";
 
-  // Candidate votes (new system)
-  const candidateSim = bill.candidateVotes.filter(
-    (v) =>
-      v.voteType === "SIM" &&
-      (!filterText ||
+  const { candidateSim, candidateNao, candidateOther, legacySim, legacyNao } =
+    useMemo(() => {
+      const matchesCandidate = (v: {
+        candidateName: string;
+        candidateParty: string;
+      }) =>
+        !filterText ||
         v.candidateName.toLowerCase().includes(filterText) ||
-        v.candidateParty.toLowerCase().includes(filterText))
-  );
-  const candidateNao = bill.candidateVotes.filter(
-    (v) =>
-      v.voteType === "NÃO" &&
-      (!filterText ||
-        v.candidateName.toLowerCase().includes(filterText) ||
-        v.candidateParty.toLowerCase().includes(filterText))
-  );
-  const candidateOther = bill.candidateVotes.filter(
-    (v) =>
-      v.voteType !== "SIM" &&
-      v.voteType !== "NÃO" &&
-      (!filterText ||
-        v.candidateName.toLowerCase().includes(filterText) ||
-        v.candidateParty.toLowerCase().includes(filterText))
-  );
+        v.candidateParty.toLowerCase().includes(filterText);
 
-  // Legacy votes (old politician system)
-  const legacySim = bill.legacyVotes.filter(
-    (v) =>
-      v.voteType === "SIM" &&
-      (!filterText ||
+      const matchesPolitician = (v: {
+        politician: { name: string; party: string };
+      }) =>
+        !filterText ||
         v.politician.name.toLowerCase().includes(filterText) ||
-        v.politician.party.toLowerCase().includes(filterText))
-  );
-  const legacyNao = bill.legacyVotes.filter(
-    (v) =>
-      v.voteType === "NÃO" &&
-      (!filterText ||
-        v.politician.name.toLowerCase().includes(filterText) ||
-        v.politician.party.toLowerCase().includes(filterText))
-  );
+        v.politician.party.toLowerCase().includes(filterText);
+
+      return {
+        // Candidate votes (new system)
+        candidateSim: bill.candidateVotes.filter(
+          (v) => v.voteType === "SIM" && matchesCandidate(v),
+        ),
+        candidateNao: bill.candidateVotes.filter(
+          (v) => v.voteType === "NÃO" && matchesCandidate(v),
+        ),
+        candidateOther: bill.candidateVotes.filter(
+          (v) =>
+            v.voteType !== "SIM" && v.voteType !== "NÃO" && matchesCandidate(v),
+        ),
+        // Legacy votes (old politician system)
+        legacySim: bill.legacyVotes.filter(
+          (v) => v.voteType === "SIM" && matchesPolitician(v),
+        ),
+        legacyNao: bill.legacyVotes.filter(
+          (v) => v.voteType === "NÃO" && matchesPolitician(v),
+        ),
+      };
+    }, [bill.candidateVotes, bill.legacyVotes, filterText]);
 
   return (
     <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-9 pb-3">
         <nav
-          className="flex items-center gap-2 text-[12.5px]"
+          className="flex items-center gap-2 text-xs"
           aria-label="Trilha de navegação"
         >
           <Link
             to="/votacoes"
-            className="flex-none font-semibold text-indigo-600 hover:text-indigo-700"
+            className="focus-ring flex-none rounded-sm font-semibold text-indigo-600 hover:text-indigo-700"
           >
             ← Votações
           </Link>
@@ -232,11 +273,11 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           <span className="truncate text-slate-500">{title}</span>
         </nav>
 
-        <h1 className="mt-3 font-heading text-[28px] font-bold tracking-[-0.02em] text-pretty text-slate-800 sm:text-[34px]">
+        <h1 className="mt-3 font-heading text-3xl font-bold tracking-[-0.02em] text-pretty text-slate-800 sm:text-4xl">
           {title}
         </h1>
 
-        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[12.5px] text-slate-500">
+        <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-500">
           <time dateTime={bill.voteDate}>
             {dateFormatter.format(new Date(bill.voteDate))}
           </time>
@@ -253,7 +294,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
               href={bill.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-700"
+              className="focus-ring inline-flex items-center gap-1 rounded-sm font-semibold text-indigo-600 hover:text-indigo-700"
             >
               Fonte oficial · {sourceLabel}
               <ExternalLink className="size-3" aria-hidden="true" />
@@ -271,10 +312,10 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
         {/* Description */}
         {(bill.simplifiedDescription || bill.description) && (
           <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+            <h2 className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
               Sobre a votação
             </h2>
-            <p className="mt-2 text-[14px] leading-relaxed whitespace-pre-line text-slate-600">
+            <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-slate-600">
               {bill.simplifiedDescription || bill.description}
             </p>
           </section>
@@ -285,20 +326,20 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {bill.voteSimDetails && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h2 className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Votar Sim significa
                 </h2>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   {bill.voteSimDetails}
                 </p>
               </section>
             )}
             {bill.voteNaoDetails && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h2 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h2 className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Votar Não significa
                 </h2>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-slate-600">
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   {bill.voteNaoDetails}
                 </p>
               </section>
@@ -311,26 +352,49 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
           são registros do voto, não acerto ou erro. Colorir Sim de verde e Não
           de vermelho embutiria um juízo de valor que a plataforma não emite.
         */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "Sim", count: bill.summary.sim },
-            { label: "Não", count: bill.summary.nao },
-            { label: "Abstenção", count: bill.summary.abstencao },
-            { label: "Obstrução", count: bill.summary.obstrucao },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-2xl border border-slate-200 bg-white p-4 text-center"
-            >
-              <p className="text-[22px] font-bold text-slate-800 tabular-nums">
-                {item.count}
-              </p>
-              <p className="mt-0.5 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
-                {item.label}
-              </p>
-            </div>
-          ))}
-        </div>
+        <section aria-labelledby="placar">
+          <h2 id="placar" className="sr-only">
+            Placar da votação
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: "Sim", count: bill.summary.sim },
+              { label: "Não", count: bill.summary.nao },
+              { label: "Abstenção", count: bill.summary.abstencao },
+              { label: "Obstrução", count: bill.summary.obstrucao },
+              /*
+                `outros` é todo tipo de voto fora dos quatro acima, com o
+                rótulo literal da fonte. O serviço já o calculava e a página
+                não o exibia: `ARTIGO 17` aparece em 5 das 8 votações
+                publicadas, e esses votos entravam no total e sumiam do
+                placar — a soma dos quatro cartões não fechava com a lista
+                nominal logo abaixo, e nada na tela dizia por quê.
+              */
+              ...bill.summary.outros,
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-slate-200 bg-white p-4 text-center"
+              >
+                <p className="text-2xl font-bold text-slate-800 tabular-nums">
+                  {item.count}
+                </p>
+                <p className="mt-0.5 text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
+                  {item.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          {/* O total existe para o leitor poder conferir a soma — é a mesma
+              razão de `outros` estar acima. */}
+          <p className="mt-2 text-xs text-slate-500 tabular-nums">
+            {bill.summary.total}{" "}
+            {bill.summary.total === 1
+              ? "voto registrado nesta votação"
+              : "votos registrados nesta votação"}
+            .
+          </p>
+        </section>
 
         {/* Filter */}
         <div className="relative">
@@ -344,9 +408,46 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
             aria-label="Filtrar votos por nome ou partido"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
+            // O que se digita aqui é sobrenome de parlamentar e sigla de
+            // partido — exatamente o que o teclado do celular "corrige".
+            // "Boulos" vira "Bolos" e "PSOL" vira "Sol": a lista esvazia e a
+            // pessoa conclui que ninguém com aquele nome votou.
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            // Mesmo conserto do `INPUT` de /admin: o outline cancelado mais um
+            // anel a 10% de alfa é foco invisível, e a borda de foco em
+            // indigo-300 rende 1,99:1 — abaixo dos 3:1 do SC 1.4.11. O anel vem
+            // da utilitária `.focus-ring`.
+            className="focus-ring w-full rounded-xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm text-slate-800 placeholder:text-slate-500"
           />
         </div>
+
+        {/*
+          Ausência declarada, não seção que some.
+
+          `VoteRecord` — a tabela que liga candidatura a voto nominal — está
+          vazia no banco inteiro (0 linhas em 31/08/2026) e nenhum script do
+          repositório escreve nela. O resultado é que este bloco nunca
+          renderizava em página nenhuma: o leitor via os votos dos deputados e
+          não tinha como saber se as candidaturas foram checadas e não votaram,
+          ou se ninguém checou. Silêncio e ausência se parecem na tela, e a
+          diferença entre os dois é justamente o que esta plataforma promete
+          não borrar.
+        */}
+        {bill.candidateVotes.length === 0 && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h2 className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
+              Votos das candidaturas de 2026
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">
+              Nenhum voto de candidatura de 2026 está associado a esta votação
+              no nosso banco. O vínculo entre as candidaturas e as listas
+              nominais ainda não foi feito — a ausência aqui é de dado, e não
+              prova de que nenhuma delas votou.
+            </p>
+          </section>
+        )}
 
         {/* Candidate votes (new system) */}
         {bill.candidateVotes.length > 0 && (
@@ -380,7 +481,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
             </div>
             {candidateOther.length > 0 && (
               <div className="rounded-2xl border border-slate-200 bg-white p-5">
-                <h3 className="text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+                <h3 className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
                   Abstenção / Obstrução
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -389,7 +490,13 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
                       key={v.candidateId}
                       to={`/candidato/${v.candidateId}`}
                       prefetch="intent"
-                      className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-600 transition-colors hover:border-indigo-300"
+                      // Mesmo `min-h-11` das abas de casa legislativa em
+                      // `/votacoes`: eram ~26px, e são links de verdade para a
+                      // ficha da pessoa. Crescer a caixa, e não estender a área
+                      // por pseudo-elemento — aqui as pílulas se enfileiram com
+                      // `gap-2`, e áreas estendidas se sobreporiam entre
+                      // vizinhas, roubando o clique uma da outra.
+                      className="focus-ring inline-flex min-h-11 items-center rounded-full border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 transition-colors hover:border-indigo-300"
                     >
                       {v.candidateName} · {v.voteType}
                     </Link>
@@ -421,7 +528,7 @@ function VoteDetailsContent({ bill }: { bill: BillData }) {
               atribuir o voto de uma pessoa real ao perfil de outra. Preferimos
               não prometer uma página que não existe.
             */}
-            <p className="text-[12.5px] leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-slate-500">
               A plataforma cobre as candidaturas de 2026 e ainda não mantém
               página individual de parlamentar; por isso os nomes abaixo
               aparecem sem link. O voto de cada um está registrado na fonte
@@ -478,10 +585,10 @@ function VoteColumn({
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
       {/* Chip neutro: o rótulo do voto não recebe cor de aprovação/reprovação. */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+        <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
           {title}
         </span>
-        <span className="text-[12px] text-slate-500 tabular-nums">
+        <span className="text-xs text-slate-500 tabular-nums">
           {entries.length}{" "}
           {entries.length === 1 ? "parlamentar" : "parlamentares"}
         </span>
@@ -491,7 +598,7 @@ function VoteColumn({
         // Coluna vazia com o filtro em branco significa votação unânime nesse
         // lado, não "o filtro não achou ninguém". Dizer a segunda coisa manda
         // o leitor procurar um filtro que ele não digitou.
-        <p className="pt-4 text-[13px] text-slate-500">
+        <p className="pt-4 text-sm text-slate-500">
           {isFiltering
             ? "Nenhum voto correspondente ao filtro."
             : `Nenhum parlamentar votou "${title}" nesta votação.`}
@@ -510,14 +617,17 @@ function VoteColumn({
                       className="size-full object-cover"
                     />
                   ) : (
-                    <User className="size-4 text-slate-500" aria-hidden="true" />
+                    <User
+                      className="size-4 text-slate-500"
+                      aria-hidden="true"
+                    />
                   )}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-[13.5px] font-semibold text-slate-800">
+                  <span className="block truncate text-sm font-semibold text-slate-800">
                     {entry.name}
                   </span>
-                  <span className="block truncate text-[12px] text-slate-500">
+                  <span className="block truncate text-xs text-slate-500">
                     {entry.subtitle}
                   </span>
                 </span>
@@ -530,7 +640,7 @@ function VoteColumn({
                   <Link
                     to={entry.linkTo}
                     prefetch="intent"
-                    className="flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-slate-50"
+                    className="focus-ring flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-slate-50"
                   >
                     {inner}
                   </Link>

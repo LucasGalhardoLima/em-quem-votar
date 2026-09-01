@@ -35,6 +35,72 @@ function voteKey(raw: string): string {
     .toUpperCase();
 }
 
+/**
+ * Placar de várias votações de uma vez, para a listagem.
+ *
+ * Lê os DOIS modelos de voto e agrupa pela mesma `voteKey()` que `getById`
+ * usa. Contar só `voteLog` seria suficiente hoje — `voteRecord` está vazio —,
+ * mas um card que conta uma fonte e uma página que conta duas divergiriam no
+ * dia em que a segunda fosse populada, e a divergência apareceria como número
+ * errado sobre uma votação real, não como erro de código.
+ *
+ * `outros` é uma CONTAGEM, não uma lista de rótulos: o card não tem espaço
+ * para exibir cada grafia, mas também não pode descartá-las — foi assim que
+ * `ARTIGO 17` sumia do placar da página de detalhe. Com ela na conta,
+ * `sim + nao + abstencao + obstrucao + outros === total` sempre fecha.
+ *
+ * Duas consultas agregadas para a página inteira, não uma por card.
+ */
+async function tallyByBill(ids: string[]) {
+  const out = new Map<
+    string,
+    {
+      sim: number;
+      nao: number;
+      abstencao: number;
+      obstrucao: number;
+      outros: number;
+      total: number;
+    }
+  >();
+  if (ids.length === 0) return out;
+
+  const [logs, records] = await Promise.all([
+    db.voteLog.groupBy({
+      by: ["billId", "voteType"],
+      where: { billId: { in: ids } },
+      _count: { _all: true },
+    }),
+    db.voteRecord.groupBy({
+      by: ["billId", "voteType"],
+      where: { billId: { in: ids } },
+      _count: { _all: true },
+    }),
+  ]);
+
+  for (const row of [...logs, ...records]) {
+    const entry = out.get(row.billId) ?? {
+      sim: 0,
+      nao: 0,
+      abstencao: 0,
+      obstrucao: 0,
+      outros: 0,
+      total: 0,
+    };
+    const n = row._count._all;
+    const key = voteKey(row.voteType);
+    if (key === "SIM") entry.sim += n;
+    else if (key === "NAO") entry.nao += n;
+    else if (key === "ABSTENCAO") entry.abstencao += n;
+    else if (key === "OBSTRUCAO") entry.obstrucao += n;
+    else entry.outros += n;
+    entry.total += n;
+    out.set(row.billId, entry);
+  }
+
+  return out;
+}
+
 export const BillService = {
   /**
    * Só o que o `<head>` de `/votacao/:id` precisa — título, resumo e casa.
@@ -150,9 +216,13 @@ export const BillService = {
      * para a página mostrar em vez de esconder.
      */
     const outros = Array.from(tally.entries())
-      .filter(([key]) => !["SIM", "NAO", "ABSTENCAO", "OBSTRUCAO"].includes(key))
+      .filter(
+        ([key]) => !["SIM", "NAO", "ABSTENCAO", "OBSTRUCAO"].includes(key),
+      )
       .map(([, entry]) => entry)
-      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "pt-BR"));
+      .sort(
+        (a, b) => b.count - a.count || a.label.localeCompare(b.label, "pt-BR"),
+      );
 
     return {
       id: bill.id,
@@ -181,11 +251,27 @@ export const BillService = {
     };
   },
 
-  async listApproved({
-    query,
-    source,
-    limit = 50,
-  }: ListApprovedParams = {}) {
+  /**
+   * A página de votações, com o total real ao lado da fatia devolvida.
+   *
+   * POR QUE O `total` VIAJA JUNTO
+   *
+   * O `take` sempre existiu, mas a rota recebia só o array: com mais de
+   * `limit` votações aprovadas, as mais antigas sumiam da tela sem que nada
+   * dissesse que existiam. Uma lista que parece completa e não é afirma algo
+   * falso sobre o acervo — o mesmo defeito que a regra "dado ausente é
+   * renderizado como ausente" proíbe em cima de uma candidatura.
+   *
+   * O `count` usa o MESMO `where` da busca, então o número acompanha o filtro:
+   * com um termo digitado ele é o total daquele termo, não o do banco inteiro.
+   *
+   * shortcut: a fatia é sempre a primeira — quem quiser as antigas depende da
+   * busca e do filtro de casa. Hoje isso não corta nada (8 votações aprovadas
+   * de 58 no banco em 28/08/2026), mas as 48 pendentes cabem dentro de um
+   * `approve` — upgrade: paginar por `?page=`, quando `total` passar de
+   * `limit`.
+   */
+  async listApproved({ query, source, limit = 50 }: ListApprovedParams = {}) {
     const where: Prisma.BillWhereInput = {
       status: "approved",
     };
@@ -202,25 +288,36 @@ export const BillService = {
       where.sourceType = source;
     }
 
-    const bills = await db.bill.findMany({
-      where,
-      select: {
-        id: true,
-        title: true,
-        simplifiedTitle: true,
-        voteDate: true,
-        status: true,
-        sourceType: true,
-        sourceUrl: true,
-      },
-      orderBy: { voteDate: "desc" },
-      take: limit,
-    });
+    const [bills, total] = await Promise.all([
+      db.bill.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          simplifiedTitle: true,
+          voteDate: true,
+          status: true,
+          sourceType: true,
+          sourceUrl: true,
+        },
+        orderBy: { voteDate: "desc" },
+        take: limit,
+      }),
+      db.bill.count({ where }),
+    ]);
 
-    return bills.map((b) => ({
-      ...b,
-      voteDate: b.voteDate.toISOString(),
-    }));
+    const tallies = await tallyByBill(bills.map((b) => b.id));
+
+    return {
+      bills: bills.map((b) => ({
+        ...b,
+        voteDate: b.voteDate.toISOString(),
+        /** Placar da votação. `null` = nenhum voto registrado para ela. */
+        summary: tallies.get(b.id) ?? null,
+      })),
+      /** Quantas votações atendem ao filtro — não quantas foram devolvidas. */
+      total,
+    };
   },
 
   async listFeatured(ids: string[]) {
