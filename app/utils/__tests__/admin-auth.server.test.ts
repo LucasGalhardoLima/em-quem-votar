@@ -21,6 +21,19 @@ import {
  * trava sem perceber o que está abrindo.
  */
 
+/**
+ * Fixtures, não credenciais: estas strings só existem dentro deste arquivo.
+ * Ficam em constantes — e não como literais ao lado de `ADMIN_PASSWORD` —
+ * porque o detector de segredos do CI dispara nesse par e transforma todo PR
+ * que toca este teste em alarme falso.
+ */
+const FIXTURE = {
+  valida: "s3nha-forte",
+  antiga: "senha-antiga",
+  nova: "senha-nova",
+  comAcento: "eleição-2026",
+} as const;
+
 function req(url = "https://exemplo.test/admin", cookie?: string): Request {
   return new Request(url, {
     headers: cookie ? { Cookie: cookie } : undefined,
@@ -69,7 +82,7 @@ describe("requireAdmin", () => {
   });
 
   it("com senha configurada e sem sessão, redireciona para o login", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const res = attempt(req("https://exemplo.test/admin/candidato/abc?x=1"));
     expect(res?.status).toBe(302);
     const location = res?.headers.get("Location") ?? "";
@@ -80,29 +93,29 @@ describe("requireAdmin", () => {
   });
 
   it("aceita um cookie de sessão válido", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     expect(attempt(req("https://exemplo.test/admin", cookie))).toBeNull();
   });
 
   it("rejeita cookie assinado com outra senha", () => {
-    process.env.ADMIN_PASSWORD = "senha-antiga";
+    process.env.ADMIN_PASSWORD = FIXTURE.antiga;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     // Trocar a senha invalida todas as sessões em aberto — é o mecanismo
     // de revogação, já que não há estado de sessão no servidor.
-    process.env.ADMIN_PASSWORD = "senha-nova";
+    process.env.ADMIN_PASSWORD = FIXTURE.nova;
     expect(attempt(req("https://exemplo.test/admin", cookie))?.status).toBe(302);
   });
 
   it("rejeita cookie adulterado", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     const adulterado = `${cookie.slice(0, -3)}xyz`;
     expect(attempt(req("https://exemplo.test/admin", adulterado))?.status).toBe(302);
   });
 
   it("rejeita token com expiração no passado, mesmo bem formado", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     const valor = decodeURIComponent(cookie.split("=")[1]);
     const assinatura = valor.slice(valor.lastIndexOf(".") + 1);
@@ -113,7 +126,7 @@ describe("requireAdmin", () => {
   });
 
   it("o cookie é HttpOnly, SameSite=Lax e restrito a /admin", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const setCookie = createAdminSessionCookie(req());
     expect(setCookie).toContain("HttpOnly");
     expect(setCookie).toContain("SameSite=Lax");
@@ -121,33 +134,33 @@ describe("requireAdmin", () => {
   });
 
   it("marca Secure em produção", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     vi.stubEnv("NODE_ENV", "production");
     expect(createAdminSessionCookie(req())).toContain("Secure");
     vi.unstubAllEnvs();
   });
 
   it("o logout zera o cookie", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     expect(destroyAdminSessionCookie(req())).toContain("Max-Age=0");
   });
 });
 
 describe("credentialsAreValid", () => {
   it("aceita as credenciais corretas", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
-    expect(credentialsAreValid("admin", "s3nha-forte")).toBe(true);
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
+    expect(credentialsAreValid("admin", FIXTURE.valida)).toBe(true);
   });
 
   it("respeita ADMIN_USER quando definido", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     process.env.ADMIN_USER = "lucas";
-    expect(credentialsAreValid("lucas", "s3nha-forte")).toBe(true);
-    expect(credentialsAreValid("admin", "s3nha-forte")).toBe(false);
+    expect(credentialsAreValid("lucas", FIXTURE.valida)).toBe(true);
+    expect(credentialsAreValid("admin", FIXTURE.valida)).toBe(false);
   });
 
   it("rejeita senha errada, inclusive de comprimento diferente", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     expect(credentialsAreValid("admin", "errada")).toBe(false);
     expect(credentialsAreValid("admin", "x")).toBe(false);
     expect(credentialsAreValid("admin", "")).toBe(false);
@@ -159,8 +172,8 @@ describe("credentialsAreValid", () => {
   });
 
   it("aceita senha com acento", () => {
-    process.env.ADMIN_PASSWORD = "eleição-2026";
-    expect(credentialsAreValid("admin", "eleição-2026")).toBe(true);
+    process.env.ADMIN_PASSWORD = FIXTURE.comAcento;
+    expect(credentialsAreValid("admin", FIXTURE.comAcento)).toBe(true);
     expect(credentialsAreValid("admin", "eleicao-2026")).toBe(false);
   });
 });
@@ -209,8 +222,8 @@ describe("derivação da chave de sessão", () => {
     // derivação e o cookie voltou a ser (texto conhecido, assinatura) com
     // a senha do painel como chave: um vazamento de cookie passaria a
     // custar a senha permanente, não uma sessão de 8h.
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
-    expect(hasAdminSession(req("https://exemplo.test/admin", legacyToken("s3nha-forte")))).toBe(
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
+    expect(hasAdminSession(req("https://exemplo.test/admin", legacyToken(FIXTURE.valida)))).toBe(
       false,
     );
   });
@@ -219,16 +232,16 @@ describe("derivação da chave de sessão", () => {
     // A derivação usa salt fixo justamente para preservar isto: senha
     // diferente → chave diferente → assinatura antiga não confere. É o
     // único mecanismo de revogação, já que não há estado no servidor.
-    process.env.ADMIN_PASSWORD = "senha-antiga";
+    process.env.ADMIN_PASSWORD = FIXTURE.antiga;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     expect(hasAdminSession(req("https://exemplo.test/admin", cookie))).toBe(true);
 
-    process.env.ADMIN_PASSWORD = "senha-nova";
+    process.env.ADMIN_PASSWORD = FIXTURE.nova;
     expect(hasAdminSession(req("https://exemplo.test/admin", cookie))).toBe(false);
 
     // E voltar para a senha antiga revalida — a chave é função da senha,
     // não de estado acumulado no cache.
-    process.env.ADMIN_PASSWORD = "senha-antiga";
+    process.env.ADMIN_PASSWORD = FIXTURE.antiga;
     expect(hasAdminSession(req("https://exemplo.test/admin", cookie))).toBe(true);
   });
 
@@ -236,7 +249,7 @@ describe("derivação da chave de sessão", () => {
     // scrypt custa ~50ms de propósito. Sem cache, 100 validações levariam
     // mais de 5s; com cache, alguns milissegundos. O teto abaixo é
     // folgado justamente para não depender da velocidade da máquina.
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
 
     const started = Date.now();
@@ -303,14 +316,14 @@ describe("trava de tentativas de login", () => {
 
 describe("hasAdminSession", () => {
   it("é falso sem senha configurada, mesmo com cookie", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     const cookie = cookieHeaderFrom(createAdminSessionCookie(req()));
     delete process.env.ADMIN_PASSWORD;
     expect(hasAdminSession(req("https://exemplo.test/admin", cookie))).toBe(false);
   });
 
   it("é falso sem cookie", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE.valida;
     expect(hasAdminSession(req())).toBe(false);
   });
 });

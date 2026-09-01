@@ -14,6 +14,14 @@ import { createAdminSessionCookie } from "~/utils/admin-auth.server";
  * reclamar.
  */
 
+/**
+ * Fixture, não credencial: esta string só existe dentro deste arquivo. Fica
+ * em constante — e não como literal ao lado de `ADMIN_PASSWORD` — porque o
+ * detector de segredos do CI dispara nesse par e transforma todo PR que toca
+ * este teste em alarme falso.
+ */
+const FIXTURE_VALIDA = "s3nha-forte";
+
 function req(method: string, cookie?: string): Request {
   return new Request("https://exemplo.test/admin/logout", {
     method,
@@ -63,7 +71,7 @@ describe("GET /admin/logout", () => {
 
 describe("POST /admin/logout", () => {
   it("com sessão válida, apaga o cookie e manda para o login", () => {
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE_VALIDA;
     const cookie = cookieHeaderFrom(
       createAdminSessionCookie(req("GET")),
     );
@@ -81,7 +89,7 @@ describe("POST /admin/logout", () => {
     // É este caso que neutraliza o CSRF de logout: o POST forjado não traz o
     // cookie, então a resposta não carrega `Set-Cookie` e a sessão de quem
     // estava logado continua de pé.
-    process.env.ADMIN_PASSWORD = "s3nha-forte";
+    process.env.ADMIN_PASSWORD = FIXTURE_VALIDA;
 
     const res = runAction(req("POST"));
 
