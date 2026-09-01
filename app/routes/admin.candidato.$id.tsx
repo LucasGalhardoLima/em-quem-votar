@@ -37,7 +37,14 @@ import {
   NO_POSITION_LABEL,
   STANCE_UNKNOWN,
 } from "~/lib/stance";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
+import {
+  BTN_PRIMARY,
+  BTN_QUIET,
+  CARD,
+  INPUT,
+  LABEL,
+} from "~/components/admin/styles";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -322,26 +329,37 @@ const STATUS_OPTIONS = REGISTRATION_STATUSES.map((value) => ({
   label: STATUS_PRESENTATION[value].label,
 }));
 
-const CARD = "rounded-2xl border border-slate-200 bg-white";
-const LABEL =
-  "mb-1.5 block text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase";
-const INPUT =
-  "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none placeholder:text-slate-500 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
-const BTN_PRIMARY =
-  "inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900 disabled:opacity-50";
-const BTN_QUIET =
-  "inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[12.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 disabled:opacity-50";
-
 // ------------------------------------------------------------------
 // Página
 // ------------------------------------------------------------------
+
+/**
+ * Qual envio está em voo, se algum.
+ *
+ * `navigation.state === "submitting"` responde só "alguma coisa está sendo
+ * enviada" — e a tela tem um formulário por posição. Com esse booleano
+ * global, aprovar UMA posição desabilitava as outras dezenove e acendia o
+ * spinner no botão errado, porque todos liam o mesmo sinal.
+ *
+ * `navigation.formData` traz o corpo do POST em voo, e cada formulário daqui
+ * já carrega `intent` e (quando é sobre uma posição) `positionId` em campos
+ * ocultos — dá para identificar o botão exato sem trocar `<Form>` por
+ * `useFetcher`, o que custaria a submissão sem JavaScript.
+ */
+function usePendingSubmission() {
+  const { formData } = useNavigation();
+  const read = (key: string) => {
+    const value = formData?.get(key);
+    return typeof value === "string" ? value : null;
+  };
+  return { intent: read("intent"), positionId: read("positionId") };
+}
 
 export default function AdminCandidatoPage() {
   const { candidate, positions, topics, allTags } =
     useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
+  const pending = usePendingSubmission();
 
   const approvedCount = positions.filter((p) => p.isApproved).length;
   const blockedCount = positions.filter(
@@ -353,22 +371,22 @@ export default function AdminCandidatoPage() {
     actionData && !actionData.positionId ? actionData : null;
 
   return (
-    <main className="flex-1">
+    <main id={MAIN_CONTENT_ID} className="flex-1">
       <Container className="pt-9 pb-16">
         <Link
           to="/admin"
-          className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-500 transition-colors hover:text-slate-600"
+          className="focus-ring inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-slate-500 transition-colors hover:text-slate-600"
         >
-          <ArrowLeft className="size-3.5" />
+          <ArrowLeft className="size-3.5" aria-hidden="true" />
           Voltar ao painel
         </Link>
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[34px]">
+            <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
               {candidate.displayName}
             </h1>
-            <p className="mt-1.5 text-[14.5px] text-slate-500">
+            <p className="mt-1.5 text-base text-slate-500">
               {positions.length} posições cadastradas · {approvedCount}{" "}
               aprovadas
               {blockedCount > 0
@@ -397,22 +415,25 @@ export default function AdminCandidatoPage() {
         )}
 
         <div className="mt-6 space-y-5">
-          <CandidateForm candidate={candidate} isSubmitting={isSubmitting} />
+          <CandidateForm
+            candidate={candidate}
+            isSubmitting={pending.intent === "update-candidate"}
+          />
 
           <TagsSection candidate={candidate} allTags={allTags} />
 
           <section className={cn(CARD, "p-5 sm:p-6")}>
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+              <h2 className="font-heading text-lg font-bold tracking-[-0.01em] text-slate-800">
                 Posições políticas
               </h2>
-              <p className="text-[12.5px] text-slate-500">
+              <p className="text-xs text-slate-500">
                 Toda posição publicada cita documento, página e trecho literal.
               </p>
             </div>
 
             {positions.length === 0 ? (
-              <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-[13.5px] text-slate-500">
+              <p className="mt-4 rounded-xl border border-dashed border-slate-300 px-5 py-8 text-center text-sm text-slate-500">
                 Nenhuma posição cadastrada. Extraia da proposta de governo
                 protocolada no TSE e registre abaixo.
               </p>
@@ -422,7 +443,10 @@ export default function AdminCandidatoPage() {
                   <PositionCard
                     key={position.id}
                     position={position}
-                    isSubmitting={isSubmitting}
+                    // Só o intent que menciona ESTA posição chega aqui.
+                    pendingIntent={
+                      pending.positionId === position.id ? pending.intent : null
+                    }
                     notice={
                       actionData && actionData.positionId === position.id
                         ? actionData
@@ -436,7 +460,7 @@ export default function AdminCandidatoPage() {
             <AddPositionForm
               topics={topics}
               governmentPlanUrl={candidate.governmentPlanUrl}
-              isSubmitting={isSubmitting}
+              isSubmitting={pending.intent === "add-position"}
             />
           </section>
         </div>
@@ -462,7 +486,7 @@ function Notice({
     <p
       role="status"
       className={cn(
-        "flex items-start gap-2 rounded-xl border px-4 py-3 text-[13px] leading-relaxed",
+        "flex items-start gap-2 rounded-xl border px-4 py-3 text-sm leading-relaxed",
         ok
           ? "border-emerald-200 bg-emerald-50 text-emerald-800"
           : "border-rose-200 bg-rose-50 text-rose-800",
@@ -503,10 +527,10 @@ function CandidateForm({
           </div>
         )}
         <div className="min-w-0">
-          <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+          <h2 className="font-heading text-lg font-bold tracking-[-0.01em] text-slate-800">
             Dados do candidato
           </h2>
-          <p className="truncate text-[12px] text-slate-500">
+          <p className="truncate text-xs text-slate-500">
             {candidate.dataSource === "tse"
               ? "Origem TSE"
               : `Origem ${candidate.dataSource}`}
@@ -518,10 +542,10 @@ function CandidateForm({
       </div>
 
       <fieldset className="space-y-3">
-        <legend className="text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
+        <legend className="text-xs font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Campos do TSE
         </legend>
-        <p className="text-[12.5px] leading-relaxed text-slate-500">
+        <p className="text-xs leading-relaxed text-slate-500">
           O sync sobrescreve estes campos na próxima execução. Edite aqui só
           para corrigir algo urgente antes do próximo <code>npm run sync:tse</code>.
         </p>
@@ -569,10 +593,10 @@ function CandidateForm({
       </fieldset>
 
       <fieldset className="space-y-3 border-t border-slate-100 pt-5">
-        <legend className="text-[12px] font-semibold tracking-[0.06em] text-slate-500 uppercase">
+        <legend className="text-xs font-semibold tracking-[0.06em] text-slate-500 uppercase">
           Curadoria editorial
         </legend>
-        <p className="text-[12.5px] leading-relaxed text-slate-500">
+        <p className="text-xs leading-relaxed text-slate-500">
           O sync do TSE nunca sobrescreve estes campos — o admin é o dono
           deles. O plano de governo é a fonte primária das posições: preencha o
           link antes de começar a extração.
@@ -618,8 +642,15 @@ function CandidateForm({
         </div>
       </fieldset>
 
-      <button type="submit" disabled={isSubmitting} className={BTN_PRIMARY}>
-        {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+        className={BTN_PRIMARY}
+      >
+        {isSubmitting && (
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+        )}
         Salvar dados do candidato
       </button>
     </Form>
@@ -635,12 +666,12 @@ function TagsSection({
 }) {
   return (
     <section className={cn(CARD, "space-y-4 p-5 sm:p-6")}>
-      <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+      <h2 className="font-heading text-lg font-bold tracking-[-0.01em] text-slate-800">
         Tags
       </h2>
 
       {candidate.tags.length === 0 ? (
-        <p className="text-[13px] text-slate-500">Nenhuma tag atribuída.</p>
+        <p className="text-sm text-slate-500">Nenhuma tag atribuída.</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {candidate.tags.map((tag) => (
@@ -654,7 +685,7 @@ function TagsSection({
               <button
                 type="submit"
                 title={`Remover ${tag.name}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
+                className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
               >
                 {tag.name}
                 <Trash2 className="size-3" aria-hidden="true" />
@@ -679,7 +710,7 @@ function TagsSection({
           ))}
         </select>
         <button type="submit" className={cn(BTN_QUIET, "sm:flex-none")}>
-          <Plus className="size-3.5" />
+          <Plus className="size-3.5" aria-hidden="true" />
           Adicionar
         </button>
       </Form>
@@ -711,6 +742,7 @@ function DeletePositionButton({
   isSubmitting,
 }: {
   positionId: string;
+  /** Só o envio desta exclusão — ver `usePendingSubmission`. */
   isSubmitting: boolean;
 }) {
   const [armed, setArmed] = useState(false);
@@ -743,7 +775,7 @@ function DeletePositionButton({
         disabled={isSubmitting}
         onClick={() => setArmed(true)}
         className={cn(
-          "inline-flex items-center justify-center gap-1.5 rounded-xl border p-2 text-[12.5px] font-semibold transition-colors disabled:opacity-50",
+          "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl border p-2 text-xs font-semibold transition-colors disabled:opacity-50",
           armed
             ? "border-rose-300 bg-rose-50 px-3 text-rose-700"
             : "border-slate-200 bg-white text-slate-500 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
@@ -762,11 +794,12 @@ function DeletePositionButton({
 
 function PositionCard({
   position,
-  isSubmitting,
+  pendingIntent,
   notice,
 }: {
   position: PositionView;
-  isSubmitting: boolean;
+  /** Intent em voo para ESTA posição, ou `null`. */
+  pendingIntent: string | null;
   notice: ActionResult | null;
 }) {
   const canApprove = position.approvalBlocker === null;
@@ -776,40 +809,40 @@ function PositionCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+            <h3 className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
               {position.topicName}
             </h3>
-            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[12px] font-medium text-slate-500">
+            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-500">
               {position.topicCategory}
             </span>
             {position.isApproved ? (
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[12px] font-semibold text-emerald-700">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                 Aprovada
                 {position.approvedAt
                   ? ` · ${new Date(position.approvedAt).toLocaleDateString("pt-BR")}`
                   : ""}
               </span>
             ) : (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[12px] font-semibold text-amber-800">
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">
                 Pendente
               </span>
             )}
           </div>
 
-          <p className="mt-1.5 text-[13.5px] font-semibold text-slate-800">
+          <p className="mt-1.5 text-sm font-semibold text-slate-800">
             {position.stance === STANCE_UNKNOWN
               ? NO_POSITION_LABEL
               : (CANDIDATE_STANCE_LABELS[position.stance] ?? NO_POSITION_LABEL)}
           </p>
           {position.description && (
-            <p className="mt-1 text-[12.5px] leading-relaxed text-slate-500">
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
               {position.description}
             </p>
           )}
 
           {/* Prévia exata do que o leitor vê na página pública. */}
           <div className="mt-2">
-            <p className="mb-1 text-[12px] tracking-[0.06em] text-slate-500 uppercase">
+            <p className="mb-1 text-xs tracking-[0.06em] text-slate-500 uppercase">
               Como o leitor vê
             </p>
             <SourceCite source={position} />
@@ -823,11 +856,16 @@ function PositionCard({
               <input type="hidden" name="positionId" value={position.id} />
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={pendingIntent === "unapprove-position"}
+                aria-busy={pendingIntent === "unapprove-position"}
                 className={BTN_QUIET}
                 title="Tirar do ar e devolver para pendente"
               >
-                <Undo2 className="size-3.5" />
+                {pendingIntent === "unapprove-position" ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Undo2 className="size-3.5" aria-hidden="true" />
+                )}
                 Reverter
               </button>
             </Form>
@@ -837,16 +875,21 @@ function PositionCard({
               <input type="hidden" name="positionId" value={position.id} />
               <button
                 type="submit"
-                disabled={isSubmitting || !canApprove}
+                disabled={pendingIntent === "approve-position" || !canApprove}
+                aria-busy={pendingIntent === "approve-position"}
                 title={position.approvalBlocker ?? "Aprovar e publicar"}
                 className={cn(
-                  "inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-[12.5px] font-semibold transition-colors",
+                  "focus-ring inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors",
                   canApprove
                     ? "bg-emerald-600 text-white hover:bg-emerald-700"
                     : "cursor-not-allowed border border-slate-200 bg-white text-slate-500"
                 )}
               >
-                <CheckCircle2 className="size-3.5" />
+                {pendingIntent === "approve-position" ? (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <CheckCircle2 className="size-3.5" aria-hidden="true" />
+                )}
                 Aprovar
               </button>
             </Form>
@@ -854,7 +897,7 @@ function PositionCard({
 
           <DeletePositionButton
             positionId={position.id}
-            isSubmitting={isSubmitting}
+            isSubmitting={pendingIntent === "delete-position"}
           />
         </div>
       </div>
@@ -872,7 +915,7 @@ function PositionCard({
       )}
 
       <details className="group mt-3">
-        <summary className="w-fit cursor-pointer list-none text-[12.5px] font-semibold text-indigo-600 hover:text-indigo-700">
+        <summary className="focus-ring w-fit cursor-pointer list-none rounded-md text-xs font-semibold text-indigo-600 hover:text-indigo-700">
           <span className="group-open:hidden">Editar posição e fonte</span>
           <span className="hidden group-open:inline">Fechar edição</span>
         </summary>
@@ -896,10 +939,13 @@ function PositionCard({
           />
           <button
             type="submit"
-            disabled={isSubmitting}
-            className={cn(BTN_PRIMARY, "px-5 py-2.5 text-[13px]")}
+            disabled={pendingIntent === "update-position"}
+            aria-busy={pendingIntent === "update-position"}
+            className={cn(BTN_PRIMARY, "px-5 py-2.5")}
           >
-            {isSubmitting && <Loader2 className="size-3.5 animate-spin" />}
+            {pendingIntent === "update-position" && (
+              <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+            )}
             Salvar posição
           </button>
         </Form>
@@ -923,7 +969,7 @@ function AddPositionForm({
       className="mt-5 space-y-3 rounded-2xl border border-dashed border-slate-300 bg-slate-50/60 p-4 sm:p-5"
     >
       <input type="hidden" name="intent" value="add-position" />
-      <h3 className="font-heading text-[14.5px] font-bold text-slate-800">
+      <h3 className="font-heading text-base font-bold text-slate-800">
         Adicionar posição
       </h3>
 
@@ -953,11 +999,16 @@ function AddPositionForm({
         sourceDate={null}
       />
 
-      <button type="submit" disabled={isSubmitting} className={BTN_PRIMARY}>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+        className={BTN_PRIMARY}
+      >
         {isSubmitting ? (
-          <Loader2 className="size-3.5 animate-spin" />
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
         ) : (
-          <Plus className="size-3.5" />
+          <Plus className="size-3.5" aria-hidden="true" />
         )}
         Adicionar posição
       </button>
@@ -1078,7 +1129,7 @@ function SourceFields({
           placeholder="Copie e cole a frase do documento. Nunca parafraseie."
           className={cn(INPUT, "resize-y leading-relaxed")}
         />
-        <p className="mt-1 text-[12px] text-slate-500">
+        <p className="mt-1 text-xs text-slate-500">
           O trecho aparece entre aspas na página do candidato, exatamente como
           digitado aqui.
         </p>

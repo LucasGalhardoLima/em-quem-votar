@@ -1,6 +1,14 @@
-import { Form, redirect, useSearchParams } from "react-router";
+import {
+  Form,
+  redirect,
+  useNavigation,
+  useSearchParams,
+} from "react-router";
+import { Loader2 } from "lucide-react";
 import type { Route } from "./+types/admin.login";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
+import { BTN_PRIMARY, INPUT } from "~/components/admin/styles";
+import { cn } from "~/lib/utils";
 import {
   adminPasswordConfigured,
   createAdminSessionCookie,
@@ -112,18 +120,26 @@ export default function AdminLogin({
   const [searchParams] = useSearchParams();
   const next = safeNextPathClient(searchParams.get("next"));
 
+  // `formData` e não `state === "submitting"`: ele continua preenchido
+  // durante o `loading` que vem depois do POST bem-sucedido, então o botão
+  // fica travado até o redirecionamento terminar. Com `submitting` sozinho
+  // haveria uma janela em que o botão volta a aceitar clique e dispara um
+  // segundo POST de login.
+  const navigation = useNavigation();
+  const submitting = navigation.formData != null;
+
   return (
-    <main className="flex flex-1 items-center justify-center">
+    <main id={MAIN_CONTENT_ID} className="flex flex-1 items-center justify-center">
       <Container className="max-w-[420px] py-16">
-        <h1 className="font-heading text-[26px] font-bold tracking-[-0.02em] text-slate-800">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800">
           Painel editorial
         </h1>
-        <p className="mt-1.5 text-[13.5px] text-slate-500">
+        <p className="mt-1.5 text-sm text-slate-500">
           Acesso restrito a quem cura as posições e as candidaturas.
         </p>
 
         {!loaderData.configured ? (
-          <p className="mt-6 rounded-2xl border border-amber-200/80 bg-amber-50 px-5 py-4 text-[13.5px] leading-relaxed text-amber-800">
+          <p className="mt-6 rounded-2xl border border-amber-200/80 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-800">
             <strong className="font-semibold">ADMIN_PASSWORD não está definida.</strong>{" "}
             Em produção o painel responde 503 até que ela seja configurada no
             servidor. Veja <code className="font-mono">.env.example</code>.
@@ -136,7 +152,7 @@ export default function AdminLogin({
             <input type="hidden" name="next" value={next} />
 
             <label className="grid gap-1.5">
-              <span className="text-[12.5px] font-semibold text-slate-600">
+              <span className="text-xs font-semibold text-slate-600">
                 Usuário
               </span>
               <input
@@ -144,12 +160,12 @@ export default function AdminLogin({
                 autoComplete="username"
                 defaultValue="admin"
                 required
-                className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
+                className={cn(INPUT, "px-4 py-3")}
               />
             </label>
 
             <label className="grid gap-1.5">
-              <span className="text-[12.5px] font-semibold text-slate-600">
+              <span className="text-xs font-semibold text-slate-600">
                 Senha
               </span>
               <input
@@ -158,29 +174,38 @@ export default function AdminLogin({
                 autoComplete="current-password"
                 required
                 autoFocus
-                className="rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10"
+                className={cn(INPUT, "px-4 py-3")}
               />
             </label>
 
             {actionData?.error && (
               <p
                 role="alert"
-                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-[12.5px] text-rose-800"
+                className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs text-rose-800"
               >
                 {actionData.error}
               </p>
             )}
 
+            {/* O envio precisa aparecer no botão: sem isso um clique duplo
+                manda dois POST de login, e cada um deles conta como uma
+                tentativa na trava de força bruta — o usuário legítimo se
+                bloqueia sozinho na metade do tempo. */}
             <button
               type="submit"
-              className="mt-1 rounded-xl bg-slate-800 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-900"
+              disabled={submitting}
+              aria-busy={submitting}
+              className={cn(BTN_PRIMARY, "mt-1")}
             >
-              Entrar
+              {submitting && (
+                <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+              )}
+              {submitting ? "Entrando…" : "Entrar"}
             </button>
           </Form>
         )}
 
-        <p className="mt-4 text-[12px] leading-relaxed text-slate-500">
+        <p className="mt-4 text-xs leading-relaxed text-slate-500">
           A sessão dura 8 horas e vale só para /admin. Nada do que você faz
           aqui aparece para o público antes de ser aprovado.
         </p>
