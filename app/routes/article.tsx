@@ -9,7 +9,10 @@ import type { Route } from "./+types/article";
 const LEGACY_SLUGS: Record<string, string> = {
   "importancia-do-voto": "importancia-voto",
   "como-escolher": "como-escolher",
-  "funcoes-vereador": "funcoes-vereador",
+  // O texto sobre vereador virou /educacao/funcoes-legislativo quando foi
+  // reescrito para os cargos de 2026. Aponta direto para o destino final,
+  // para não encadear dois 301.
+  "funcoes-vereador": "funcoes-legislativo",
   "espectro-politico": "espectro-politico",
   "mito-voto-nulo": "mito-voto-nulo",
   centrao: "centrao",

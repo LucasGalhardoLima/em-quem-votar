@@ -20,7 +20,10 @@ export default [
   route("educacao", "routes/educacao._index.tsx"),
   route("educacao/como-escolher", "routes/educacao.como-escolher.mdx"),
   route("educacao/importancia-voto", "routes/educacao.importancia-voto.mdx"),
-  route("educacao/funcoes-vereador", "routes/educacao.funcoes-vereador.mdx"),
+  route("educacao/funcoes-legislativo", "routes/educacao.funcoes-legislativo.mdx"),
+  // Slug antigo do mesmo texto, de quando ele falava de vereador. 301, não
+  // renomeio silencioso: a URL já está indexada. Ver o comentário na rota.
+  route("educacao/funcoes-vereador", "routes/educacao.funcoes-vereador.tsx"),
   route("educacao/espectro-politico", "routes/educacao.espectro-politico.mdx"),
   route("educacao/mito-voto-nulo", "routes/educacao.mito-voto-nulo.mdx"),
   route("educacao/centrao", "routes/educacao.centrao.mdx"),

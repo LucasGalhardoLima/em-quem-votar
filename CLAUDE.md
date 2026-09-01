@@ -173,7 +173,10 @@ Routes defined in `app/routes.ts` using React Router config API:
 - Resource routes (no UI): `api/cron/tse-status`, `resources/og/:id`,
   `sitemap.xml`
 - Legacy 301 redirects kept for SEO: `/busca`, `/politico/:id`,
-  `/artigos/:slug`
+  `/artigos/:slug`, `/educacao/funcoes-vereador` (the article was rewritten
+  for the offices actually on the 2026 ballot and now lives at
+  `/educacao/funcoes-legislativo`; the old slug is already indexed, so it
+  redirects instead of being renamed silently)
 
 ### State Management
 Zustand stores in `app/stores/`, both persisted to localStorage with
