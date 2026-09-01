@@ -29,22 +29,45 @@ visto**, nunca quando "deve funcionar".
 Bloqueia todo o resto: enquanto a branch não sobe, ficha do TSE, SEO, segurança
 do admin e acessibilidade não existem para ninguém fora deste laptop.
 
-- [ ] **1.1** Rams `review_files` nos arquivos de UI alterados → aplicar o que
+- [x] **1.1** Rams `review_files` nos arquivos de UI alterados → aplicar o que
       apontar → `verify_fixes`. (Exigência do `CLAUDE.md` de `Personal/`.)
-- [ ] **1.2** `npm run build` — o build de produção nunca rodou sobre este diff;
-      MDX e rotas novas só quebram aqui.
-- [ ] **1.3** Commits em blocos coerentes, **incluindo os untracked**:
+      **92/100, zero críticos** em 6 levas; 4 correções reais aplicadas na raiz
+      (`aria-hidden` em ícones decorativos, alvo de toque e anel de foco nos
+      links "Ficha"/"Fonte", barra de gastos escondida do leitor de tela, 9
+      glifos `→`). Dois apontamentos foram rejeitados com medição, não por
+      opinião: o contraste do contador (fundo real `#f6f6fe` → 5,84:1, passa AA)
+      e o "filtro de situação perdido no refresh" (o arquivo chama
+      `syncUrl({ situacao })`). Restou **1 crédito de 30**.
+- [x] **1.2** `npm run build` — o build de produção nunca rodou sobre este diff;
+      MDX e rotas novas só quebram aqui. Passou, e o build foi subido localmente
+      contra o banco real: `/` 200 com canonical, 301 do slug antigo,
+      `/candidatos?uf=SP` com título por estado, ficha 200, `/resultado` e
+      `/votacoes` 200. Anotação para o 5.1: a ficha levou **4,2s** no primeiro
+      carregamento com o banco remoto daqui — medir na Vercel antes de concluir.
+- [x] **1.3** Commits em blocos coerentes, **incluindo os untracked**:
       `prisma/migrations/20260828160000_add_tse_declared_counts/`,
       `educacao.funcoes-legislativo.mdx`, `educacao.funcoes-vereador.tsx` (301),
       `app/components/admin/styles.ts` e os 3 arquivos de teste novos.
       Critério: `git status` limpo e `npm test` verde depois do último commit.
       Cuidado: `routes.ts` já referencia os dois arquivos de educação untracked —
-      commit parcial quebra o build.
-- [ ] **1.4** `CLAUDE.md`: registrar a rota `/educacao/funcoes-legislativo` e o
+      commit parcial quebra o build. Fechado: árvore limpa, **426 testes** em 16
+      arquivos, `typecheck` limpo.
+- [x] **1.4** `CLAUDE.md`: registrar a rota `/educacao/funcoes-legislativo` e o
       301 do slug antigo na lista de rotas.
-- [ ] **1.5** **[PORTÃO]** push da branch + abrir PR para `main`.
+- [x] **1.5** **[PORTÃO]** push da branch + abrir PR para `main`.
+      [PR #5](https://github.com/LucasGalhardoLima/em-quem-votar/pull/5), 33
+      commits, preview da Vercel verde.
 - [ ] **1.6** **[PORTÃO]** merge + deploy. Conferir em produção: `/candidatos`,
       uma ficha com aba de bens, `/quiz` → `/resultado`, e o 301 do slug antigo.
+      **Estado em 01/09:** nada bloqueia o merge — `main` não tem branch
+      protection nem ruleset, e o PR está `MERGEABLE`/`UNSTABLE`. O único check
+      vermelho é o GitGuardian: 3 incidentes, 7 ocorrências, todas fixtures de
+      teste (`s3nha-forte`, `senha-antiga`, `senha-nova`, `eleição-2026`) presas
+      no commit `1dd3d8c`. O commit `841d6eb` tirou os literais do formato
+      `ADMIN_PASSWORD = "..."` — o que limpa a `main` e os PRs futuros — mas o
+      scanner lê **todos** os commits do PR, então este aqui não fica verde sem
+      marcar os incidentes no dashboard (só o Lucas tem acesso) ou reescrever a
+      história do branch.
 
 ## Bloco 2 — Fase B: posições com fonte (SC-102 e SC-103)
 
