@@ -73,7 +73,7 @@ export function SourceCite({
   return (
     <div className={cn("flex flex-col gap-1", className)}>
       {source.sourceQuote && (
-        <blockquote className="border-l-2 border-indigo-600/25 pl-2.5 text-[12px] leading-relaxed text-slate-600 italic">
+        <blockquote className="border-l-2 border-indigo-600/25 pl-2.5 text-xs leading-relaxed text-slate-600 italic">
           “{source.sourceQuote}”
         </blockquote>
       )}
@@ -82,12 +82,50 @@ export function SourceCite({
           href={source.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-700 hover:underline"
+          className={cn(
+            "relative inline-flex w-fit items-center gap-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 hover:underline",
+            /*
+              Alvo de toque de 44px sem tocar na tipografia. A caixa visível
+              tem 1rem de altura — `text-xs` é 0.75rem de fonte pareada com
+              `line-height: 1rem` —, e este é o link que materializa a promessa
+              da plataforma — documento, página e link —, repetido cerca de
+              vinte vezes na ficha de uma candidatura. Era o mais difícil de
+              acertar com o dedo justamente por ser o mais importante de
+              alcançar.
+
+              Pseudo-elemento e não `padding`, pelo precedente comentado em
+              `CompareToggle`: só a área clicável cresce, o fluxo não se mexe e
+              as ~20 citações não empurram a página para baixo em meia tela.
+
+              0.875 + 1 + 0.875 = 2.75rem, os mesmos 44px de `min-h-11`. A
+              folga está em `rem` de propósito: a caixa visível também está
+              (era 18px fixos quando a fonte era arbitrária e herdava o
+              `line-height: 1.5` do preflight), então o alvo cresce junto com
+              quem aumenta a fonte do navegador, em vez de encolher em
+              proporção. A folga é simétrica porque o componente é
+              compartilhado. Uma versão assimétrica, crescendo mais para baixo
+              para se apoiar no `py-4` do cartão, quebrava no admin: lá o
+              `SourceCite` mora num `flex-wrap` cujo `gap-3` (0.75rem) põe os
+              botões de aprovar/reprovar logo abaixo quando a linha quebra, e a
+              caixa invisível passaria a comer a borda de cima deles. Com
+              0.875rem o excedente é de 0.125rem (2px) sobre esse gap — 1px a
+              mais que na versão em pixels, porque a caixa visível encolheu 2px
+              e a folga teve que compensar dos dois lados.
+
+              O preço de crescer para cima é a faixa de texto que a caixa
+              cobre — descrição e citação em bloco deixam de ser selecionáveis
+              nos últimos pixels. É texto, não controle: nada deixa de
+              funcionar, e o link só ganha um alvo generoso onde antes exigia
+              precisão de uma linha de 1rem.
+            */
+            "before:absolute before:-inset-x-2 before:-inset-y-3.5 before:content-['']",
+            "focus-ring",
+          )}
         >
           {body}
         </a>
       ) : (
-        <span className="inline-flex w-fit items-center gap-1.5 text-[12px] font-medium text-slate-500">
+        <span className="inline-flex w-fit items-center gap-1.5 text-xs font-medium text-slate-500">
           {body}
         </span>
       )}
@@ -98,7 +136,7 @@ export function SourceCite({
 /** Marcador exibido quando não existe documento sobre o tema. */
 export function NoSourceNotice({ className }: { className?: string }) {
   return (
-    <span className={cn("text-[12px] text-slate-500", className)}>
+    <span className={cn("text-xs text-slate-500", className)}>
       Nenhum documento oficial registrado sobre este tema.
     </span>
   );

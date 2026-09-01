@@ -27,18 +27,30 @@ export function CompareToggle({
         onToggle();
       }}
       className={cn(
-        "relative flex size-[26px] flex-none items-center justify-center rounded-full border transition-colors",
-        // Alvo de toque de 32px sem engordar o círculo: o pseudo-elemento
-        // estende só a área clicável. É o controle principal de cada card na
-        // grade mobile, e 26px passava o piso da WCAG 2.2 por 2px.
-        "before:absolute before:-inset-[3px] before:content-['']",
+        "focus-ring relative flex size-[26px] flex-none items-center justify-center rounded-full border transition-colors",
+        // Alvo de toque de 44px sem engordar o círculo: o pseudo-elemento
+        // estende só a área clicável, então o desenho do cartão não muda.
+        //
+        // A régua é 44px, não os 24px do SC 2.5.8 da WCAG 2.2. O círculo de
+        // 26px já passava aquele piso, e a folga anterior (`-inset-[3px]`,
+        // 32px efetivos) também — a troca é deliberada: o projeto adotou
+        // 44px como alvo mínimo, o mesmo que os chips de filtro de
+        // `/candidatos` e o botão de remover de `/comparar` seguem agora.
+        // Este é o controle principal de cada card na grade mobile e vive
+        // sobre um cartão que é inteiro clicável; errar por 3px aqui abre a
+        // ficha de outra pessoa em vez de marcar a comparação.
+        "before:absolute before:-inset-[9px] before:content-['']",
         selected
           ? "border-indigo-600 bg-indigo-600/[0.08] text-indigo-600"
           : "border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300",
         className,
       )}
     >
-      {selected ? <Check className="size-3.5" /> : <Plus className="size-3.5" />}
+      {selected ? (
+        <Check className="size-3.5" aria-hidden="true" />
+      ) : (
+        <Plus className="size-3.5" aria-hidden="true" />
+      )}
     </button>
   );
 }

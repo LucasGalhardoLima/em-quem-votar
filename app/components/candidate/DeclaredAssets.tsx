@@ -42,7 +42,12 @@ export function DeclaredAssets({ assets }: { assets: DeclaredAsset[] }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5">
-      <h3 className="mb-3 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+      {/* `text-sm`, e não `text-xs`: os itens da lista abaixo são `text-sm`, e
+          um cabeçalho menor que o texto que ele encabeça inverte a hierarquia
+          que o próprio elemento anuncia. `slate-600` dá 7,58:1 sobre o branco
+          — o `slate-500` anterior passava o AA raspando, em 4,76:1. Mesmo
+          degrau dos outros títulos de cartão da ficha. */}
+      <h3 className="mb-3 text-sm font-bold tracking-wider text-slate-600 uppercase">
         Bens declarados, item a item
       </h3>
       <ul className="divide-y divide-slate-100">
@@ -54,26 +59,26 @@ export function DeclaredAssets({ assets }: { assets: DeclaredAsset[] }) {
               className="flex flex-col gap-1 py-2.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
             >
               <div className="min-w-0">
-                <p className="text-[13.5px] leading-snug text-slate-700">
+                <p className="text-sm leading-snug text-slate-700">
                   {asset.description ?? (
                     <span className="text-slate-500">
                       Sem descrição no registro do TSE
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-[12px] text-slate-500">
+                <p className="mt-0.5 text-xs text-slate-500">
                   {asset.category ?? "Tipo não informado"}
                   {declaredAt ? ` · declarado em ${declaredAt}` : ""}
                 </p>
               </div>
-              <p className="flex-none text-[13.5px] font-semibold text-slate-800 tabular-nums">
+              <p className="flex-none text-sm font-semibold text-slate-800 tabular-nums">
                 {BRL.format(asset.amount)}
               </p>
             </li>
           );
         })}
       </ul>
-      <p className="mt-3 text-[12px] leading-relaxed text-slate-500">
+      <p className="mt-3 text-xs leading-relaxed text-slate-500">
         Valores conforme a declaração de bens entregue ao TSE no registro da
         candidatura. A descrição de cada item é a do próprio declarante.
       </p>

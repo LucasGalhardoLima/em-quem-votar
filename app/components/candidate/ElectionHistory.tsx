@@ -40,11 +40,11 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
             className="flex flex-col gap-1.5 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
           >
             <div className="min-w-0">
-              <p className="text-[14px] leading-snug font-semibold text-slate-700">
+              <p className="text-sm leading-snug font-semibold text-slate-700">
                 <span className="tabular-nums">{election.year}</span> ·{" "}
                 {election.office}
               </p>
-              <p className="mt-0.5 text-[12px] text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-500">
                 {election.party ?? "Partido não informado"}
                 {election.ue ? (
                   <>
@@ -55,7 +55,7 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
               </p>
             </div>
             <div className="flex flex-none items-center gap-2">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[12px] font-semibold text-slate-600">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
                 {election.resultLabel}
               </span>
               {election.sourceUrl && (
@@ -63,7 +63,12 @@ export function ElectionHistory({ elections }: { elections: PriorElection[] }) {
                   href={election.sourceUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[12px] font-medium text-indigo-600 hover:underline"
+                  /* Mesmo alvo de 44px do `SourceCite`, pelo mesmo pseudo-
+                     elemento: 0.875 + 1 (a caixa de `text-xs`) + 0.875 =
+                     2.75rem, sem mexer no fluxo da linha nem na tipografia.
+                     E o mesmo `focus-ring` do resto do app — este link estava
+                     sem indicador nenhum. */
+                  className="focus-ring relative inline-flex items-center gap-1 rounded-sm text-xs font-medium text-indigo-600 hover:underline before:absolute before:-inset-x-2 before:-inset-y-3.5 before:content-['']"
                 >
                   Ficha
                   <ExternalLink className="size-3" aria-hidden="true" />
