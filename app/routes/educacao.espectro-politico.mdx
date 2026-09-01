@@ -4,7 +4,7 @@ excerpt: "Você sabe onde se encaixa no espectro político? Um guia simples para
 date: "2025-10-04"
 author: "Equipe Em Quem Votar"
 category: "Conceitos Básicos"
-image: "/images/espectro-politico.jpg"
+image: ""
 ---
 
 import { pageMeta } from "../root";
@@ -15,43 +15,43 @@ export const meta = () =>
   // Open Graph mora em pageMeta(), para não existir treze vezes.
   pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
 
-import { Container } from "../components/layout";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Conceitos Básicos
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           Esquerda, Direita ou Centro?
         </h1>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
           Você sabe onde se encaixa no espectro político? Um guia simples para entender as ideologias sem 'politiquês'.
         </p>
       </header>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">1.</span> A Origem (1789)
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             Tudo começou na Revolução Francesa. Na Assembleia Nacional, os <strong className="font-semibold text-slate-800">revolucionários</strong> (mudança) sentavam à esquerda, e os <strong className="font-semibold text-slate-800">conservadores</strong> (tradição) sentavam à direita.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">2.</span> Os Dois Polos
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Esquerda</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+            <h3 className="text-base font-bold text-slate-800">Esquerda</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
               Prioridade: <strong className="font-semibold text-indigo-600">Igualdade Social</strong>
             </p>
-            <ul className="mt-3 grid gap-2 text-[13px] leading-relaxed text-slate-500">
+            <ul className="mt-3 grid gap-2 text-sm leading-relaxed text-slate-500">
               <li className="flex items-start gap-2.5">
                 <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
                 <span><strong className="font-semibold text-slate-800">Economia:</strong> Estado forte, programas sociais, impostos progressivos.</span>
@@ -67,11 +67,11 @@ import { Container } from "../components/layout";
             </ul>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Direita</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
+            <h3 className="text-base font-bold text-slate-800">Direita</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
               Prioridade: <strong className="font-semibold text-indigo-600">Liberdade Individual</strong>
             </p>
-            <ul className="mt-3 grid gap-2 text-[13px] leading-relaxed text-slate-500">
+            <ul className="mt-3 grid gap-2 text-sm leading-relaxed text-slate-500">
               <li className="flex items-start gap-2.5">
                 <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
                 <span><strong className="font-semibold text-slate-800">Economia:</strong> Livre mercado, estado mínimo, privatizações.</span>
@@ -89,16 +89,16 @@ import { Container } from "../components/layout";
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">3.</span> O Centro
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
             O fiel da balança. Busca o <strong className="font-semibold text-slate-800">equilíbrio</strong> e o pragmatismo, evitando extremos. Pode apoiar a economia de direita e o social de esquerda. No Brasil, é frequentemente associado à governabilidade.
           </p>
         </div>
       </section>
-      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
         <p>
           <strong className="font-semibold text-slate-800">Nota:</strong> Ninguém é 100% uma coisa só. Você pode ser liberal na economia e conservador nos costumes. Analise as <em>propostas</em>, não apenas os rótulos.
         </p>

@@ -1,10 +1,11 @@
 ---
-title: "O Que é o 'Centrão'? Entenda o Poder por Trás do Trono"
-excerpt: "Eles não são de esquerda nem de direita. Entenda como funciona o grupo mais poderoso (e polêmico) do Congresso."
-date: "2025-10-06"
+title: "O Que é o 'Centrão'?"
+excerpt: "Um bloco sem estatuto, sem lista de filiados e sem registro no TSE. Entenda o que a palavra descreve e o que o seu voto de 4 de outubro tem a ver com ela."
+date: "2026-08-28"
 author: "Equipe Em Quem Votar"
 category: "Bastidores do Poder"
-image: "/images/centrao.jpg"
+image: ""
+readTime: "5 min"
 ---
 
 import { pageMeta } from "../root";
@@ -15,100 +16,135 @@ export const meta = () =>
   // Open Graph mora em pageMeta(), para não existir treze vezes.
   pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
 
-import { Container } from "../components/layout";
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Bastidores do Poder
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           O Que é o Centrão?
         </h1>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          Eles não são de esquerda nem de direita. Entenda como funciona o grupo mais poderoso (e polêmico) do Congresso.
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 5 min de leitura
+        </p>
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Um bloco sem estatuto, sem lista de filiados e sem registro no TSE. Entenda o que a palavra descreve e o que o seu voto de 4 de outubro tem a ver com ela.
         </p>
       </header>
-      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
         <p>
-          Você ouve falar neles todo dia no jornal: "O governo negociou com o Centrão", "O Centrão ganhou ministérios". Mas afinal, quem são eles?
+          Você ouve a palavra todo dia no noticiário. Antes de qualquer outra coisa, vale registrar o que ela não é: o Centrão não é um partido, não tem registro no TSE, não tem estatuto nem lista pública de integrantes.
         </p>
       </div>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">1.</span> Definição
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> O que a palavra descreve
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            O "Centrão" não é um partido único. É um <strong className="font-semibold text-slate-800">bloco informal de partidos médios e grandes</strong> que, historicamente, não possuem uma ideologia clara (nem esquerda, nem direita) e priorizam o acesso a:
+            "Centrão" é um apelido jornalístico para um <strong className="font-semibold text-slate-800">agrupamento informal de partidos</strong> que costuma votar em bloco no Congresso em troca de participação no governo, seja qual for o governo.
+          </p>
+          <p>
+            Porque é informal, não existe fonte oficial que diga quem está dentro e quem está fora. Qualquer lista de "partidos do Centrão" que você encontrar é uma atribuição de quem escreveu a lista, não um dado do TSE ou do Congresso. Este site não publica uma dessas listas exatamente por isso: não teria documento para citar.
           </p>
         </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Por que um bloco assim tem poder
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A resposta é aritmética, não ideológica. Quem é eleito presidente ganha o cargo numa eleição nacional, mas não ganha o Congresso junto: deputados e senadores são eleitos separadamente, em 27 disputas estaduais.
+          </p>
+          <p>
+            Para a Câmara deliberar, a Constituição exige a presença da maioria absoluta dos membros — pelo menos 257 dos 513 deputados — e decide a maioria dos presentes (art. 47). Um presidente cujo partido não chega perto disso precisa reunir votos fora dele. É essa necessidade permanente que cria o mercado onde o bloco negocia.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> As duas moedas da negociação
+        </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Orçamento</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Verbas para suas bases eleitorais.
+            <h3 className="text-base font-bold text-slate-800">Orçamento</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              As emendas individuais ao Orçamento têm execução obrigatória, dentro de um limite fixado na própria Constituição (art. 166, § 9º). Uma fatia do dinheiro federal é destinada por parlamentares, não pelo Executivo.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Cargos</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Ministérios e estatais.
+            <h3 className="text-base font-bold text-slate-800">Cargos</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Nomear e exonerar ministros é competência privativa do presidente (art. 84, I). Como ele decide sozinho, é uma moeda que pode oferecer em troca de votos.
             </p>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">2.</span> Como Eles Operam?
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> As duas leituras do fenômeno
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            A lógica é o <strong className="font-semibold text-slate-800">pragmatismo</strong> (ou, para os críticos, o fisiologismo).
+            Os dois quadros abaixo são <em>argumentos</em> que circulam no debate público, não conclusões desta plataforma.
           </p>
-          <ul className="grid gap-2.5">
-            <li className="flex items-start gap-3">
-              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">E</span>
-              <span>Se o presidente é de <strong className="font-semibold text-slate-800">esquerda</strong>, eles apoiam em troca de espaço.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">D</span>
-              <span>Se o presidente é de <strong className="font-semibold text-slate-800">direita</strong>, eles apoiam... em troca de espaço.</span>
-            </li>
-          </ul>
         </div>
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">A crítica</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Quando o apoio se compra com verba e cargo, o critério da decisão deixa de ser o mérito da matéria em votação. Isso torna a posição do parlamentar difícil de prever a partir do programa do partido.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">A defesa</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Coalizão ampla é o que permite governar sem maioria própria, e as emendas levam recursos federais a municípios pequenos que não têm outra porta de entrada no Orçamento da União.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">5.</span> O que isso tem a ver com 4 de outubro
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            Eles garantem a <strong className="font-semibold text-slate-800">governabilidade</strong>. Como somam centenas de votos no Congresso, nenhum presidente consegue aprovar leis ou evitar um impeachment sem o apoio deles.
+            Das seis escolhas que você faz na urna, quatro são para o Legislativo: deputado federal, deputado estadual (ou distrital), e dois senadores. Só duas são para o Executivo: governador e presidente.
+          </p>
+          <p>
+            Ou seja: a maior parte do seu voto define exatamente o Congresso com quem o próximo presidente vai ter de negociar. Se a composição do Legislativo te interessa, ela é decidida nas quatro primeiras telas da urna.
+          </p>
+        </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+          <p>
+            Rótulo não é comportamento. A forma verificável de saber como um parlamentar vota é olhar o registro nominal de cada votação, um voto de cada vez.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">3.</span> Os Dois Lados do Debate
-        </h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">O Lado Ruim</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              A falta de ideologia e os frequentes escândalos de corrupção associados à barganha constante de cargos públicos.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">O Argumento de Defesa</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Eles trazem estabilidade e representam interesses regionais reais de milhares de municípios brasileiros que dependem dessas emendas.
-            </p>
-          </div>
+        <h2 className="text-lg font-bold text-slate-800">Fontes</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Constituição — arts. 47, 84 e 166
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://dadosabertos.camara.leg.br/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Câmara — Dados Abertos
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
         </div>
       </section>
-      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
-        <p>
-          <strong className="font-semibold text-slate-800">Nota:</strong> Saber quem faz parte do Centrão ajuda você a entender se o seu candidato vai votar por convicção ou por conveniência.
-        </p>
-      </aside>
     </div>
   </Container>
 </main>

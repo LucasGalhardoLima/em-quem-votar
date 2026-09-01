@@ -1,9 +1,10 @@
 ---
 title: "A Importância do Seu Voto"
-excerpt: "Entenda como o seu voto impacta diretamente o futuro da sua cidade e do país. A democracia precisa de você."
-image: "/images/voto-consciente.jpg"
-date: "2025-10-01"
+excerpt: "Como o voto foi conquistado no Brasil, quem é obrigado a votar e por quanto tempo cada escolha de 4 de outubro vale."
+image: ""
+date: "2026-08-28"
 category: "Cidadania"
+readTime: "6 min"
 ---
 
 import { pageMeta } from "../root";
@@ -15,102 +16,136 @@ export const meta = () =>
   pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
 
 import { ExternalLink } from "lucide-react";
-import { Container } from "../components/layout";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Cidadania
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           A Importância do Seu Voto
         </h1>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          Entenda como o seu voto impacta diretamente o futuro da sua cidade e do país. A democracia precisa de você.
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 6 min de leitura
+        </p>
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Como o voto foi conquistado no Brasil, quem é obrigado a votar e por quanto tempo cada escolha de 4 de outubro vale.
         </p>
       </header>
-      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
         <p>
-          O <strong className="font-semibold text-slate-800">voto no Brasil</strong> é um pilar fundamental da democracia e um instrumento crucial para a participação cidadã. Ele não é apenas um direito; é a ferramenta mais poderosa que temos para transformar a nossa realidade social.
+          Em 4 de outubro você faz seis escolhas que definem quem comanda o país e o seu estado pelos próximos anos. É um poder que a maioria das gerações brasileiras não teve.
         </p>
       </div>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">1.</span> História e Evolução
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            O direito de escolher nossos representantes não foi dado de graça; foi conquistado. A história do voto no Brasil passou por diversas transformações:
+            O direito de escolher nossos representantes não foi dado de graça; foi conquistado, e em etapas:
           </p>
           <ul className="grid gap-2">
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Voto de Cabresto:</strong> Períodos onde o voto era controlado pelos "coronéis".</span>
+              <span><strong className="font-semibold text-slate-800">Voto de cabresto:</strong> na República Velha, o voto era aberto e a apuração ficava nas mãos de quem tinha poder local.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Voto Feminino (1932):</strong> Um marco histórico na luta pela igualdade.</span>
+              <span><strong className="font-semibold text-slate-800">Voto feminino (1932):</strong> o Código Eleitoral daquele ano definiu, no art. 2º, que é eleitor "o cidadão maior de 21 anos, sem distinção de sexo".</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Constituição de 1988:</strong> Consolidou o sufrágio universal, direto e secreto.</span>
+              <span><strong className="font-semibold text-slate-800">Constituição de 1988:</strong> o art. 14 firmou o sufrágio universal e o voto direto e secreto, "com valor igual para todos".</span>
             </li>
           </ul>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">2.</span> O Poder da Escolha
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Quem é obrigado a votar
         </h2>
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
-          <p className="italic">
-            "O voto é a arma do cidadão para mudar o destino de uma nação sem derramar uma gota de sangue."
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            O art. 14, § 1º da Constituição separa duas situações, e muita gente confunde as duas:
           </p>
         </div>
-        <div className="mt-3 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          <p>
-            Numa democracia representativa, você delega o poder de decisão. Ao votar, você está dizendo: "Eu confio que essa pessoa vai gerenciar o meu dinheiro (impostos) e cuidar da minha cidade melhor do que qualquer outra."
-          </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Obrigatório</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Para maiores de 18 anos. A obrigação é comparecer — o que você faz dentro da cabine é secreto.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Facultativo</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Para quem tem 16 ou 17 anos, para maiores de 70 e para analfabetos. É direito pleno, sem penalidade por não exercer.
+            </p>
+          </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">3.</span> O Que é o Voto Consciente?
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Por quanto tempo o seu voto vale
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Nem todos os seus seis votos têm o mesmo prazo, e essa diferença costuma passar despercebida:
+          </p>
+          <ul className="grid gap-2.5">
+            <li className="flex items-start gap-3">
+              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">4</span>
+              <span><strong className="font-semibold text-slate-800">Quatro anos</strong> para presidente, governador, deputado federal e deputado estadual ou distrital.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-px flex size-6 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">8</span>
+              <span><strong className="font-semibold text-slate-800">Oito anos</strong> para senador (art. 46, § 1º). Os dois nomes que você escolher para o Senado seguem no cargo depois da próxima eleição presidencial inteira.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> O Que é o Voto Consciente?
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>Votar com consciência vai além de escolher um número. Significa:</p>
           <ul className="grid gap-2.5">
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">1</span>
-              <span><strong className="font-semibold text-slate-800">Analisar o passado</strong> do candidato.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">1</span>
+              <span><strong className="font-semibold text-slate-800">Conferir a ficha</strong> na fonte oficial, e não no que chegou pelo grupo de mensagens.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">2</span>
-              <span><strong className="font-semibold text-slate-800">Ler as propostas</strong> e ver se são viáveis.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">2</span>
+              <span><strong className="font-semibold text-slate-800">Ler as propostas</strong> e checar se cabem no cargo em disputa.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[12px] font-bold text-indigo-600">3</span>
-              <span><strong className="font-semibold text-slate-800">Entender as consequências</strong> que o voto tem por 4 anos.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">3</span>
+              <span><strong className="font-semibold text-slate-800">Decidir os seis votos</strong>, não apenas o de presidente. Quatro deles elegem o Congresso e a Assembleia do seu estado.</span>
             </li>
           </ul>
-          <p>
-            Um voto consciente impede a eleição de maus políticos e fortalece as instituições democráticas.
-          </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">Referências</h2>
+        <h2 className="text-lg font-bold text-slate-800">Referências</h2>
         <div className="mt-3 flex flex-wrap gap-3">
-          <a href="https://www.tse.jus.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
-            TSE — A importância do voto
+          <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Constituição — arts. 14, 46 e 82
             <ExternalLink className="size-3.5" aria-hidden="true" />
             {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
                 enxerga. */}
             <span className="sr-only">(abre em nova aba)</span>
           </a>
-          <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
+          <a href="https://www.tse.jus.br/eleicoes/eleicoes-2026" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Eleições 2026
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
             Politize! — História do voto
             <ExternalLink className="size-3.5" aria-hidden="true" />
             <span className="sr-only">(abre em nova aba)</span>

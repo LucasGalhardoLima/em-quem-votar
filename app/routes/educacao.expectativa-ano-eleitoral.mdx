@@ -1,8 +1,8 @@
 ---
-title: "O que esperar do ano eleitoral?"
-excerpt: "Datas importantes, regras novas e como se preparar para exercer sua cidadania com sabedoria em 2026."
+title: "O Que Esperar do Resto do Ano Eleitoral"
+excerpt: "O registro fechou, a campanha começou e o horário gratuito estreou. As datas que ainda faltam até 4 de outubro e o que muda em cada uma."
 image: ""
-date: "2026-01-05"
+date: "2026-08-28"
 category: "Guia do Eleitor"
 readTime: "5 min"
 ---
@@ -15,100 +15,168 @@ export const meta = () =>
   // Open Graph mora em pageMeta(), para não existir treze vezes.
   pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
 
-import { Container } from "../components/layout";
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
 
-<main className="flex-1">
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[12px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Guia do Eleitor
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
-          O que esperar do Ano Eleitoral?
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
+          O Que Esperar do Resto do Ano Eleitoral
         </h1>
-        <p className="text-[14px] text-slate-500">
-          05 de Janeiro de 2026 · 5 min de leitura
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 5 min de leitura
         </p>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          2026 é ano de decisão. Prepare-se para um período de debates intensos, muita propaganda e, acima de tudo, a oportunidade de renovar a esperança.
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          O registro fechou, a campanha começou e o horário gratuito estreou. As datas que ainda faltam até 4 de outubro e o que muda em cada uma.
         </p>
       </header>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">1.</span> Calendário Essencial
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> O que já aconteceu
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          <p>Fique atento às datas que definem o jogo democrático:</p>
-        </div>
         <div className="mt-3 grid gap-3">
           <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
-            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
-              Jan-Mar
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-slate-600 uppercase">
+              15 ago
             </span>
             <div>
-              <h3 className="text-[15px] font-bold text-slate-800">Janela Partidária</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                Período onde políticos podem trocar de partido sem perder o mandato. Espere muitas movimentações.
+              <h3 className="text-base font-bold text-slate-800">Fim do prazo de registro</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Encerrou o prazo para os partidos pedirem o registro das candidaturas no TSE. Quem não entrou até ali não está na urna.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
-            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-[12px] font-bold tracking-[0.06em] text-slate-500 uppercase">
-              Jun-Jul
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-slate-600 uppercase">
+              16 ago
             </span>
             <div>
-              <h3 className="text-[15px] font-bold text-slate-800">Convenções Partidárias</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                Definição oficial dos candidatos. É aqui que as chapas são formadas.
+              <h3 className="text-base font-bold text-slate-800">Início da propaganda eleitoral</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Comício, carro de som, material impresso e propaganda na internet passaram a ser permitidos dentro das regras da Justiça Eleitoral.
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
-            <span className="flex-none rounded-lg bg-indigo-600 px-2.5 py-1 text-[12px] font-bold tracking-[0.06em] text-white uppercase">
-              Out
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-slate-600 uppercase">
+              28 ago
             </span>
             <div>
-              <h3 className="text-[15px] font-bold text-slate-800">Eleições (1º e 2º Turno)</h3>
-              <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
-                O momento da verdade nas urnas.
+              <h3 className="text-base font-bold text-slate-800">Estreia do horário eleitoral gratuito</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Começaram as inserções em rádio e TV. O tempo de cada candidatura não é igual: é distribuído conforme regra legal, e não segundo a preferência de quem transmite.
               </p>
             </div>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">2.</span> Cuidado com a Desinformação
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> O que ainda vem
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-3 grid gap-3">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-white uppercase">
+              4 out
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Primeiro turno</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Um domingo. A votação vai das 8h às 17h pelo horário de Brasília, em todos os estados e no Distrito Federal. Seis escolhas na urna, começando por deputado federal.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-white uppercase">
+              25 out
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Eventual segundo turno</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Só existe para presidente e governador, e só se ninguém tiver alcançado mais da metade dos votos válidos no dia 4. Senadores e deputados são definidos de uma vez, no primeiro turno.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Como ler uma pesquisa eleitoral
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            Em anos eleitorais, o volume de <em>Fake News</em> triplica. Antes de compartilhar qualquer notícia bombástica no grupo da família:
+            Toda pesquisa divulgada tem de ser registrada na Justiça Eleitoral até cinco dias antes da publicação, com quem contratou, quanto custou, a metodologia, o plano amostral e a margem de erro (Lei 9.504/97, art. 33). O registro recebe um número, e a consulta é pública.
           </p>
           <ul className="grid gap-2">
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Cheque a fonte:</strong> É um jornal conhecido?</span>
+              <span><strong className="font-semibold text-slate-800">Procure o número de registro.</strong> Sem ele, não é pesquisa divulgável.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Verifique a data:</strong> Notícias antigas costumam ressurgir fora de contexto.</span>
+              <span><strong className="font-semibold text-slate-800">Leia a margem de erro.</strong> Dois candidatos separados por menos que ela estão tecnicamente empatados.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Desconfie do tom:</strong> Textos muito alarmistas ou com muitos adjetivos ("URGENTE", "CRIMINOSO") geralmente são falsos.</span>
+              <span><strong className="font-semibold text-slate-800">Veja quem contratou.</strong> Está no registro, e o dado é público de propósito.</span>
             </li>
           </ul>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">3.</span> A Polarização
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> Cuidado com a desinformação
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            A tendência é que o clima político continue polarizado. O desafio para o eleitor consciente é furar a bolha, ouvir propostas de diferentes espectros e votar com racionalidade, não apenas com o fígado.
+            Nas semanas finais de campanha, conteúdo falso circula com mais velocidade do que a checagem consegue acompanhar. Antes de repassar qualquer coisa:
           </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Ache a fonte primária:</strong> se a alegação é sobre um documento, o documento existe e pode ser aberto.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Verifique a data:</strong> material antigo reaparece fora de contexto, e o recorte é o que engana.</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span><strong className="font-semibold text-slate-800">Desconfie de áudio e vídeo curtos:</strong> ferramentas de geração sintética tornaram baratíssimo fabricar uma fala de poucos segundos.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">5.</span> A polarização
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Da estreia do horário eleitoral até a apuração, o tom do debate tende a endurecer nos dois sentidos. O único antídoto que depende de você é o mesmo de sempre: procurar a proposta antes do adjetivo, e conferir a fonte antes de repassar.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">Fontes</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.tse.jus.br/eleicoes/calendario-eleitoral" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Calendário eleitoral
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.tse.jus.br/eleicoes/estatisticas/pesquisas-eleitorais" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Pesquisas eleitorais
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
         </div>
       </section>
     </div>
