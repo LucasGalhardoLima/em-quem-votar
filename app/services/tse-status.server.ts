@@ -9,9 +9,18 @@
  * `vote-classifier.server.ts` (OpenAI) pertence ao pipeline de votações e não
  * é tocado por este caminho — o cron horário não consome créditos de modelo.
  */
-import { statusFromTseLabel } from "~/lib/candidate-status";
+import { tseStatusWrite, type RegistrationStatus } from "~/lib/candidate-status";
 import { fetchDivulgaStatuses, type DivulgaStatuses } from "~/lib/tse-divulga";
 import { db } from "~/utils/db.server";
+
+/**
+ * Updates por transação. Mesmo motivo (e mesmo número) de
+ * `tse-detail.server.ts`: o banco é remoto e o que custa é o NÚMERO de idas e
+ * voltas. Em série, um julgamento em lote — 140 candidaturas ainda
+ * "Aguardando julgamento" hoje — viravam 140 round-trips dentro de uma função
+ * serverless; agrupadas, viram um.
+ */
+const CHUNK = 500;
 
 export interface StatusRefreshResult {
   /** Situações lidas no TSE. */
@@ -28,13 +37,18 @@ export interface StatusRefreshResult {
  * e não toca em nenhum outro campo — é o passo barato que roda de hora em
  * hora, enquanto o sync completo (identidade, coligação, chapa) roda menos.
  *
- * Duas recusas deliberadas:
+ * Três recusas deliberadas:
  *
  * 1. Unidade sem resposta não sobrescreve nada. Como só gravamos os `tseId`
  *    que a API devolveu, uma queda do TSE simplesmente não mexe no banco —
  *    em vez de rebaixar "Deferido" para "aguardando julgamento".
- * 2. Redação desconhecida não vira palpite. Sai em `unmapped` para alguém
- *    olhar; a situação gravada continua a que estava.
+ * 2. Redação desconhecida não vira palpite no ENUM. A redação em si é gravada
+ *    (é a palavra literal da Justiça Eleitoral, e é ela que o badge exibe); o
+ *    `registrationStatus` guardado é preservado, porque um valor que alguém
+ *    conferiu vale mais que um fallback inventado. Ver `tseStatusWrite()`.
+ * 3. O aviso de redação desconhecida sai em TODA execução, não só na primeira.
+ *    Reportar apenas quando o rótulo muda faria a anomalia aparecer uma vez e
+ *    sumir — com o enum errado congelado no banco e ninguém mais avisado.
  */
 export async function refreshCandidateStatuses(): Promise<StatusRefreshResult> {
   const { byTseId, failedUnits } = await fetchDivulgaStatuses();
@@ -46,24 +60,46 @@ export async function refreshCandidateStatuses(): Promise<StatusRefreshResult> {
 
   const changed: StatusRefreshResult["changed"] = [];
   const unmapped: StatusRefreshResult["unmapped"] = [];
+  const updates: Array<{
+    tseId: string;
+    data: {
+      tseStatusLabel: string;
+      registrationStatus?: RegistrationStatus;
+      lastSyncedAt: Date;
+    };
+  }> = [];
 
   for (const candidate of candidates) {
     const tseId = candidate.tseId as string;
     const label = byTseId.get(tseId);
     if (!label) continue; // unidade não respondeu, ou candidatura fora do recorte
+
+    const write = tseStatusWrite(label);
+    if (write.kind === "absent") continue; // a API mandou string vazia
+
+    // Antes da comparação de rótulos, de propósito: uma redação desconhecida
+    // continua exigindo código mesmo depois de já estar gravada.
+    if (write.kind === "unmapped") unmapped.push({ tseId, label });
+
     if (label === candidate.tseStatusLabel) continue;
 
-    const status = statusFromTseLabel(label);
-    if (!status) {
-      unmapped.push({ tseId, label });
-      continue;
-    }
-
-    await db.candidate.update({
-      where: { tseId },
-      data: { tseStatusLabel: label, registrationStatus: status, lastSyncedAt: new Date() },
+    updates.push({
+      tseId,
+      data: {
+        tseStatusLabel: write.label,
+        ...(write.kind === "mapped" ? { registrationStatus: write.status } : {}),
+        lastSyncedAt: new Date(),
+      },
     });
     changed.push({ tseId, from: candidate.tseStatusLabel, to: label });
+  }
+
+  for (let i = 0; i < updates.length; i += CHUNK) {
+    await db.$transaction(
+      updates
+        .slice(i, i + CHUNK)
+        .map(u => db.candidate.update({ where: { tseId: u.tseId }, data: u.data })),
+    );
   }
 
   return { read: byTseId.size, changed, unmapped, failedUnits };

@@ -58,6 +58,22 @@ function seededShuffle<T>(items: T[], seed: number): T[] {
 }
 
 /**
+ * Recorte de "tema documentado", para os contadores.
+ *
+ * `approvedAt` sozinho não basta. Stance `0` significa "sem posição
+ * registrada" (ver `app/lib/stance.ts`) e uma linha assim pode ser aprovada
+ * no /admin como qualquer outra — basta isso para o card afirmar "1 tema
+ * documentado" sobre um tema que a candidatura explicitamente não documentou.
+ * Hoje não há nenhuma linha nessa condição no banco (verificado em
+ * 27/08/2026); o filtro existe para que passe a haver não vire uma afirmação
+ * falsa. É o mesmo recorte que `/candidato/:id` já usa para `documentedCount`.
+ */
+const APPROVED_AND_DOCUMENTED: Prisma.CandidatePositionWhereInput = {
+  approvedAt: { not: null },
+  stance: { gt: 0 },
+};
+
+/**
  * Recorte de cargo/UF usado por toda consulta auxiliar. Existe para que os
  * chips de filtro, a lista de partidos e o quiz enxerguem exatamente o mesmo
  * conjunto que a listagem — um contador que conta candidaturas invisíveis é
@@ -169,7 +185,7 @@ export const CandidateService = {
             include: { tag: true },
           },
           _count: {
-            select: { positions: { where: { approvedAt: { not: null } } } },
+            select: { positions: { where: APPROVED_AND_DOCUMENTED } },
           },
         },
         orderBy: { name: "asc" },
@@ -233,8 +249,14 @@ export const CandidateService = {
           include: { tag: true },
         },
         legislativeLink: true,
-        spendingRecords: {
-          orderBy: { periodEnd: "desc" },
+        // `spendingRecords` NÃO entra aqui. A página de candidato lê gastos e
+        // bens por `SpendingService.getByCandidate` / `getDeclaredAssets`, que
+        // agregam e ordenam; o `spending` que este método devolvia não tinha
+        // um único consumidor e fazia `/candidato/:id` ler a mesma tabela três
+        // vezes por requisição.
+        // Do mais recente para o mais antigo — é como uma trajetória se lê.
+        electionHistory: {
+          orderBy: [{ year: "desc" }, { office: "asc" }],
         },
         votes: {
           include: {
@@ -278,7 +300,31 @@ export const CandidateService = {
       socialLinks: candidate.socialLinks as Record<string, string> | null,
       dataSource: candidate.dataSource,
       sourceUrl: candidate.sourceUrl,
+      // Nº do processo de registro (RCand): é o que permite ao leitor abrir a
+      // decisão da Justiça Eleitoral e conferir a situação na fonte.
+      tseProcessNumber: candidate.tseProcessNumber,
+      /*
+        Quantos bens e quantas candidaturas anteriores a FICHA do TSE declara,
+        em três estados cada (`null` = não sabemos, `0` = a ficha declara zero,
+        `N` = a ficha declara N). São o que permite à página distinguir "a
+        ficha não trouxe a lista" de "a ficha trouxe a lista vazia" — sem eles
+        as duas chegam aqui como a mesma coisa, nenhuma linha, e a página não
+        pode afirmar nem uma nem outra. Ver o comentário das colunas no
+        schema.
+      */
+      tseAssetsDeclared: candidate.tseAssetsDeclared,
+      tsePriorElectionsDeclared: candidate.tsePriorElectionsDeclared,
       lastSyncedAt: candidate.lastSyncedAt?.toISOString() ?? null,
+      /** Candidaturas anteriores, redação do TSE. Nunca parafraseada. */
+      electionHistory: candidate.electionHistory.map((e) => ({
+        id: e.id,
+        year: e.year,
+        office: e.office,
+        ue: e.ue,
+        party: e.party,
+        resultLabel: e.resultLabel,
+        sourceUrl: e.sourceUrl,
+      })),
       positions: candidate.positions.map((p) => ({
         topicName: p.topic.name,
         topicCategory: p.topic.category,
@@ -298,13 +344,6 @@ export const CandidateService = {
         slug: ct.tag.slug,
         category: ct.tag.category,
       })),
-      spending: candidate.spendingRecords.map((s) => ({
-        type: s.type,
-        totalAmount: Number(s.amount),
-        period: `${s.periodStart.toISOString().slice(0, 7)} — ${s.periodEnd.toISOString().slice(0, 7)}`,
-        source: s.source,
-        sourceUrl: s.sourceUrl,
-      })),
       votes: candidate.votes.map((v) => ({
         id: v.id,
         voteType: v.voteType,
@@ -323,6 +362,43 @@ export const CandidateService = {
       // afirmar um cargo fixo.
       electionType: candidate.electionType,
       uf: candidate.uf,
+    };
+  },
+
+  /**
+   * O mínimo para desenhar a imagem de compartilhamento (`/resources/og/:id`).
+   *
+   * Existe porque aquela rota chamava `getById`, que junta posições com
+   * tópicos, histórico eleitoral, vínculo legislativo e as 20 votações mais
+   * recentes com os `Bill` de cada uma — tudo isso para pintar cinco campos
+   * num PNG. Um `select` enxuto troca meia dúzia de joins por uma consulta.
+   */
+  async getOgCard(id: string) {
+    const candidate = await db.candidate.findUnique({
+      where: { id },
+      select: {
+        displayName: true,
+        party: true,
+        coalition: true,
+        photoUrl: true,
+        tags: {
+          select: { tag: { select: { name: true, slug: true } } },
+          take: 5,
+        },
+      },
+    });
+
+    if (!candidate) return null;
+
+    return {
+      displayName: candidate.displayName,
+      party: candidate.party,
+      coalition: candidate.coalition,
+      photoUrl: candidate.photoUrl,
+      tags: candidate.tags.map((ct) => ({
+        name: ct.tag.name,
+        slug: ct.tag.slug,
+      })),
     };
   },
 
@@ -346,29 +422,56 @@ export const CandidateService = {
     };
   },
 
+  /**
+   * O mínimo para desenhar a tabela de `/comparar`: cabeçalho da coluna
+   * (foto, nome, partido, número, badge de situação) e uma célula por tema.
+   *
+   * O `select` é o mesmo remédio já aplicado em `getById`, e aqui o
+   * desperdício era pior porque a tela carrega até `MAX_COMPARISON`
+   * candidaturas de uma vez. Saíram três coisas sem consumidor nenhum na
+   * rota: `spendingRecords` (a comparação não mostra gastos — quem mostra é
+   * `/candidato/:id`, por `SpendingService`), `votes` com o `Bill` inteiro de
+   * cada voto e SEM `take` (a tela não tem linha de votação; num
+   * parlamentar de longa data isso é a tabela toda vezes três), e o `topic`
+   * completo por posição quando só o `slug` vira chave do mapa.
+   */
   async listForComparison(ids: string[]) {
     const candidates = await db.candidate.findMany({
       where: { id: { in: ids } },
-      include: {
+      select: {
+        id: true,
+        displayName: true,
+        party: true,
+        photoUrl: true,
+        number: true,
+        registrationStatus: true,
+        tseStatusLabel: true,
+        electionType: true,
+        uf: true,
         positions: {
+          // `stance: 0` continua entrando: é uma posição aprovada que diz
+          // "sem posição registrada", e a célula precisa exibir isso em vez
+          // de deixar o tema mudo. Quem separa é `hasPosition()` na tela.
           where: { approvedAt: { not: null } },
-          include: { topic: true },
-        },
-        spendingRecords: true,
-        votes: {
-          include: { bill: true },
+          select: {
+            stance: true,
+            description: true,
+            sourceType: true,
+            sourceUrl: true,
+            sourceDocument: true,
+            sourcePage: true,
+            topic: { select: { slug: true } },
+          },
         },
       },
     });
 
     return candidates.map((c) => ({
       id: c.id,
-      name: c.name,
       displayName: c.displayName,
       party: c.party,
       photoUrl: c.photoUrl,
       number: c.number,
-      coalition: c.coalition,
       registrationStatus: c.registrationStatus,
       tseStatusLabel: c.tseStatusLabel,
       office: c.electionType as Office,
@@ -385,13 +488,6 @@ export const CandidateService = {
             sourcePage: p.sourcePage,
           },
         ])
-      ),
-      spending: c.spendingRecords.map((s) => ({
-        type: s.type,
-        totalAmount: Number(s.amount),
-      })),
-      votes: Object.fromEntries(
-        c.votes.map((v) => [v.billId, v.voteType])
       ),
     }));
   },
@@ -427,7 +523,7 @@ export const CandidateService = {
           include: { tag: true },
         },
         _count: {
-          select: { positions: { where: { approvedAt: { not: null } } } },
+          select: { positions: { where: APPROVED_AND_DOCUMENTED } },
         },
       },
     });
@@ -460,10 +556,13 @@ export const CandidateService = {
   },
 
   async listAllIds() {
-    return db.candidate.findMany({
+    const rows = await db.candidate.findMany({
       where: scopeWhere(null, null),
       select: { id: true, updatedAt: true },
     });
+    // ISO na saída, como todo o resto da camada de serviço: era o único
+    // método daqui que devolvia `Date` cru para quem chama.
+    return rows.map((c) => ({ id: c.id, updatedAt: c.updatedAt.toISOString() }));
   },
 
   // Admin methods

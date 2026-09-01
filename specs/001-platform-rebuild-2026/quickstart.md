@@ -110,7 +110,7 @@ app/
 │   ├── spending.server.ts
 │   ├── bill.server.ts
 │   ├── article.server.ts
-│   └── newsletter.server.ts
+│   └── newsletter.server.ts   # DROPPED 2026-08-28
 ├── data/                # Static data (archetypes, featured items)
 ├── stores/              # Zustand client state
 ├── hooks/               # React hooks

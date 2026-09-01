@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import {
   useLoaderData,
   useActionData,
@@ -21,7 +22,8 @@ import {
 import type { Route } from "./+types/admin.votacao.$id";
 import { db } from "~/utils/db.server";
 import { requireAdmin } from "~/utils/admin-auth.server";
-import { Container } from "~/components/layout";
+import { Container, MAIN_CONTENT_ID } from "~/components/layout";
+import { CARD, INPUT, LABEL } from "~/components/admin/styles";
 import { cn } from "~/lib/utils";
 
 export function meta() {
@@ -83,8 +85,17 @@ export async function action({ request, params }: Route.ActionArgs) {
         const tagSim = formData.get("tagSim") as string;
         const tagNao = formData.get("tagNao") as string;
 
+        // `missing` diz QUAIS campos faltaram: sem isso a tela só consegue
+        // dizer "algo está errado" e deixa o editor procurando qual dos dois
+        // selects é o culpado.
         if (!tagSim || !tagNao) {
-            return { error: "Selecione as tags para SIM e NÃO" };
+            return {
+                error: "Selecione as tags para SIM e NÃO.",
+                missing: [
+                    ...(tagSim ? [] : ["tagSim"]),
+                    ...(tagNao ? [] : ["tagNao"]),
+                ],
+            };
         }
 
         // 1. Atualizar status da Bill
@@ -105,7 +116,13 @@ export async function action({ request, params }: Route.ActionArgs) {
         ]);
 
         if (!tagSimObj || !tagNaoObj) {
-            return { error: "Tags não encontradas" };
+            return {
+                error: "Tags não encontradas.",
+                missing: [
+                    ...(tagSimObj ? [] : ["tagSim"]),
+                    ...(tagNaoObj ? [] : ["tagNao"]),
+                ],
+            };
         }
 
         // 3. Buscar todos os votos dessa votação
@@ -154,12 +171,6 @@ export async function action({ request, params }: Route.ActionArgs) {
     return null;
 }
 
-const CARD = "rounded-2xl border border-slate-200 bg-white";
-const LABEL =
-    "mb-1.5 block text-[10.5px] font-semibold tracking-[0.06em] text-slate-400 uppercase";
-const INPUT =
-    "w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-800 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-600/10";
-
 const STATUS_PRESENTATION: Record<string, { label: string; className: string }> = {
     pending: {
         label: "Pendente",
@@ -179,7 +190,12 @@ export default function AdminVotacaoDetail() {
     const { bill, voteCount, tagsByCategory } = useLoaderData<typeof loader>();
     const actionData = useActionData<typeof action>();
     const navigation = useNavigation();
-    const isSubmitting = navigation.state === "submitting";
+    // Qual dos dois botões está em voo, não "algum": o spinner acendia no
+    // "Aprovar" mesmo quando o clique tinha sido no "Rejeitar".
+    const pendingIntent =
+        typeof navigation.formData?.get("intent") === "string"
+            ? (navigation.formData.get("intent") as string)
+            : null;
 
     const status =
         STATUS_PRESENTATION[bill.status] ?? {
@@ -188,44 +204,61 @@ export default function AdminVotacaoDetail() {
         };
     const errorMessage =
         actionData && "error" in actionData ? actionData.error : null;
+    const missing =
+        actionData && "missing" in actionData ? actionData.missing : [];
+
+    /**
+     * O erro nasce dos selects lá embaixo; antes ele era anunciado no topo da
+     * página, uns dois rolares acima do formulário, e nada movia o foco. Quem
+     * usa teclado ou leitor de tela ficava sabendo que "algo falhou" sem
+     * caminho de volta ao campo. Agora o aviso mora dentro do formulário e
+     * recebe o foco assim que aparece.
+     *
+     * A dependência é `actionData` (objeto novo a cada envio) e não a
+     * mensagem: dois envios com o mesmo texto precisam reposicionar o foco.
+     */
+    const errorRef = useRef<HTMLParagraphElement>(null);
+    useEffect(() => {
+        if (errorMessage) errorRef.current?.focus();
+    }, [actionData, errorMessage]);
 
     return (
-        <main className="flex-1">
+        <main id={MAIN_CONTENT_ID} className="flex-1">
             <Container className="pt-9 pb-16">
                 <Link
                     to="/admin"
-                    className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-slate-400 transition-colors hover:text-slate-600"
+                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-xs font-medium text-slate-500 transition-colors hover:text-slate-600"
                 >
-                    <ArrowLeft className="size-3.5" />
+                    <ArrowLeft className="size-3.5" aria-hidden="true" />
                     Voltar ao painel
                 </Link>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                     <span
                         className={cn(
-                            "rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                            "rounded-full border px-2.5 py-0.5 text-xs font-semibold",
                             status.className
                         )}
                     >
                         {status.label}
                     </span>
                     {bill.aiConfidence !== null && (
-                        <span className="text-[12px] text-slate-400">
+                        <span className="text-xs text-slate-500">
                             Confiança da IA: {Number(bill.aiConfidence).toFixed(0)}%
                         </span>
                     )}
                 </div>
 
-                <h1 className="mt-3 font-heading text-[28px] font-bold tracking-[-0.02em] text-balance text-slate-800 sm:text-[34px]">
+                <h1 className="mt-3 font-heading text-3xl font-bold tracking-[-0.02em] text-balance text-slate-800 sm:text-4xl">
                     {bill.simplifiedTitle || bill.title}
                 </h1>
-                <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14.5px] text-slate-500">
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-slate-500">
                     <span className="inline-flex items-center gap-1.5">
-                        <Calendar className="size-4 text-slate-400" aria-hidden="true" />
+                        <Calendar className="size-4 text-slate-500" aria-hidden="true" />
                         {new Date(bill.voteDate).toLocaleDateString("pt-BR")}
                     </span>
                     <span className="inline-flex items-center gap-1.5">
-                        <Users className="size-4 text-slate-400" aria-hidden="true" />
+                        <Users className="size-4 text-slate-500" aria-hidden="true" />
                         {voteCount} votos registrados
                     </span>
                     <span>
@@ -233,22 +266,12 @@ export default function AdminVotacaoDetail() {
                     </span>
                 </p>
 
-                {errorMessage && (
-                    <p
-                        role="alert"
-                        className="mt-5 flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-800"
-                    >
-                        <TriangleAlert className="mt-0.5 size-4 flex-none" aria-hidden="true" />
-                        <span>{errorMessage}</span>
-                    </p>
-                )}
-
                 <div className="mt-6 space-y-5">
                     <section className={cn(CARD, "space-y-5 p-5 sm:p-6")}>
                         {bill.simplifiedTitle && (
                             <div>
                                 <p className={LABEL}>Título original</p>
-                                <p className="text-[13.5px] leading-relaxed text-slate-600">
+                                <p className="text-sm leading-relaxed text-slate-600">
                                     {bill.title}
                                 </p>
                             </div>
@@ -257,7 +280,7 @@ export default function AdminVotacaoDetail() {
                         {bill.description && (
                             <div>
                                 <p className={LABEL}>Descrição técnica</p>
-                                <p className="text-[13.5px] leading-relaxed text-slate-600">
+                                <p className="text-sm leading-relaxed text-slate-600">
                                     {bill.description}
                                 </p>
                             </div>
@@ -266,7 +289,7 @@ export default function AdminVotacaoDetail() {
                         {bill.simplifiedDescription && (
                             <div>
                                 <p className={LABEL}>Resumo simplificado</p>
-                                <p className="text-[13.5px] leading-relaxed whitespace-pre-line text-slate-600">
+                                <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">
                                     {bill.simplifiedDescription}
                                 </p>
                             </div>
@@ -278,12 +301,15 @@ export default function AdminVotacaoDetail() {
                                     href={bill.sourceUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
+                                    className="focus-ring inline-flex items-center gap-1.5 rounded-md text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline"
                                 >
                                     Conferir a votação original
                                     <ExternalLink className="size-3.5" aria-hidden="true" />
+                                    {/* Ver `SourceCite`: o ícone de nova aba só
+                                        comunica a quem enxerga. */}
+                                    <span className="sr-only">(abre em nova aba)</span>
                                 </a>
-                                <p className="mt-1 text-[12px] text-slate-400">
+                                <p className="mt-1 text-xs text-slate-500">
                                     Confirme os detalhes na fonte antes de aprovar.
                                 </p>
                             </div>
@@ -291,11 +317,11 @@ export default function AdminVotacaoDetail() {
 
                         {bill.suggestedTagSim && (
                             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                                <p className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-600">
-                                    <Tag className="size-3.5 text-slate-400" aria-hidden="true" />
+                                <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
+                                    <Tag className="size-3.5 text-slate-500" aria-hidden="true" />
                                     Sugestão da IA
                                 </p>
-                                <div className="mt-2 flex flex-wrap gap-4 text-[12.5px] text-slate-500">
+                                <div className="mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
                                     <span>
                                         SIM:{" "}
                                         <code className="rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-slate-700">
@@ -316,25 +342,52 @@ export default function AdminVotacaoDetail() {
                     {bill.status === "pending" && (
                         <Form method="post" className={cn(CARD, "space-y-4 p-5 sm:p-6")}>
                             <div>
-                                <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+                                <h2 className="font-heading text-lg font-bold tracking-[-0.01em] text-slate-800">
                                     Classificar votação
                                 </h2>
-                                <p className="mt-1 text-[12.5px] text-slate-500">
+                                <p className="mt-1 text-xs text-slate-500">
                                     A tag escolhida é atribuída a todos os parlamentares
                                     conforme o voto registrado.
                                 </p>
                             </div>
+
+                            {errorMessage && (
+                                <p
+                                    ref={errorRef}
+                                    role="alert"
+                                    tabIndex={-1}
+                                    id="classificar-erro"
+                                    className="focus-ring flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"
+                                >
+                                    <TriangleAlert className="mt-0.5 size-4 flex-none" aria-hidden="true" />
+                                    <span>{errorMessage}</span>
+                                </p>
+                            )}
 
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
                                     <label htmlFor="tagSim" className={LABEL}>
                                         Tag para voto SIM
                                     </label>
+                                    {/* `required` para que o navegador barre o
+                                        envio e leve o foco ao campo vazio antes
+                                        de o servidor precisar responder. O
+                                        "Rejeitar" escapa disso com
+                                        `formNoValidate`: rejeitar uma votação
+                                        não depende de escolher tag nenhuma. */}
                                     <select
                                         id="tagSim"
                                         name="tagSim"
+                                        required
+                                        aria-invalid={missing.includes("tagSim") || undefined}
+                                        aria-describedby={
+                                            errorMessage ? "classificar-erro" : undefined
+                                        }
                                         defaultValue={bill.suggestedTagSim || ""}
-                                        className={INPUT}
+                                        className={cn(
+                                            INPUT,
+                                            missing.includes("tagSim") && "border-rose-300",
+                                        )}
                                     >
                                         <option value="">Selecione…</option>
                                         {Object.entries(tagsByCategory).map(([category, tags]) => (
@@ -356,8 +409,16 @@ export default function AdminVotacaoDetail() {
                                     <select
                                         id="tagNao"
                                         name="tagNao"
+                                        required
+                                        aria-invalid={missing.includes("tagNao") || undefined}
+                                        aria-describedby={
+                                            errorMessage ? "classificar-erro" : undefined
+                                        }
                                         defaultValue={bill.suggestedTagNao || ""}
-                                        className={INPUT}
+                                        className={cn(
+                                            INPUT,
+                                            missing.includes("tagNao") && "border-rose-300",
+                                        )}
                                     >
                                         <option value="">Selecione…</option>
                                         {Object.entries(tagsByCategory).map(([category, tags]) => (
@@ -378,13 +439,14 @@ export default function AdminVotacaoDetail() {
                                     type="submit"
                                     name="intent"
                                     value="approve"
-                                    disabled={isSubmitting}
-                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-[13.5px] font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                                    disabled={pendingIntent !== null}
+                                    aria-busy={pendingIntent === "approve"}
+                                    className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                                 >
-                                    {isSubmitting ? (
-                                        <Loader2 className="size-4 animate-spin" />
+                                    {pendingIntent === "approve" ? (
+                                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                                     ) : (
-                                        <CheckCircle2 className="size-4" />
+                                        <CheckCircle2 className="size-4" aria-hidden="true" />
                                     )}
                                     Aprovar e atribuir tags
                                 </button>
@@ -393,10 +455,18 @@ export default function AdminVotacaoDetail() {
                                     type="submit"
                                     name="intent"
                                     value="reject"
-                                    disabled={isSubmitting}
-                                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-6 py-3 text-[13.5px] font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
+                                    // Rejeitar não precisa das tags — sem isto o
+                                    // `required` dos selects barraria a rejeição.
+                                    formNoValidate
+                                    disabled={pendingIntent !== null}
+                                    aria-busy={pendingIntent === "reject"}
+                                    className="focus-ring inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-6 py-3 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 disabled:opacity-50"
                                 >
-                                    <XCircle className="size-4" />
+                                    {pendingIntent === "reject" ? (
+                                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                                    ) : (
+                                        <XCircle className="size-4" aria-hidden="true" />
+                                    )}
                                     Rejeitar
                                 </button>
                             </div>
@@ -405,21 +475,21 @@ export default function AdminVotacaoDetail() {
 
                     {bill.voteLogs.length > 0 && (
                         <section className={cn(CARD, "p-5 sm:p-6")}>
-                            <h2 className="font-heading text-[17px] font-bold tracking-[-0.01em] text-slate-800">
+                            <h2 className="font-heading text-lg font-bold tracking-[-0.01em] text-slate-800">
                                 Amostra de votos
                             </h2>
                             <ul className="mt-3 divide-y divide-slate-100">
                                 {bill.voteLogs.map((vote) => (
                                     <li
                                         key={vote.id}
-                                        className="flex items-center justify-between gap-3 py-2.5 text-[13.5px]"
+                                        className="flex items-center justify-between gap-3 py-2.5 text-sm"
                                     >
                                         <span className="truncate text-slate-600">
                                             {vote.politician.name}
                                         </span>
                                         <span
                                             className={cn(
-                                                "flex-none rounded-full border px-2.5 py-0.5 text-[11px] font-semibold",
+                                                "flex-none rounded-full border px-2.5 py-0.5 text-xs font-semibold",
                                                 vote.voteType === "SIM"
                                                     ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                                                     : vote.voteType === "NÃO" || vote.voteType === "NAO"

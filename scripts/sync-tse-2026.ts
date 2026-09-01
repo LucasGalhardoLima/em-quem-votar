@@ -12,6 +12,9 @@
  * Página do dataset : https://dadosabertos.tse.jus.br/dataset/candidatos-2026
  * Pacote de dados   : https://cdn.tse.jus.br/estatistica/sead/odsele/consulta_cand/consulta_cand_2026.zip
  * Fotos de urna     : https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2026/fotos/foto_cand2026_<UF>_div.zip
+ * Situação          : /rest/v1/candidatura/listar/... (DivulgaCandContas, 28 chamadas)
+ * Ficha completa    : /rest/v1/candidatura/buscar/... (DivulgaCandContas, 1 por candidatura)
+ *                     — bens declarados, eleições anteriores, nº do processo, aptidão
  *
  * Uso
  * ---
@@ -43,19 +46,24 @@
  *   nem em public/candidatos).
  */
 
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { inflateRawSync } from "node:zlib";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { statusFromTseLabel, type RegistrationStatus } from "../app/lib/candidate-status";
+import { tseStatusWrite, type RegistrationStatus } from "../app/lib/candidate-status";
 import {
   CARGO_GOVERNADOR,
   CARGO_PRESIDENTE,
   divulgaUrl,
   ELECTION_YEAR,
+  fetchDivulgaDetails,
   fetchDivulgaStatuses,
 } from "../app/lib/tse-divulga";
+import {
+  applyDivulgaDetails,
+  type DetailTarget,
+} from "../app/services/tse-detail.server";
 
 // ============================================================
 // Configuração
@@ -197,6 +205,41 @@ let statusUndisclosedCount = 0;
 
 /** Marca que o diff do --dry-run rodou às cegas (banco fora do ar). */
 let dbUnavailable = false;
+
+/**
+ * Motivo pelo qual este run NÃO conferiu a situação de ninguém — `null` quando
+ * conferiu. Faz o script sair com código != 0, senão o Actions marca verde
+ * sobre uma execução que não fez o trabalho principal e a defasagem cresce sem
+ * ninguém ver.
+ *
+ * DUAS CAUSAS, UM MECANISMO SÓ (ver onde é atribuído, no passo 3):
+ *   - indisponibilidade — metade ou mais das unidades sem resposta;
+ *   - anomalia de formato — zero situações lidas E nenhuma unidade falhou.
+ * A segunda é invisível para a primeira: num ponto cego de formato ninguém
+ * falha, então não há contagem de falhas para cruzar o teto. É por isso que a
+ * variável guarda a mensagem em vez de um booleano — o mesmo caminho de saída
+ * precisa dizer QUAL das duas aconteceu.
+ */
+let statusOutage: string | null = null;
+
+/** BR/presidente + 27 UFs/governador — o denominador do teto abaixo. */
+const DIVULGA_UNITS = 28;
+/**
+ * Acima desta fração de unidades sem resposta, o run é considerado falho.
+ * Metade é o corte: uma ou outra unidade fora do ar é ruído do TSE (e a
+ * situação daquelas candidaturas fica preservada, que é o comportamento
+ * correto); metade ou mais é indisponibilidade, e indisponibilidade tem de
+ * pintar vermelho.
+ */
+const DIVULGA_OUTAGE_RATIO = 0.5;
+
+/**
+ * Colunas opcionais ausentes, acumuladas por nome → nº de CSVs. Agregar em vez
+ * de avisar na hora: `DS_SITUACAO_CANDIDATURA`/`DS_DETALHE_SITUACAO_CAND`
+ * faltam nos 28 arquivos do pacote de 2026 por decisão do TSE (ver CLAUDE.md),
+ * e 56 linhas iguais enterravam os avisos que exigem ação humana.
+ */
+const missingOptionalColumns = new Map<string, number>();
 
 function warn(message: string) {
   warningCount++;
@@ -843,13 +886,48 @@ function buildTable(text: string, sourceLabel: string): CsvTable {
     );
   }
 
+  // Acumula em vez de avisar por arquivo — ver `missingOptionalColumns`.
   for (const column of OPTIONAL_COLUMNS) {
     if (!index.has(column)) {
-      warn(`Coluna opcional ausente no CSV (${sourceLabel}): ${column}. Campo virá vazio.`);
+      missingOptionalColumns.set(column, (missingOptionalColumns.get(column) ?? 0) + 1);
     }
   }
 
   return { headers, index, rows: rows.slice(1), sourceLabel };
+}
+
+/** UM aviso para todas as colunas opcionais ausentes, em todos os CSVs. */
+function reportMissingOptionalColumns(totalTables: number) {
+  if (missingOptionalColumns.size === 0) return;
+  const detalhe = [...missingOptionalColumns.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([column, count]) => `${column} (em ${count}/${totalTables} arquivo(s))`)
+    .join(", ");
+  warn(
+    `Coluna(s) opcional(is) ausente(s) no pacote do TSE: ${detalhe}. ` +
+      "Os campos correspondentes vêm vazios. Em 2026 a situação da candidatura " +
+      "não está no pacote por decisão do TSE — ela vem do DivulgaCandContas."
+  );
+}
+
+/**
+ * Carimba `lastSyncedAt` SEM tocar em `updatedAt`, e devolve quantas linhas.
+ *
+ * `updatedAt` é `@updatedAt`: QUALQUER update do Prisma o reescreve, inclusive
+ * um que não muda campo nenhum — e `updatedAt` é o `<lastmod>` do sitemap. Com
+ * o `lastSyncedAt: new Date()` dentro do payload de update, um sync sem
+ * novidade anunciava aos buscadores que as 211 páginas haviam mudado, quatro
+ * vezes por dia. "Conferido agora" e "mudou agora" são afirmações diferentes,
+ * e só uma delas é verdade num run sem diff.
+ *
+ * SQL cru porque `update`/`updateMany` do Prisma sempre carregam o
+ * `@updatedAt` junto. De quebra, as 211 viram UM statement em vez de 211.
+ */
+async function touchLastSynced(prisma: PrismaClient, tseIds: string[]): Promise<number> {
+  if (tseIds.length === 0) return 0;
+  return prisma.$executeRaw`
+    UPDATE "Candidate" SET "lastSyncedAt" = NOW() WHERE "tseId" IN (${Prisma.join(tseIds)})
+  `;
 }
 
 function cell(table: CsvTable, row: string[], column: string): string | undefined {
@@ -873,14 +951,29 @@ function cell(table: CsvTable, row: string[], column: string): string | undefine
  * `DS_SITUACAO_CANDIDATURA` costuma trazer o estado grosso ("APTO"/"INAPTO")
  * e `DS_DETALHE_SITUACAO_CAND` o julgamento fino ("DEFERIDO", "INDEFERIDO COM
  * RECURSO", ...). Por isso o detalhe é consultado primeiro e a situação serve
- * de fallback. Se nenhum dos dois casar, cai em REGISTERED — o estado mais
- * conservador possível, já que a candidatura existe no CSV — e emite AVISO
- * nomeando as duas strings, para que uma redação nova do TSE apareça no log
- * em vez de ser engolida.
+ * de fallback.
+ *
+ * TRÊS SAÍDAS, e a diferença entre as duas últimas é o defeito que este
+ * script carregava:
+ *
+ *   - redação CONHECIDA   → o enum correspondente;
+ *   - NENHUMA fonte falou → `STATUS_UNDISCLOSED` (aguardando julgamento), o
+ *     estado real de quem está no CSV e ainda não foi julgado;
+ *   - redação DESCONHECIDA → `null`, e AVISO. `null` não é "sem situação": é
+ *     "não sei traduzir isto". Quem grava escreve a redação literal e NÃO
+ *     escreve o enum — ver a guarda em `writeData`.
+ *
+ * O que acontecia antes: uma redação nova ("Cassado por abuso de poder", por
+ * exemplo) avisava e mesmo assim gravava PENDING_JUDGMENT. A candidatura
+ * ficava com rótulo honesto e enum inventado — e PRESA, porque no run seguinte
+ * o diff não via diferença nenhuma.
  */
+const STATUS_UNDISCLOSED: RegistrationStatus = "PENDING_JUDGMENT";
+
 interface StatusResult {
-  status: RegistrationStatus;
-  matchedFrom: "detalhe" | "situacao" | "fallback";
+  /** `null` = o TSE escreveu algo que o `TSE_STATUS_MAP` não conhece. */
+  status: RegistrationStatus | null;
+  matchedFrom: "detalhe" | "situacao" | "fallback" | "desconhecida";
 }
 
 function mapStatus(
@@ -888,36 +981,36 @@ function mapStatus(
   detalhe: string | null,
   candidateLabel: string
 ): StatusResult {
-  const fromDetail = statusFromTseLabel(detalhe);
-  if (fromDetail) return { status: fromDetail, matchedFrom: "detalhe" };
-
-  const fromSituacao = statusFromTseLabel(situacao);
-  if (fromSituacao) return { status: fromSituacao, matchedFrom: "situacao" };
-
-  // Dois casos muito diferentes caem aqui, e tratá-los igual é o que fazia o
-  // script afirmar situação que o TSE não afirmou.
-  //
-  // (a) COLUNA VAZIA. No pacote de 2026 `DS_SITUACAO_CANDIDATURA` vem `#NE`
-  //     em TODAS as candidaturas e `DS_DETALHE_SITUACAO_CAND` nem existe: o
-  //     TSE só publica a situação depois de julgar, e até 26/08/2026 nada foi
-  //     julgado. O correto é PENDING_JUDGMENT ("Aguardando julgamento"), não
-  //     REGISTERED — "Registro protocolado" afirmaria um estágio processual
-  //     que ninguém alcançou ainda. E não é anomalia: avisar 211 vezes só
-  //     enterraria os avisos que importam.
-  if (situacao === null && detalhe === null) {
-    statusUndisclosedCount++;
-    return { status: "PENDING_JUDGMENT", matchedFrom: "fallback" };
+  const fromDetail = tseStatusWrite(detalhe);
+  if (fromDetail.kind === "mapped") {
+    return { status: fromDetail.status, matchedFrom: "detalhe" };
   }
 
-  // (b) REDAÇÃO DESCONHECIDA. O TSE escreveu algo que o STATUS_MAP não
-  //     reconhece — isso sim é anomalia, e merece aviso por candidatura.
+  const fromSituacao = tseStatusWrite(situacao);
+  if (fromSituacao.kind === "mapped") {
+    return { status: fromSituacao.status, matchedFrom: "situacao" };
+  }
+
+  // (a) COLUNA VAZIA. No pacote de 2026 `DS_SITUACAO_CANDIDATURA` vem `#NE`
+  //     em TODAS as candidaturas e `DS_DETALHE_SITUACAO_CAND` nem existe: o
+  //     TSE só publica a situação depois de julgar. O correto é
+  //     "aguardando julgamento", não REGISTERED — "Registro protocolado"
+  //     afirmaria um estágio processual que ninguém alcançou ainda. E não é
+  //     anomalia: avisar 211 vezes só enterraria os avisos que importam.
+  if (fromDetail.kind === "absent" && fromSituacao.kind === "absent") {
+    statusUndisclosedCount++;
+    return { status: STATUS_UNDISCLOSED, matchedFrom: "fallback" };
+  }
+
+  // (b) REDAÇÃO DESCONHECIDA. Isso sim é anomalia, e merece aviso por
+  //     candidatura — em TODA execução, até que a redação entre no mapa.
   warn(
     `Situação do TSE não mapeada para ${candidateLabel}: ` +
-      `DS_SITUACAO_CANDIDATURA=${JSON.stringify(situacao)} / ` +
-      `DS_DETALHE_SITUACAO_CAND=${JSON.stringify(detalhe)}. ` +
-      "Registrado como PENDING_JUDGMENT — adicione a redação em TSE_STATUS_MAP (app/lib/candidate-status.ts)."
+      `situação=${JSON.stringify(situacao)} / detalhe=${JSON.stringify(detalhe)}. ` +
+      "A redação literal FOI gravada; o registrationStatus guardado foi PRESERVADO " +
+      "(nenhum palpite). Adicione a redação em TSE_STATUS_MAP (app/lib/candidate-status.ts)."
   );
-  return { status: "PENDING_JUDGMENT", matchedFrom: "fallback" };
+  return { status: null, matchedFrom: "desconhecida" };
 }
 
 // ============================================================
@@ -1017,12 +1110,18 @@ interface CandidateWriteData {
   sourceUrl: string | null;
   /**
    * Opcionais de propósito: sem fonte para a situação, os três são omitidos
-   * do update e o valor já gravado sobrevive. Ver a guarda em `writeData`.
+   * do update e o valor já gravado sobrevive. E `registrationStatus` é
+   * omitido também quando a redação existe mas é desconhecida. Ver a guarda
+   * em `writeData`.
    */
   tseStatusLabel?: string | null;
   tseStatusDetail?: string | null;
   registrationStatus?: RegistrationStatus;
-  lastSyncedAt: Date;
+  /**
+   * Só nas escritas que MUDAM alguma coisa. As candidaturas inalteradas
+   * recebem o carimbo por `touchLastSynced()`, que não bate em `updatedAt`.
+   */
+  lastSyncedAt?: Date;
   /** Só presentes quando o CSV trouxe valor — ver preservação de curadoria. */
   viceName?: string;
   viceParty?: string;
@@ -1041,7 +1140,11 @@ interface CandidatePayload {
   coalitionParties: string[];
   tseStatusLabel: string | null;
   tseStatusDetail: string | null;
-  registrationStatus: RegistrationStatus;
+  /**
+   * `null` quando a redação do TSE é desconhecida. Nesse caso o enum NÃO é
+   * gravado numa linha existente — ver `mapStatus` e a guarda em `writeData`.
+   */
+  registrationStatus: RegistrationStatus | null;
   electionType: string;
   uf: string | null;
   dataSource: string;
@@ -1062,20 +1165,37 @@ interface CandidatePayload {
 }
 
 /**
- * `divulgaSituacao` vem do DivulgaCandContas e tem precedência sobre o CSV:
- * em 2026 o CSV não traz o campo (é sempre `#NE`), e mesmo quando trouxer, a
- * divulgação é atualizada de hora em hora enquanto o pacote de dados abertos
- * sai quatro vezes por dia. Preferir a fonte mais fresca é o que sustenta o
- * SC-104. `null` significa "nenhuma das duas fontes disse" — e aí o script
- * não afirma nada, em vez de chutar.
+ * TRÊS FONTES PARA A MESMA SITUAÇÃO, e uma ordem de precedência explícita:
+ *
+ *   1. `fichaSituacao`   — `descricaoSituacao` da ficha individual (`/buscar`)
+ *   2. `divulgaSituacao` — `descricaoSituacao` da listagem por unidade
+ *   3. `row.situacao`    — `DS_SITUACAO_CANDIDATURA` do CSV de dados abertos
+ *
+ * A FICHA VENCE porque é o recorte mais específico: um GET por candidatura,
+ * contra uma listagem que responde por até 27 de uma vez e um pacote de dados
+ * abertos republicado 4×/dia. Quando duas fontes divergem, é uma delas que
+ * está velha, e a mais específica é a que menos tem por onde envelhecer.
+ *
+ * A ficha já era lida — só que `descricaoSituacao` dela alimentava apenas
+ * `aptoFromDivulga()` e era descartada em seguida. Daí saíam linhas
+ * incoerentes no banco, do tipo `Deferido | APPROVED | tseApto: null`: o
+ * rótulo vinha da listagem e a aptidão da ficha, cada um de um instante
+ * diferente. Lendo as duas do mesmo lugar, a incoerência não tem como nascer.
+ *
+ * Divergência entre as duas emite AVISO (ver `warnStatusDivergence`), porque
+ * ela é informação: significa que um dos caches do TSE está atrasado.
+ *
+ * `null` em todas as três significa "ninguém disse" — e aí o script não
+ * afirma nada, em vez de chutar.
  */
 function buildPayload(
   row: TseRow,
   vice: TseRow | null,
-  divulgaSituacao: string | null
+  divulgaSituacao: string | null,
+  fichaSituacao: string | null
 ): CandidatePayload {
   const label = `${row.nomeUrna ?? row.nome} (${row.partido})`;
-  const situacao = divulgaSituacao ?? row.situacao;
+  const situacao = fichaSituacao ?? divulgaSituacao ?? row.situacao;
   const { status } = mapStatus(situacao, row.detalheSituacao, label);
 
   return {
@@ -1427,12 +1547,16 @@ function diffCandidate(
     ["sourceUrl", payload.sourceUrl],
   ];
 
-  // Espelha a guarda de escrita: sem fonte para a situação, o script não
-  // anuncia mudança de situação — porque não vai gravar nenhuma.
+  // Espelha a guarda de escrita, nas duas camadas: sem fonte para a situação,
+  // nada de situação entra no diff; com fonte mas redação desconhecida, entra
+  // a redação e NÃO entra o enum — porque o enum não vai ser gravado. Um diff
+  // que anuncia o que a escrita não faz é um relatório que mente.
   if (payload.statusKnown) {
     managed.push(["tseStatusLabel", payload.tseStatusLabel]);
     managed.push(["tseStatusDetail", payload.tseStatusDetail]);
-    managed.push(["registrationStatus", payload.registrationStatus]);
+    if (payload.registrationStatus !== null) {
+      managed.push(["registrationStatus", payload.registrationStatus]);
+    }
   }
 
   // Só entra no diff quando o pacote foi lido E o campo está vazio — as duas
@@ -1478,6 +1602,30 @@ interface SyncStats {
   updated: number;
   unchanged: number;
   photosWritten: number;
+  /** Fichas completas lidas (bens, eleições anteriores, processo, aptidão). */
+  detailsRead: number;
+  /** Fichas que não responderam — os campos delas NÃO foram tocados. */
+  detailsFailed: number;
+  aptoApt: number;
+  aptoUnapt: number;
+  aptoUndecided: number;
+  /** Bens que as fichas declaram / quantos precisaram ser regravados. */
+  assetsRead: number;
+  assetsWritten: number;
+  /** Bens APAGADOS pela regravação — sem este número, destruir sai calado. */
+  assetsDeleted: number;
+  /** Fichas sem a chave `bens`: patrimônio preservado, não zerado. */
+  assetsAbsent: number;
+  /** Linhas de histórico declaradas / criadas / atualizadas. */
+  historyRead: number;
+  historyCreated: number;
+  historyUpdated: number;
+  /** Candidaturas cuja aptidão ou nº de processo mudou. */
+  candidatesUpdatedByDetail: number;
+  /** Listagem e ficha discordaram sobre a situação — venceu a ficha. */
+  statusDivergences: number;
+  /** Candidaturas sem mudança que receberam só o carimbo de `lastSyncedAt`. */
+  touched: number;
 }
 
 async function syncTse(options: Options) {
@@ -1494,6 +1642,21 @@ async function syncTse(options: Options) {
     updated: 0,
     unchanged: 0,
     photosWritten: 0,
+    detailsRead: 0,
+    detailsFailed: 0,
+    aptoApt: 0,
+    aptoUnapt: 0,
+    aptoUndecided: 0,
+    assetsRead: 0,
+    assetsWritten: 0,
+    assetsDeleted: 0,
+    assetsAbsent: 0,
+    historyRead: 0,
+    historyCreated: 0,
+    historyUpdated: 0,
+    candidatesUpdatedByDetail: 0,
+    statusDivergences: 0,
+    touched: 0,
   };
 
   console.log("🗳️  Sincronização TSE 2026 — Presidente e Governador (Fase A)");
@@ -1505,6 +1668,7 @@ async function syncTse(options: Options) {
 
   // ---------- 1. CSV ----------
   const tables = await loadCandidateTables(options);
+  reportMissingOptionalColumns(tables.length);
 
   const presidentialRows: TseRow[] = [];
   const governorRows: TseRow[] = [];
@@ -1751,15 +1915,141 @@ async function syncTse(options: Options) {
         : "")
   );
 
+  // Sem resposta de quase nenhuma unidade, este run não conferiu situação
+  // nenhuma. Terminar com código 0 faria o Actions pintar verde sobre uma
+  // execução que não fez o trabalho principal — e a defasagem cresceria em
+  // silêncio até alguém notar pelo site.
+  if (divulga.failedUnits.length > DIVULGA_UNITS * DIVULGA_OUTAGE_RATIO) {
+    statusOutage =
+      `${divulga.failedUnits.length} de ${DIVULGA_UNITS} unidades do ` +
+      "DivulgaCandContas não responderam: a situação das candidaturas NÃO foi " +
+      "conferida nesta execução.";
+  } else if (divulga.byTseId.size === 0) {
+    // PONTO CEGO — NÃO REMOVA ACHANDO QUE É PARANOIA.
+    //
+    // O cenário: o TSE renomeia a chave `candidatos` no corpo da listagem (ou
+    // muda a forma da resposta de qualquer jeito que não seja erro de
+    // transporte). As 28 unidades respondem **HTTP 200**, `fetchUnit` não acha
+    // a lista e devolve `[]`, ninguém lança — então saem ZERO situações lidas
+    // e ZERO unidades falhas. O guarda de indisponibilidade acima não pega
+    // isto: ele conta falhas, e aqui não houve nenhuma.
+    //
+    // `fetchDivulgaStatuses` está CERTO em não afirmar nada (o valor gravado
+    // sobrevive, como manda o CLAUDE.md). Quem tem de gritar é o chamador:
+    // sem este ramo, o sync termina verde, a situação das 211 candidaturas
+    // congela e o site segue no ar afirmando situações velhas sobre pessoas
+    // reais, com aparência de saúde.
+    //
+    // O critério é um estado logicamente impossível, não uma heurística: se as
+    // 28 unidades responderam bem numa eleição com 211 candidaturas, alguma
+    // situação tinha de vir. Zero leituras sem nenhuma falha só acontece se o
+    // formato mudou. (Zero leituras COM falhas é outra coisa — cai no aviso
+    // por unidade logo acima, e no teto de indisponibilidade.)
+    //
+    // ISTO É ALARME, NÃO FALLBACK: nada é sobrescrito aqui.
+    const anomalia =
+      `as ${DIVULGA_UNITS} unidades do DivulgaCandContas responderam sem erro e ` +
+      "ainda assim ZERO situações foram lidas. Isso é impossível com 211 " +
+      "candidaturas — o formato da resposta do TSE provavelmente mudou (a chave " +
+      "`candidatos` da listagem, em app/lib/tse-divulga.ts). Nada foi " +
+      "sobrescrito, mas nenhuma situação foi conferida.";
+    statusOutage = anomalia;
+    warn(anomalia);
+  }
+
+  // ---------- 3b. Ficha completa (bens, eleições anteriores, processo, aptidão) ----------
+  //
+  // ANTES do loop de escrita, de propósito. A ficha traz `descricaoSituacao`
+  // da mesma candidatura, e é a fonte mais específica das três (ver
+  // `buildPayload`): lida aqui, ela alimenta o rótulo gravado no mesmo passo
+  // em que alimenta a aptidão. Lida depois — como era —, o rótulo vinha da
+  // listagem e a aptidão da ficha, e o banco guardava as duas metades de
+  // instantes diferentes.
+  //
+  // A LISTAGEM só entrega identidade e situação. Bens declarados, eleições
+  // anteriores, número do processo de registro e os campos de aptidão existem
+  // apenas na ficha individual, um GET por candidatura. Não há endpoint em
+  // lote — daí o pool em `~/lib/tse-divulga`.
+  const sgUeByTseId = new Map(titularRows.map(row => [row.tseId, row.sgUe]));
+  const fetchTargets = titularRows
+    .filter(row => row.sgUe !== null)
+    .map(row => ({ tseId: row.tseId, sgUe: row.sgUe as string }));
+
+  const semUe = titularRows.length - fetchTargets.length;
+  if (semUe > 0) {
+    warn(
+      `${semUe} candidatura(s) sem SG_UE no CSV — a ficha completa não pode ` +
+        "ser pedida sem a unidade eleitoral (a URL errada devolve 200 vazio). " +
+        "Situação, bens, histórico e aptidão delas ficam como estão."
+    );
+  }
+
+  console.log(
+    `\n📄 Lendo a ficha completa de ${fetchTargets.length} candidatura(s) no DivulgaCandContas...`
+  );
+
+  let lastLogged = 0;
+  const { byTseId: detailsById, failed: detailsFailed } = await fetchDivulgaDetails(
+    fetchTargets,
+    {
+      onProgress: (done, total) => {
+        if (done === total || done - lastLogged >= 50) {
+          lastLogged = done;
+          console.log(`   … ${done}/${total}`);
+        }
+      },
+    }
+  );
+
+  stats.detailsRead = detailsById.size;
+  stats.detailsFailed = detailsFailed.length;
+
+  // UM aviso para todas as fichas sem resposta — e a garantia explícita de
+  // que nenhum campo delas foi sobrescrito. Uma queda do TSE não pode virar
+  // "não declarou bens" nem "candidatura inapta" sobre uma pessoa real.
+  if (detailsFailed.length > 0) {
+    const labelByTseId = new Map(
+      titularRows.map(r => [r.tseId, `${r.nomeUrna ?? r.nome} (${r.partido})`])
+    );
+    const amostra = detailsFailed
+      .slice(0, 10)
+      .map(f => `${labelByTseId.get(f.tseId) ?? f.tseId}: ${f.error}`);
+    warn(
+      `${detailsFailed.length} ficha(s) não responderam. Situação, bens, histórico ` +
+        "eleitoral, número do processo e aptidão dessas candidaturas NÃO foram " +
+        "tocados (o valor gravado é preservado):\n      • " +
+        amostra.join("\n      • ") +
+        (detailsFailed.length > amostra.length
+          ? `\n      • … e mais ${detailsFailed.length - amostra.length}`
+          : "")
+    );
+  }
+
   const created: string[] = [];
   const updated: Array<{ label: string; diffs: FieldDiff[] }> = [];
   const unchanged: string[] = [];
+  /** Candidaturas sem mudança: só recebem o carimbo de `lastSyncedAt`. */
+  const untouchedTseIds: string[] = [];
 
   console.log("\n🔁 Processando candidaturas...\n");
 
   for (const row of titularRows) {
-    const payload = buildPayload(row, findVice(row), divulga.byTseId.get(row.tseId) ?? null);
+    const daListagem = divulga.byTseId.get(row.tseId) ?? null;
+    const daFicha = detailsById.get(row.tseId)?.situacao ?? null;
+    const payload = buildPayload(row, findVice(row), daListagem, daFicha);
     const label = `${payload.displayName} (${payload.party}${payload.number !== null ? `, ${payload.number}` : ""})`;
+
+    // As duas fontes deveriam dizer a mesma coisa. Quando não dizem, um dos
+    // caches do TSE está atrasado — e quem lê o relatório precisa saber qual
+    // valor foi gravado, em vez de descobrir pela página no ar.
+    if (daFicha !== null && daListagem !== null && daFicha !== daListagem) {
+      stats.statusDivergences++;
+      warn(
+        `Situação divergente para ${label}: listagem diz ${JSON.stringify(daListagem)}, ` +
+          `ficha diz ${JSON.stringify(daFicha)}. Gravada a da FICHA (fonte mais ` +
+          "específica) — um dos caches do TSE está atrasado."
+      );
+    }
 
     if (payload.number === null) {
       warn(`Sem NR_CANDIDATO válido para ${label}. Campo number ficará nulo.`);
@@ -1794,22 +2084,36 @@ async function syncTse(options: Options) {
       uf: payload.uf,
       dataSource: payload.dataSource,
       sourceUrl: payload.sourceUrl,
-      lastSyncedAt: new Date(),
     };
     // A SITUAÇÃO SÓ É GRAVADA QUANDO ALGUÉM A AFIRMOU.
     //
     // Se o DivulgaCandContas não respondeu para esta unidade eleitoral e o CSV
     // veio vazio (o normal em 2026), omitir os três campos preserva o que já
-    // está no banco. A alternativa — gravar o fallback PENDING_JUDGMENT —
-    // transformaria uma indisponibilidade do TSE em "aguardando julgamento"
-    // para quem já foi deferido, indeferido ou renunciou.
+    // está no banco. A alternativa — gravar o fallback de "aguardando
+    // julgamento" — transformaria uma indisponibilidade do TSE em situação
+    // afirmada para quem já foi deferido, indeferido ou renunciou.
     //
     // Numa candidatura NOVA não há o que preservar: aí o fallback é a única
     // resposta honesta e é gravado (ver o ramo `if (!existing)`).
     if (payload.statusKnown || !existing) {
       writeData.tseStatusLabel = payload.tseStatusLabel;
       writeData.tseStatusDetail = payload.tseStatusDetail;
-      writeData.registrationStatus = payload.registrationStatus;
+
+      // E O ENUM, SÓ QUANDO A REDAÇÃO FOI RECONHECIDA.
+      //
+      // `registrationStatus === null` significa que o TSE escreveu uma redação
+      // que o TSE_STATUS_MAP não conhece. Aí grava-se a palavra literal do TSE
+      // (que é o que o badge exibe) e preserva-se o enum guardado — que alguém
+      // já conferiu — em vez de carimbar um fallback. Este é o mesmo contrato
+      // do cron em `tse-status.server.ts`, agora idêntico dos dois lados.
+      //
+      // Numa linha NOVA não há enum a preservar e a coluna é obrigatória: aí o
+      // fallback é gravado, e o aviso de `mapStatus` fica no log.
+      if (payload.registrationStatus !== null) {
+        writeData.registrationStatus = payload.registrationStatus;
+      } else if (!existing) {
+        writeData.registrationStatus = STATUS_UNDISCLOSED;
+      }
     }
     if (payload.viceName !== null) writeData.viceName = payload.viceName;
     if (payload.viceParty !== null) writeData.viceParty = payload.viceParty;
@@ -1884,7 +2188,7 @@ async function syncTse(options: Options) {
         // A linha órfã veio do seed de imprensa e pode carregar curadoria —
         // um espelho de plano conferido à mão, por exemplo. Adotar não é
         // recomeçar: o que já foi curado sobrevive à adoção.
-        const adoptData = { ...writeData, tseId: payload.tseId };
+        const adoptData = { ...writeData, tseId: payload.tseId, lastSyncedAt: new Date() };
         if (orphan.governmentPlanUrl) {
           delete adoptData.governmentPlanUrl;
           if (payload.governmentPlanUrl) {
@@ -1906,12 +2210,15 @@ async function syncTse(options: Options) {
       created.push(label);
       stats.created++;
       console.log(`   ➕ ${label}`);
-      console.log(`      situação TSE: ${payload.tseStatusLabel ?? "—"} / ${payload.tseStatusDetail ?? "—"} → ${payload.registrationStatus}`);
+      console.log(
+        `      situação TSE: ${payload.tseStatusLabel ?? "—"} / ${payload.tseStatusDetail ?? "—"} → ` +
+          (writeData.registrationStatus ?? "(enum preservado)")
+      );
       if (payload.coalition) console.log(`      coligação: ${payload.coalition}`);
       if (payload.viceName) console.log(`      vice: ${payload.viceName} (${payload.viceParty})`);
       if (!options.dryRun) {
         await prisma.candidate.create({
-          data: { ...writeData, tseId: payload.tseId },
+          data: { ...writeData, tseId: payload.tseId, lastSyncedAt: new Date() },
         });
       }
       continue;
@@ -1920,6 +2227,9 @@ async function syncTse(options: Options) {
     if (diffs.length === 0) {
       unchanged.push(label);
       stats.unchanged++;
+      // NENHUM update do Prisma aqui — só o carimbo de `lastSyncedAt` em
+      // bloco, depois do loop. Ver `touchLastSynced`.
+      untouchedTseIds.push(payload.tseId);
       console.log(`   ✓ ${label} (sem mudanças)`);
     } else {
       updated.push({ label, diffs });
@@ -1928,17 +2238,133 @@ async function syncTse(options: Options) {
       for (const diff of diffs) {
         console.log(`      ${diff.field}: ${formatValue(diff.before)} → ${formatValue(diff.after)}`);
       }
+
+      if (!options.dryRun) {
+        await prisma.candidate.update({
+          where: { tseId: payload.tseId },
+          data: { ...writeData, lastSyncedAt: new Date() },
+        });
+      }
+    }
+  }
+
+  // As inalteradas: "conferido agora" sem "mudou agora". Uma escrita só para
+  // as 211, e nenhuma delas passa pelo `@updatedAt`.
+  if (!options.dryRun) {
+    stats.touched = await touchLastSynced(prisma, untouchedTseIds);
+  } else {
+    stats.touched = untouchedTseIds.length;
+  }
+
+  // ---------- 4b. Gravação da ficha completa (bens, histórico, processo, aptidão) ----------
+  //
+  // As fichas JÁ FORAM LIDAS no passo 3b, antes do loop de escrita, para que a
+  // situação gravada e a aptidão gravada saiam do mesmo instante. Aqui só se
+  // grava — e para gravar é preciso o `Candidate.id`, que as candidaturas
+  // criadas ou adotadas neste mesmo run só ganharam agora.
+  if (!dbUnavailable) {
+    const stored = await prisma.candidate.findMany({
+      where: { tseId: { in: tseIds } },
+      select: { id: true, tseId: true, displayName: true, party: true },
+    });
+
+    const detailTargets: DetailTarget[] = stored
+      .filter(row => row.tseId !== null && sgUeByTseId.get(row.tseId) != null)
+      .map(row => ({
+        id: row.id,
+        tseId: row.tseId as string,
+        sgUe: sgUeByTseId.get(row.tseId as string) ?? null,
+        label: `${row.displayName} (${row.party})`,
+      }));
+
+    if (detailTargets.length < titularRows.length) {
+      console.log(
+        `\n   ℹ️  ${titularRows.length - detailTargets.length} candidatura(s) do CSV ainda não ` +
+          "estão no banco (esperado em --dry-run com candidaturas novas) — ficha não aplicada."
+      );
     }
 
-    if (!options.dryRun) {
-      // `lastSyncedAt` é atualizado mesmo sem mudança de conteúdo: ele é o
-      // carimbo de "conferido agora", que sustenta o SC-104 (defasagem máx.
-      // de 24h). Por isso ele fica fora do diff — senão nada seria "igual".
-      await prisma.candidate.update({
-        where: { tseId: payload.tseId },
-        data: writeData,
-      });
+    const detailResult = await applyDivulgaDetails(prisma, detailTargets, detailsById, {
+      dryRun: options.dryRun,
+    });
+
+    stats.aptoApt = detailResult.apto.apt;
+    stats.aptoUnapt = detailResult.apto.unapt;
+    stats.aptoUndecided = detailResult.apto.undecided;
+    stats.assetsRead = detailResult.assetsRead;
+    stats.assetsWritten = detailResult.assetsWritten;
+    stats.assetsDeleted = detailResult.assetsDeleted;
+    stats.assetsAbsent = detailResult.assetsAbsent;
+    stats.historyRead = detailResult.historyRead;
+    stats.historyCreated = detailResult.historyCreated;
+    stats.historyUpdated = detailResult.historyUpdated;
+    stats.candidatesUpdatedByDetail = detailResult.candidatesUpdated;
+
+    console.log(
+      `   ${detailResult.applied} ficha(s) aplicada(s) | ` +
+        `${detailResult.assetsRead} bem(ns) declarado(s) ` +
+        `(${detailResult.assetsWritten} gravado(s), ${detailResult.assetsDeleted} apagado(s)) | ` +
+        `${detailResult.historyRead} linha(s) de histórico ` +
+        `(${detailResult.historyCreated} nova(s), ${detailResult.historyUpdated} atualizada(s)) | ` +
+        `aptidão: ${detailResult.apto.apt} apta(s), ${detailResult.apto.unapt} inapta(s), ` +
+        `${detailResult.apto.undecided} ainda não julgada(s)`
+    );
+
+    // A operação mais destrutiva do sync: zerar a declaração de bens de alguém.
+    // Pode ser legítima (o TSE aceita declaração sem bens), mas sem este aviso
+    // um `bens: []` indevido saía do relatório indistinguível de um run calmo.
+    if (detailResult.assetsCleared.length > 0) {
+      warn(
+        `${detailResult.assetsCleared.length} candidatura(s) tiveram a declaração de bens ` +
+          "ZERADA: tinham linhas gravadas e a ficha do TSE agora declara lista vazia. " +
+          "Confira na ficha oficial antes de aceitar:\n      • " +
+          detailResult.assetsCleared
+            .map(b => `${b.label}: ${b.removidos} bem(ns) removido(s)`)
+            .join("\n      • ")
+      );
     }
+
+    if (detailResult.assetsAbsent > 0) {
+      warn(
+        `${detailResult.assetsAbsent} ficha(s) responderam SEM a chave "bens". ` +
+          "O patrimônio dessas candidaturas NÃO foi tocado — ausência do campo não " +
+          "é declaração de zero bens."
+      );
+    }
+
+    if (detailResult.assetsSkippedNoDate.length > 0) {
+      warn(
+        `${detailResult.assetsSkippedNoDate.length} bem(ns) sem data de declaração ` +
+          "no TSE — não gravados, porque carimbar a data de hoje inventaria " +
+          "quando o patrimônio foi declarado:\n      • " +
+          detailResult.assetsSkippedNoDate
+            .slice(0, 10)
+            .map(b => `${b.label}: ${b.descricao}`)
+            .join("\n      • ")
+      );
+    }
+
+    // Processos de cassação/desconstituição não têm modelo no schema porque
+    // vieram vazios nas 13 presidenciais em 27/08/2026. Se aparecer um, uma
+    // pessoa precisa ver — não pode ser descartado em silêncio.
+    if (detailResult.withProceedings.length > 0) {
+      warn(
+        `${detailResult.withProceedings.length} candidatura(s) com processo de cassação ou ` +
+          "desconstituição na ficha do TSE. Esses processos NÃO são modelados no " +
+          "banco — confira à mão na ficha oficial:\n      • " +
+          detailResult.withProceedings
+            .map(
+              p =>
+                `${p.label}: ${p.cassacao} cassação, ${p.desconstituicao} desconstituição`
+            )
+            .join("\n      • ")
+      );
+    }
+  } else {
+    warn(
+      "Banco indisponível: a ficha completa foi LIDA no TSE, mas não pôde ser " +
+        "gravada (bens, histórico, processo e aptidão ficam como estão)."
+    );
   }
 
   // ---------- 5. Sumiços e duplicatas (nunca destrutivo) ----------
@@ -2030,8 +2456,29 @@ function printSummary(stats: SyncStats, options: Options) {
       "Sem situação em nenhuma fonte",
       `${statusUndisclosedCount} → aguardando julgamento`,
     ],
+    [
+      "Fichas completas lidas",
+      stats.detailsFailed === 0
+        ? String(stats.detailsRead)
+        : `${stats.detailsRead} (${stats.detailsFailed} sem resposta)`,
+    ],
+    [
+      "Bens declarados (gravados / apagados)",
+      `${stats.assetsRead} (${stats.assetsWritten} / ${stats.assetsDeleted})` +
+        (stats.assetsAbsent > 0 ? ` — ${stats.assetsAbsent} ficha(s) sem a chave` : ""),
+    ],
+    [
+      "Histórico eleitoral (novas / atualizadas)",
+      `${stats.historyRead} (${stats.historyCreated} / ${stats.historyUpdated})`,
+    ],
+    [
+      "Aptidão (apta / inapta / não julgada)",
+      `${stats.aptoApt} / ${stats.aptoUnapt} / ${stats.aptoUndecided}`,
+    ],
+    ["Aptidão ou nº de processo alterados", String(stats.candidatesUpdatedByDetail)],
+    ["Situação divergente (listagem × ficha)", String(stats.statusDivergences)],
     ["Atualizados", String(stats.updated)],
-    ["Inalterados", String(stats.unchanged)],
+    ["Inalterados (só lastSyncedAt)", `${stats.unchanged} (${stats.touched})`],
   ];
 
   if (options.photos) rows.push(["Fotos gravadas", String(stats.photosWritten)]);
@@ -2066,6 +2513,13 @@ function printSummary(stats: SyncStats, options: Options) {
       "\n❌ O diff acima NÃO foi comparado com o banco (leitura falhou). Saindo com código 1."
     );
   }
+
+  if (statusOutage) {
+    console.log(
+      `\n❌ ${statusOutage} ` +
+        "Nada foi sobrescrito. Saindo com código 1 para que a falha apareça no Actions."
+    );
+  }
 }
 
 // ============================================================
@@ -2091,7 +2545,7 @@ async function main() {
     console.time("Tempo total");
     await syncTse(options);
     console.timeEnd("Tempo total");
-    if (dbUnavailable) {
+    if (dbUnavailable || statusOutage) {
       await prismaClient?.$disconnect();
       process.exit(1);
     }

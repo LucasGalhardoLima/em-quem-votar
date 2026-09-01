@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ExternalLink } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface VoteDetailProps {
   billId: string;
@@ -30,7 +30,7 @@ export function VoteDetail({
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {voteSimDetails && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              <span className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
                 Votar Sim significa
               </span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -40,7 +40,7 @@ export function VoteDetail({
           )}
           {voteNaoDetails && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <span className="text-[10px] font-bold tracking-[0.06em] text-slate-500 uppercase">
+              <span className="text-xs font-bold tracking-[0.06em] text-slate-500 uppercase">
                 Votar Não significa
               </span>
               <p className="mt-1 text-xs leading-relaxed text-slate-600">
@@ -51,13 +51,27 @@ export function VoteDetail({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="-mb-1 flex justify-end">
+        {/*
+          Seta, não ícone de link externo: este Link navega dentro do próprio
+          site. O ícone de "abre em nova aba" prometia uma saída que não
+          acontece — e é a mesma marca usada aqui para fontes oficiais do TSE e
+          da Câmara, então reusá-la aqui desvaloriza o sinal onde ele importa.
+
+          `min-h-11`: era o menor alvo do app — 12px de texto sem preenchimento
+          nenhum davam ~16px de altura, contra os 44 do SC 2.5.5. É a única
+          ação desta gaveta, então ganha caixa de botão em vez do truque de
+          pseudo-elemento de `CompareToggle`: aqui não há círculo a preservar, e
+          estender a área para fora invadiria os cartões logo acima. O
+          `-mr-2`/`-mb-1` devolve o preenchimento novo à margem do cartão, para
+          o texto continuar alinhado à direita da grade.
+        */}
         <Link
           to={`/votacao/${billId}`}
-          className="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:underline"
+          className="focus-ring -mr-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-xs font-medium text-indigo-600 hover:underline"
         >
           Ver votação completa
-          <ExternalLink className="size-3" />
+          <ArrowRight className="size-3" aria-hidden="true" />
         </Link>
       </div>
     </div>

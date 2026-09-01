@@ -1,98 +1,159 @@
 ---
 title: "Como Escolher um Candidato"
-excerpt: "Guia prático para analisar propostas, histórico e partidos. Não vote no escuro."
-image: "/images/escolher-candidato.jpg"
-date: "2025-10-02"
+excerpt: "Você dá seis votos em 4 de outubro. Um roteiro para checar cargo, ficha e propostas antes de decidir cada um deles."
+image: ""
+date: "2026-08-28"
 category: "Guia Prático"
+readTime: "6 min"
 ---
-import { ExternalLink } from "lucide-react";
-import { Container } from "../components/layout";
 
-<main className="flex-1">
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
+
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Guia Prático
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           Como Escolher um Candidato
         </h1>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          Guia prático para analisar propostas, histórico e partidos. Não vote no escuro.
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 6 min de leitura
+        </p>
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Você dá seis votos em 4 de outubro. Um roteiro para checar cargo, ficha e propostas antes de decidir cada um deles.
         </p>
       </header>
-      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
         <p>
-          Escolher um candidato é como contratar um funcionário para a sua cidade. Você contrataria alguém sem ler o currículo ou checar referências?
+          Escolher é contratar. Ninguém contrata sem saber para qual vaga, sem ler o currículo e sem checar referência — e aqui são seis vagas diferentes, com atribuições diferentes.
         </p>
       </div>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">Passo 1.</span> Entenda o Cargo
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">Passo 1.</span> Entenda cada cargo
         </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            A urna pede seus votos nesta ordem: deputado federal, deputado estadual (ou distrital, no DF), senador (primeira vaga), senador (segunda vaga), governador e presidente. Cobrar de um cargo o que é atribuição de outro é o erro mais comum do eleitor.
+          </p>
+        </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Prefeito (Executivo)</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Administra a cidade, faz obras, cuida da saúde e educação.
+            <h3 className="text-base font-bold text-slate-800">Presidente (Executivo)</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Dirige o governo federal, nomeia ministros, sanciona ou veta leis. Mandato de 4 anos. Uma chapa em disputa, com vice.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Vereador (Legislativo)</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Cria leis e fiscaliza o Prefeito. Não faz obras!
+            <h3 className="text-base font-bold text-slate-800">Governador (Executivo)</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Chefia o Executivo do estado: saúde, segurança pública e educação estaduais. Mandato de 4 anos. São 27 chapas, uma por estado e no DF.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Senador (Legislativo)</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Representa o estado, aprova leis e autoridades indicadas pelo Executivo. Mandato de 8 anos. Este ano seu estado elege dois — e você vota em dois nomes diferentes.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Deputados (Legislativo)</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              O federal legisla e fiscaliza em âmbito nacional e aprova o Orçamento; o estadual ou distrital faz o mesmo no seu estado. Mandato de 4 anos. Eleitos pelo sistema proporcional.
             </p>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">Passo 2.</span> Investigação (O Currículo)
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">Passo 2.</span> Abra a ficha oficial
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          <p>Use ferramentas oficiais para investigar:</p>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Todo pedido de registro entregue à Justiça Eleitoral é público e fica no DivulgaCandContas do TSE. É lá que você confere, sem intermediário:
+          </p>
           <ul className="grid gap-2.5">
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">1</span>
-              <span>Acesse o <strong className="font-semibold text-slate-800">DivulgaCandContas</strong> do TSE para ver patrimônio e contas.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">1</span>
+              <span>A <strong className="font-semibold text-slate-800">declaração de bens</strong> apresentada no registro.</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">2</span>
-              <span>Pesquise se o candidato responde a processos judiciais.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">2</span>
+              <span>As <strong className="font-semibold text-slate-800">certidões criminais</strong> das Justiças Eleitoral, Federal e Estadual, exigidas por lei no registro (Lei 9.504/97, art. 11, § 1º, VII).</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-[11px] font-bold text-indigo-600">3</span>
-              <span>Veja se ele já ocupou cargos públicos e o que entregou.</span>
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">3</span>
+              <span>A <strong className="font-semibold text-slate-800">prestação de contas</strong> da campanha: quem financiou e em que o dinheiro foi gasto.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-[3px] flex size-5 flex-none items-center justify-center rounded-full bg-indigo-600/[0.08] text-xs font-bold text-indigo-600">4</span>
+              <span>A <strong className="font-semibold text-slate-800">situação da candidatura</strong>: registro deferido, indeferido ou ainda sob julgamento.</span>
             </li>
           </ul>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">Passo 3.</span> Propostas vs. Promessas
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">Passo 3.</span> Leia o plano de governo — quando ele existe
         </h2>
-        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
-          <p className="italic">
-            "Vou melhorar a saúde" vs "Vou contratar 2 médicos para o posto do Bairro X remanejando verba Y"
-          </p>
-        </div>
-        <div className="mt-3 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            Cuidado com promessas genéricas. Desconfie de soluções milagrosas. Problemas complexos exigem soluções planejadas e explicadas.
+            Aqui há uma assimetria que quase ninguém conhece. A lei obriga a registrar as "propostas defendidas" apenas para presidente, governador e prefeito (Lei 9.504/97, art. 11, § 1º, IX). Senador e deputado <strong className="font-semibold text-slate-800">não arquivam documento nenhum de propostas</strong>.
+          </p>
+          <p>
+            Isso muda o método de avaliação: para os dois cargos do Executivo você tem um documento protocolado para cobrar. Para os quatro cargos do Legislativo, o que existe de verificável é o histórico de votos nominais de quem já teve mandato — e, para quem nunca teve, praticamente nada além do discurso de campanha.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">Ferramentas Úteis</h2>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">Passo 4.</span> Proposta ou promessa?
+        </h2>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+          <p className="italic">
+            "Vou melhorar a saúde" contra "vou ampliar o programa X em N leitos, com verba da fonte Y, até tal ano"
+          </p>
+        </div>
+        <div className="mt-3 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Uma proposta diz o que será feito, com que dinheiro e em quanto tempo — e por isso pode ser conferida depois. Uma promessa genérica não pode ser nem cobrada nem desmentida.
+          </p>
+          <p>
+            Vale também checar se o que está sendo prometido cabe no cargo. Deputado não executa obra; presidente não legisla sozinho.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">Ferramentas Úteis</h2>
         <div className="mt-3 flex flex-wrap gap-3">
-          <a href="https://divulgacandcontas.tse.jus.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
+          <a href="https://divulgacandcontas.tse.jus.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
             TSE — DivulgaCand
             <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
-          <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-300">
+          <a href="https://dadosabertos.camara.leg.br/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Câmara — Dados Abertos
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.politize.com.br" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
             Politize!
             <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
           </a>
         </div>
       </section>

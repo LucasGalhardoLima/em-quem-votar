@@ -1,0 +1,217 @@
+---
+title: "O Que Fazem Deputados e Senadores?"
+excerpt: "Quatro dos seus seis votos em 4 de outubro elegem o Legislativo. Saiba o que essas cadeiras decidem — e o que elas não podem entregar."
+image: ""
+date: "2026-08-28"
+category: "Educação Política"
+readTime: "7 min"
+---
+
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
+
+<main id={MAIN_CONTENT_ID} className="flex-1">
+  <Container className="py-10">
+    <div className="grid max-w-[720px] gap-[26px]">
+      <header className="grid gap-2">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
+          Educação Política
+        </span>
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
+          O Que Fazem Deputados e Senadores?
+        </h1>
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 7 min de leitura
+        </p>
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Quatro dos seus seis votos em 4 de outubro elegem o Legislativo. Saiba o que essas cadeiras decidem — e o que elas não podem entregar.
+        </p>
+      </header>
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+        <p>
+          A campanha para presidente ocupa quase todo o noticiário, mas a urna começa pelo Legislativo: as quatro primeiras telas pedem deputado federal, deputado estadual (ou distrital), e dois senadores. Só depois vêm governador e presidente.
+        </p>
+      </div>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Quem você elege, e quantos
+        </h2>
+        <div className="mt-3 grid gap-3">
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-slate-600 uppercase">
+              513
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Deputado federal</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Todas as 513 cadeiras da Câmara são renovadas. Representam a população, legislam em âmbito nacional, fiscalizam o governo federal e aprovam o Orçamento. Mandato de 4 anos, sistema proporcional.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-slate-600 uppercase">
+              1.035
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Deputado estadual</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Cadeiras nas Assembleias Legislativas, mais 24 para deputado distrital no DF. Legislam sobre matérias estaduais e fiscalizam o Executivo local. Mandato de 4 anos, sistema proporcional.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3.5 rounded-2xl border border-slate-200 bg-white p-5">
+            <span className="flex-none rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold tracking-[0.06em] text-white uppercase">
+              54
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-800">Senador</h3>
+              <p className="mt-1 text-sm leading-relaxed text-slate-500">
+                Dois terços das 81 cadeiras do Senado. Cada estado e o DF elegem <strong className="font-semibold text-slate-800">dois</strong> senadores neste ano — e você vota em dois nomes diferentes. Mandato de 8 anos, o dobro dos demais, e cada senador é eleito com dois suplentes.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+          <p>
+            O Senado nunca se renova de uma vez: a Constituição manda alternar, a cada quatro anos, a troca de um terço e de dois terços das cadeiras (art. 46, § 2º). 2026 é um ano de dois terços.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Legislar
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Propor, debater, emendar e votar as leis. No Congresso, um projeto passa pelas duas Casas antes de ir à sanção — e é do Legislativo, não do Executivo, a palavra final sobre o Orçamento.
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Impostos, alíquotas e regras tributárias</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Lei Orçamentária Anual, onde cabe cada real do gasto federal</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Direito penal, trabalhista e civil, que valem para o país inteiro</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Emendas à própria Constituição, com quórum reforçado</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Fiscalizar
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Talvez a função menos visível e a mais decisiva. A Constituição entrega ao Congresso o controle externo das contas da União (art. 70) e uma lista de freios sobre o Executivo:
+          </p>
+          <ul className="grid gap-2">
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Sustar atos do Executivo que extrapolem o poder de regulamentar (art. 49, V)</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Abrir CPI, convocar ministro e exigir informação</span>
+            </li>
+            <li className="flex items-start gap-2.5">
+              <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
+              <span>Derrubar veto presidencial</span>
+            </li>
+          </ul>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Só a Câmara pode</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Autorizar, por dois terços dos seus membros, a abertura de processo contra o presidente, o vice e ministros de Estado (art. 51, I).
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Só o Senado pode</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Julgar o presidente nos crimes de responsabilidade (art. 52, I) e aprovar as autoridades que o Executivo indica — entre elas, ministros de tribunais superiores.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> O que essas cadeiras NÃO fazem
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Nenhum parlamentar tem poder de execução. Dirigir a administração e tocar obra é atribuição do Executivo (art. 84). Se uma campanha para deputado promete entregar a obra, ela está prometendo o que o cargo não faz.
+          </p>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm font-semibold text-slate-600">
+            Não executa obra
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm font-semibold text-slate-600">
+            Não contrata servidor
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 text-sm font-semibold text-slate-600">
+            Não nomeia ministro
+          </div>
+        </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+          <p>
+            <strong className="font-semibold text-slate-800">A ressalva honesta:</strong> um parlamentar pode <em>destinar</em> verba por emenda ao Orçamento, e as emendas individuais têm execução obrigatória dentro do limite do art. 166, § 9º. Destinar não é executar — quem contrata, licita e entrega continua sendo o Executivo.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">5.</span> Como cobrar depois da eleição
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Há uma assimetria que vale conhecer antes de votar: a lei só obriga candidatos a presidente, governador e prefeito a registrar suas propostas no TSE (Lei 9.504/97, art. 11, § 1º, IX). Para senador e deputado, não existe documento de propostas arquivado.
+          </p>
+          <p>
+            O que existe, e é público, é o registro nominal de cada votação: quem votou sim, quem votou não, quem se ausentou. Para quem já tem mandato, esse histórico diz mais do que qualquer material de campanha.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">Fontes</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Constituição — arts. 44 a 52 e 70
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.tse.jus.br/eleicoes/eleicoes-2026" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Eleições 2026
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://dadosabertos.senado.leg.br/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Senado — Dados Abertos
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+        </div>
+      </section>
+    </div>
+  </Container>
+</main>

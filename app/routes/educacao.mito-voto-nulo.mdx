@@ -1,102 +1,145 @@
 ---
 title: "Voto Nulo Anula a Eleição? O Maior Mito da Política"
-excerpt: "Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado."
-image: "/images/voto-nulo.jpg"
-date: "2025-10-05"
+excerpt: "Se mais de 50% votarem nulo, a eleição é cancelada? O que a Constituição diz, e o que o voto nulo faz de fato com a conta dos votos."
+image: ""
+date: "2026-08-28"
 category: "Mitos Eleitorais"
+readTime: "5 min"
 ---
 
-export const meta = () => {
-  return [
-    { title: "Voto Nulo Anula Eleição? | Em Quem Votar" },
-    { name: "description", content: "A verdade sobre o voto nulo no Brasil: ele cancela a eleição? Saiba aqui." },
-  ];
-};
-import { Container } from "../components/layout";
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
 
-<main className="flex-1">
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
+
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Mitos Eleitorais
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
           O Mito do Voto Nulo
         </h1>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          Se mais de 50% votarem nulo, a eleição é cancelada? Descubra a verdade sobre como seu voto é contabilizado.
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 5 min de leitura
+        </p>
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Se mais de 50% votarem nulo, a eleição é cancelada? O que a Constituição diz, e o que o voto nulo faz de fato com a conta dos votos.
         </p>
       </header>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
+        <h2 className="text-lg font-bold text-slate-800">
           <span className="text-indigo-600">1.</span> O Mito
         </h2>
         <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-5">
-          <p className="text-[14.5px] leading-[1.7] text-pretty text-slate-600 italic">
+          <p className="text-base leading-[1.7] text-pretty text-slate-600 italic">
             "Se mais de 50% dos eleitores votarem nulo, a eleição é anulada e convocam-se novas eleições com novos candidatos!"
           </p>
-          <p className="mt-3 font-heading text-[20px] font-bold tracking-[-0.01em] text-indigo-600 uppercase">
+          <p className="mt-3 font-heading text-xl font-bold tracking-[-0.01em] text-indigo-600 uppercase">
             Isso é Mentira
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">2.</span> A Realidade
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> O que a Constituição diz
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            A Constituição é clara: apenas os <strong className="font-semibold text-slate-800">votos válidos</strong> contam.
+            O art. 77, § 2º trata da eleição presidencial e é literal: será eleito quem obtiver "a maioria absoluta de votos, <strong className="font-semibold text-slate-800">não computados os em branco e os nulos</strong>".
+          </p>
+          <p>
+            Ou seja, brancos e nulos não entram na base da conta. Eles não derrubam a eleição — eles saem do denominador, e o percentual de todos os demais candidatos sobe.
           </p>
           <ul className="grid gap-2">
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Votos Válidos:</strong> Para candidatos ou partidos.</span>
+              <span><strong className="font-semibold text-slate-800">Votos válidos:</strong> os dados a candidatos e, nos cargos proporcionais, também à legenda.</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[9px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span><strong className="font-semibold text-slate-800">Nulos e Brancos:</strong> São descartados.</span>
+              <span><strong className="font-semibold text-slate-800">Brancos e nulos:</strong> contados e divulgados, mas fora do cálculo do resultado.</span>
             </li>
           </ul>
         </div>
         <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-5">
-          <h3 className="text-[15px] font-bold text-slate-800">Exemplo Prático</h3>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">Cidade com 10 eleitores:</p>
-          <ul className="mt-2 grid gap-2 text-[13px] leading-relaxed text-slate-500">
+          <h3 className="text-base font-bold text-slate-800">Exemplo prático</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-slate-500">Uma urna com 10 eleitores:</p>
+          <ul className="mt-2 grid gap-2 text-sm leading-relaxed text-slate-500">
             <li className="flex items-start gap-2.5">
               <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span>6 votam Nulo</span>
+              <span>6 votam nulo</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span>3 votam no Candidato A</span>
+              <span>3 votam no candidato A</span>
             </li>
             <li className="flex items-start gap-2.5">
               <span className="mt-[7px] size-1 flex-none rounded-full bg-indigo-600" aria-hidden="true" />
-              <span>1 vota no Candidato B</span>
+              <span>1 vota no candidato B</span>
             </li>
           </ul>
-          <p className="mt-3 text-[13px] font-semibold text-indigo-600">
-            Resultado: Candidato A vence com 75% dos votos válidos.
+          <p className="mt-3 text-sm font-semibold text-indigo-600">
+            Votos válidos: 4. O candidato A vence com 75% deles, mesmo tendo 3 votos de 10 eleitores.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">3.</span> O Perigo da Desinformação
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> No voto para deputado, o efeito é o mesmo
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            Acreditar nesse mito leva à inércia. Ao votar nulo como forma de protesto achando que vai "cancelar tudo", você está, na prática, <strong className="font-semibold text-slate-800">lavando as mãos</strong> e deixando que outras pessoas decidam por você.
+            Deputados federais, estaduais e distritais são eleitos pelo sistema proporcional. A primeira conta desse sistema é o quociente eleitoral: o total de <em>votos válidos</em> apurados dividido pelo número de vagas a preencher.
+          </p>
+          <p>
+            Como brancos e nulos não são votos válidos, eles ficam de fora dessa divisão também. Não reduzem nem redistribuem cadeira nenhuma: apenas deixam de ajudar qualquer partido a alcançar o quociente.
           </p>
         </div>
       </section>
-      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-[13px] leading-relaxed text-slate-600">
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> Então o voto nulo é proibido?
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
+          <p>
+            Não. A obrigação prevista no art. 14, § 1º é <strong className="font-semibold text-slate-800">comparecer</strong>; o que se faz dentro da cabine é secreto e é escolha de cada eleitor. Anular é uma opção legítima e legal.
+          </p>
+          <p>
+            O que este texto corrige é só a expectativa: quem anula acreditando que está cancelando o pleito está esperando um efeito que a regra não produz. A decisão continua sendo tomada — apenas por quem votou em alguém.
+          </p>
+        </div>
+      </section>
+      <aside className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
         <p>
-          <strong className="font-semibold text-slate-800">Nota:</strong> "Votar nulo não é um ato de rebeldia eficaz contra o sistema. É apenas uma forma de se omitir da decisão."
+          <strong className="font-semibold text-slate-800">Nota:</strong> a anulação de uma eleição existe no direito eleitoral, mas depende de decisão judicial — por exemplo, quando se cassa o registro ou o diploma de quem obteve a maioria. Nunca do volume de votos nulos.
         </p>
       </aside>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">Fontes</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Constituição — arts. 14 e 77
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.tse.jus.br/eleicoes/eleicoes-2026" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Eleições 2026
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+        </div>
+      </section>
     </div>
   </Container>
 </main>

@@ -30,7 +30,7 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [x] T003 Update `prisma/schema.prisma` with all new models: `Candidate` (with `RegistrationStatus` enum), `PoliticalTopic`, `CandidatePosition` (with `SourceType` enum), `CandidateTag` (join table), `CandidateLegislativeLink` (with `LegislativeSource` enum), `SpendingRecord` (with `SpendingType` enum), `VoteRecord`, `QuizQuestion`, `QuizOption` — update existing `Bill` model with `sourceType` field — preserve `Subscriber`, `UserProfile`, existing `Tag` model (add `description` field) — per data-model.md
+- [x] T003 Update `prisma/schema.prisma` with all new models: `Candidate` (with `RegistrationStatus` enum), `PoliticalTopic`, `CandidatePosition` (with `SourceType` enum), `CandidateTag` (join table), `CandidateLegislativeLink` (with `LegislativeSource` enum), `SpendingRecord` (with `SpendingType` enum), `VoteRecord`, `QuizQuestion`, `QuizOption` — update existing `Bill` model with `sourceType` field — preserve `Subscriber`, `UserProfile`, existing `Tag` model (add `description` field) — per data-model.md — DROPPED 2026-08-28 (`Subscriber` only)
 - [x] T004 Run Prisma migration: `npx prisma migrate dev --name platform-rebuild-2026`
 - [x] T005 [P] Create `prisma/seed.ts` with initial data: 20 PoliticalTopics (4 per axis: Economia, Segurança, Meio Ambiente, Direitos/Costumes, Democracia/Institucional), expanded Tags, 20 QuizQuestions with QuizOptions (5-point Likert: 1=Discordo Totalmente to 5=Concordo Totalmente), 3-5 sample Candidates with positions — per research.md thematic axes
 - [x] T006 [P] Update `app/data/tag-definitions.ts` with expanded presidential-level tags covering all 5 thematic axes per research.md
@@ -162,14 +162,17 @@
 
 ## Phase 9: User Story 7 — Newsletter & Engagement (Priority: P3)
 
+> **DROPPED 2026-08-28** — Newsletter cut from the product: `app/routes/api.newsletter.ts`, `app/services/newsletter.server.ts` and the `Subscriber` table were removed (the table had 0 rows).
+> Kept below as a dated record of what was planned — do not build it.
+
 **Goal**: Preserve newsletter subscription functionality in the new design
 
 **Independent Test**: Submit email in newsletter form — verify success toast. Submit duplicate — verify friendly message.
 
 ### Implementation for User Story 7
 
-- [ ] T050 [US7] Preserve and update `app/components/NewsletterForm.tsx` — match new design system styling, keep existing validation and toast feedback
-- [ ] T051 [US7] Verify `app/routes/api.newsletter.ts` action route works with existing Subscriber model — no changes needed if model preserved
+- [~] T050 [US7] Preserve and update `app/components/NewsletterForm.tsx` — match new design system styling, keep existing validation and toast feedback — DROPPED 2026-08-28
+- [~] T051 [US7] Verify `app/routes/api.newsletter.ts` action route works with existing Subscriber model — no changes needed if model preserved — DROPPED 2026-08-28
 
 **Checkpoint**: User Story 7 complete — newsletter subscription working
 
@@ -204,7 +207,7 @@
 - **US4 Spending (Phase 6)**: Depends on Phase 2 — adds section to US1 profile page but independently testable
 - **US5 Voting Records (Phase 7)**: Depends on Phase 2 — adds section to US1 profile page but independently testable
 - **US6 Static Content (Phase 8)**: Depends on Phase 2 (navigation) — no story dependencies
-- **US7 Newsletter (Phase 9)**: Depends on Phase 2 (design system) — no story dependencies
+- **US7 Newsletter (Phase 9)**: Depends on Phase 2 (design system) — no story dependencies — DROPPED 2026-08-28
 - **Polish (Phase 10)**: Depends on all desired user stories being complete
 
 ### User Story Dependencies
@@ -215,7 +218,7 @@
 - **US4 (P2)**: Foundation + adds to candidato.$id.tsx from US1 (but can create standalone)
 - **US5 (P2)**: Foundation + adds to candidato.$id.tsx from US1 (but can create standalone)
 - **US6 (P3)**: Foundation only
-- **US7 (P3)**: Foundation only
+- **US7 (P3)**: Foundation only — DROPPED 2026-08-28
 
 ### Within Each User Story
 
@@ -295,7 +298,7 @@ Task: "Implement resultado.tsx route"
 5. US4 Spending → Test → Deploy (financial transparency)
 6. US5 Voting Records → Test → Deploy (legislative accountability)
 7. US6 Static Content → Test → Deploy (education/trust)
-8. US7 Newsletter → Test → Deploy (retention)
+8. US7 Newsletter → Test → Deploy (retention) — DROPPED 2026-08-28
 9. Polish → Final deployment
 
 ### Suggested MVP Scope

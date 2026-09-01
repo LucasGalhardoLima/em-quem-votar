@@ -2,19 +2,46 @@ import { CandidateService } from "~/services/candidate.server";
 import type { Route } from "./+types/resources.og.$id";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
-
-const FONT_URLS = {
-  bold: "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Bold.ttf",
-  regular:
-    "https://github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-Regular.ttf",
-} as const;
+import { checkQuota } from "~/utils/rate-limit.server";
 
 /**
- * As fontes eram baixadas do GitHub a CADA requisição — duas idas à rede por
- * imagem. No pico de outubro isso é lento e, pior, frágil: se o GitHub
- * limitar ou cair, as prévias de compartilhamento quebram exatamente quando
- * mais importam.
+ * Cota por origem — 30 imagens a cada 5 minutos.
  *
+ * POR QUE ESTE NÚMERO. Aqui cada pedido rasteriza um PNG de 1200×630 (satori
+ * monta o SVG, o resvg desenha): é a coisa mais cara que o site faz por
+ * requisição, em CPU e em memória, e no cold start ainda baixa duas fontes.
+ * Nada disso tem cache do lado de cá — a proteção era só o `s-maxage=86400`
+ * do CDN, que um pedido com query string variável fura.
+ *
+ * A rajada de 30 é dimensionada pelo pior caso legítimo: alguém publica um
+ * post com vários links de candidatura e o robô da rede social resolve todos
+ * em sequência, do mesmo IP. Trinta cobre isso com folga. A janela de 5
+ * minutos é o que segura o custo sustentado em 6 rasterizações/min por
+ * origem; varrer as 211 candidaturas de um IP só levaria ~35min, e nada
+ * legítimo faz isso — o CDN aquece um card por compartilhamento, sob demanda.
+ */
+const QUOTA_BUCKET = "og";
+const QUOTA_LIMIT = 30;
+const QUOTA_WINDOW_MS = 5 * 60 * 1000;
+
+/**
+ * As duas fontes vinham de
+ * `github.com/google/fonts/raw/main/apache/robotoslab/RobotoSlab-{Bold,Regular}.ttf`
+ * — e as duas respondem **404** (verificado em 27/08/2026): o repositório do
+ * Google Fonts hoje publica só a fonte variável `RobotoSlab[wght].ttf` naquele
+ * diretório. O loader caía direto no 503 e nunca gerou uma imagem. Ninguém
+ * percebeu porque nenhuma página apontava para esta rota; agora que as tags
+ * Open Graph apontam, ela precisa funcionar de verdade.
+ *
+ * A correção resolve as URLs pela API CSS2 do Google Fonts em vez de fixá-las:
+ * caminho fixo em CDN de fonte é exatamente o que quebrou aqui, porque o
+ * segmento de versão (`/v36/`) muda sozinho. Um User-Agent antigo faz a API
+ * devolver `format('truetype')` — o satori lê TTF, não WOFF2.
+ */
+const FONT_CSS_URL =
+  "https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700";
+
+/**
  * Memoizamos a promessa (não o resultado) para que requisições concorrentes
  * durante o cold start compartilhem o mesmo download em vez de dispararem
  * um cada. O cache vive enquanto a instância viver.
@@ -22,38 +49,82 @@ const FONT_URLS = {
 let fontsPromise: Promise<{ bold: ArrayBuffer; regular: ArrayBuffer }> | null =
   null;
 
+async function fetchTtf(url: string, label: string) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`fonte ${label}: HTTP ${res.status}`);
+  return res.arrayBuffer();
+}
+
 function loadFonts() {
   if (!fontsPromise) {
-    fontsPromise = Promise.all([
-      fetch(FONT_URLS.bold).then((r) => {
-        if (!r.ok) throw new Error(`fonte bold: HTTP ${r.status}`);
-        return r.arrayBuffer();
-      }),
-      fetch(FONT_URLS.regular).then((r) => {
-        if (!r.ok) throw new Error(`fonte regular: HTTP ${r.status}`);
-        return r.arrayBuffer();
-      }),
-    ])
-      .then(([bold, regular]) => ({ bold, regular }))
-      .catch((err) => {
-        // Não guarda a falha: a próxima requisição tenta de novo.
-        fontsPromise = null;
-        throw err;
+    fontsPromise = (async () => {
+      const cssRes = await fetch(FONT_CSS_URL, {
+        // O UA antigo é o que faz a API servir TTF em vez de WOFF2.
+        headers: { "User-Agent": "Mozilla/4.0" },
       });
+      if (!cssRes.ok) throw new Error(`css das fontes: HTTP ${cssRes.status}`);
+      const css = await cssRes.text();
+
+      // A API devolve os @font-face na ordem dos pesos pedidos: 400, depois 700.
+      const urls = [...css.matchAll(/url\((https:\/\/[^)]+\.ttf)\)/g)].map(
+        (m) => m[1]
+      );
+      if (urls.length < 2) {
+        throw new Error(`css das fontes sem TTF (${urls.length} url(s))`);
+      }
+
+      const [regular, bold] = await Promise.all([
+        fetchTtf(urls[0], "regular"),
+        fetchTtf(urls[1], "bold"),
+      ]);
+      return { bold, regular };
+    })().catch((err) => {
+      // Não guarda a falha: a próxima requisição tenta de novo.
+      fontsPromise = null;
+      throw err;
+    });
   }
   return fontsPromise;
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+export async function loader({ params, request }: Route.LoaderArgs) {
+  // O loader do root não roda em resource route (React Router despacha por
+  // `handleResourceRequest`, só a folha). Mesma leitura de origem que ele faz.
+  // A cota vem antes de tudo porque o custo é o pedido inteiro: consulta,
+  // fontes e rasterização.
+  const ip = request.headers.get("x-forwarded-for") || "local";
+  if (!checkQuota(QUOTA_BUCKET, ip, QUOTA_LIMIT, QUOTA_WINDOW_MS)) {
+    return new Response("Too Many Requests", {
+      status: 429,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   if (!params.id) {
     return new Response("Not Found", { status: 404 });
   }
 
-  const candidate = await CandidateService.getById(params.id);
+  // `getOgCard` traz só os cinco campos que o PNG usa. Importa mais agora do
+  // que antes: com as tags Open Graph apontando para cá, esta rota passou a ser
+  // chamada por todo crawler de rede social, e `getById` carregava a ficha
+  // inteira (bens, histórico, 20 votações) para jogar quase tudo fora.
+  const candidate = await CandidateService.getOgCard(params.id);
 
   if (!candidate) {
     return new Response("Not Found", { status: 404 });
   }
+
+  /*
+    O satori rejeita caminho relativo em <img> ("Image source must be an
+    absolute URL"), e a foto oficial das 211 candidaturas é servida de
+    `public/candidatos/<tseId>.jpg` — ou seja, sempre relativa. Resolvemos
+    contra a origem do próprio request: `new URL(rel, origin)` devolve a
+    absoluta e deixa passar intacta uma URL que já seja absoluta.
+  */
+  const origin = new URL(request.url).origin;
+  const photoUrl = candidate.photoUrl
+    ? new URL(candidate.photoUrl, origin).toString()
+    : null;
 
   let fontData: ArrayBuffer;
   let regularFontData: ArrayBuffer;
@@ -71,160 +142,159 @@ export async function loader({ params }: Route.LoaderArgs) {
     });
   }
 
+  /*
+    O CARD DE COMPARTILHAMENTO
+
+    Esta é a superfície onde o contexto se perde. No Brasil o WhatsApp é ao
+    mesmo tempo o principal canal de compartilhamento político e o principal
+    vetor de desinformação, e um card sem procedência vira, fora do site,
+    "a plataforma disse X sobre fulano". Por isso ele carrega a própria fonte.
+
+    O QUE FOI REMOVIDO, E POR QUÊ: a versão anterior renderizava as `tags` da
+    candidatura como chips preenchidos, sob o título "Posicionamentos". As tags
+    são rótulos ideológicos de uma palavra — "Progressista", "Estatista",
+    "Armamentista", "Ausente" — sem documento, página ou citação por trás.
+    Carimbar isso na foto de uma pessoa real, no artefato mais fácil de
+    printar, contradiz a metodologia §2, que exige rastro para toda posição.
+    Nenhuma das 211 candidaturas tem tag hoje, então o chip nunca chegou a
+    aparecer; o desenho é que estava pronto para publicá-lo.
+
+    PALETA: `slate` + `indigo-600`, como manda o CLAUDE.md. A versão anterior
+    usava seis cores fora do sistema (#0E34A0, #2F3061, #DFDFDF, #343434,
+    #5a5a5a, #e8eaf6).
+
+    NEUTRALIDADE: tudo aqui é idêntico entre candidaturas. A linha de
+    procedência é a mesma para as 211 — deliberadamente não exibimos a
+    contagem de temas documentados, que varia e, ao lado de um rosto, leria
+    como nota, não como fonte. Esse número existe na ficha, onde há espaço
+    para explicá-lo.
+  */
   const svg = await satori(
     <div
       style={{
         display: "flex",
         height: "100%",
         width: "100%",
-        alignItems: "center",
-        justifyContent: "center",
         flexDirection: "column",
-        backgroundImage: "linear-gradient(to bottom right, #DFDFDF, #e8eaf6)",
+        backgroundColor: "#f1f5f9",
         fontFamily: '"Roboto Slab"',
-        padding: "40px",
+        padding: "44px",
       }}
     >
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           width: "100%",
           height: "100%",
-          backgroundColor: "white",
-          borderRadius: "40px",
-          boxShadow: "0 20px 50px -10px rgba(0,0,0,0.15)",
-          padding: "60px",
-          alignItems: "center",
-          gap: "60px",
+          backgroundColor: "#ffffff",
+          borderRadius: "28px",
+          border: "1px solid #e2e8f0",
+          padding: "56px 60px",
+          justifyContent: "space-between",
         }}
       >
-        {/* Photo */}
-        <div style={{ display: "flex" }}>
-          {candidate.photoUrl ? (
+        {/*
+          Sem `alt` de propósito: o satori rasteriza esta árvore para PNG, não
+          para DOM — nenhum leitor de tela chega até aqui. O texto alternativo
+          da imagem é a tag `og:image:alt`, definida em candidato.$id.tsx.
+        */}
+        <div style={{ display: "flex", alignItems: "center", gap: "52px" }}>
+          {photoUrl ? (
             <img
-              src={candidate.photoUrl}
-              width={400}
-              height={400}
+              src={photoUrl}
+              width={320}
+              height={320}
               style={{
                 borderRadius: "50%",
                 objectFit: "cover",
-                border: "10px solid #DFDFDF",
+                border: "6px solid #e2e8f0",
               }}
             />
           ) : (
             <div
               style={{
-                width: 400,
-                height: 400,
+                width: 320,
+                height: 320,
                 borderRadius: "50%",
-                backgroundColor: "#DFDFDF",
+                backgroundColor: "#f1f5f9",
+                border: "6px solid #e2e8f0",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "150px",
-                color: "#5a5a5a",
+                fontSize: "120px",
+                color: "#94a3b8",
               }}
             >
-              ?
+              {candidate.displayName.slice(0, 1)}
             </div>
           )}
-        </div>
 
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "20px",
-            flex: 1,
-          }}
-        >
-          {/* Header */}
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div
               style={{
-                fontSize: "32px",
-                color: "#5a5a5a",
-                fontWeight: 400,
-                marginBottom: "8px",
+                fontSize: "24px",
+                color: "#64748b",
+                fontWeight: 700,
+                letterSpacing: "4px",
+                marginBottom: "18px",
+                textTransform: "uppercase",
               }}
             >
-              Em Quem Votar?
+              Em quem votar?
             </div>
             <div
               style={{
-                fontSize: "70px",
-                color: "#343434",
+                fontSize: "62px",
+                color: "#0f172a",
                 fontWeight: 700,
-                lineHeight: 1,
+                lineHeight: 1.05,
               }}
             >
               {candidate.displayName}
             </div>
             <div
               style={{
-                fontSize: "40px",
-                color: "#0E34A0",
+                fontSize: "34px",
+                color: "#4f46e5",
                 fontWeight: 400,
-                marginTop: "10px",
+                marginTop: "14px",
               }}
             >
-              {candidate.party}
-              {candidate.coalition && ` · ${candidate.coalition}`}
+              {candidate.coalition
+                ? `${candidate.party} · ${candidate.coalition}`
+                : candidate.party}
             </div>
           </div>
+        </div>
 
-          {/* Divider */}
+        {/*
+          A ASSINATURA: a barra de citação. É o gesto que o site faz em toda
+          posição — trecho literal com a fonte ao lado — aplicado ao próprio
+          card. A linha é idêntica para as 211 candidaturas.
+        */}
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
           <div
             style={{
-              width: "100%",
-              height: "4px",
-              backgroundColor: "#DFDFDF",
-              margin: "20px 0",
+              display: "flex",
+              width: "6px",
+              height: "44px",
+              backgroundColor: "#4f46e5",
+              borderRadius: "3px",
             }}
-          ></div>
-
-          {/* Tags */}
-          {candidate.tags.length > 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: "24px",
-                  color: "#5a5a5a",
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                  fontWeight: 700,
-                }}
-              >
-                Posicionamentos
-              </div>
-              <div
-                style={{ display: "flex", flexWrap: "wrap", gap: "16px" }}
-              >
-                {candidate.tags.slice(0, 5).map((tag: any) => (
-                  <div
-                    key={tag.slug}
-                    style={{
-                      display: "flex",
-                      backgroundColor: "#2F3061",
-                      color: "white",
-                      fontSize: "30px",
-                      padding: "12px 30px",
-                      borderRadius: "20px",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {tag.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          />
+          <div
+            style={{
+              display: "flex",
+              fontSize: "23px",
+              color: "#64748b",
+              fontWeight: 400,
+              lineHeight: 1.35,
+            }}
+          >
+            Posições extraídas da proposta de governo protocolada no TSE, com
+            documento, página e trecho citados.
+          </div>
         </div>
       </div>
     </div>,
@@ -255,7 +325,15 @@ export async function loader({ params }: Route.LoaderArgs) {
   return new Response(pngBuffer as any, {
     headers: {
       "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      /*
+        Era `max-age=31536000, immutable`. Com a rota morta ninguém percebeu;
+        agora que as tags Open Graph apontam para cá, "imutável por um ano"
+        significaria que trocar foto, partido ou coligação nunca atualizaria o
+        card — num projeto que sincroniza com o TSE 4x/dia. Um dia de CDN com
+        revalidação em segundo plano acompanha a cadência do dado.
+      */
+      "Cache-Control":
+        "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800",
     },
   });
 }

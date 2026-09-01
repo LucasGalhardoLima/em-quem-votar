@@ -20,7 +20,10 @@ export default [
   route("educacao", "routes/educacao._index.tsx"),
   route("educacao/como-escolher", "routes/educacao.como-escolher.mdx"),
   route("educacao/importancia-voto", "routes/educacao.importancia-voto.mdx"),
-  route("educacao/funcoes-vereador", "routes/educacao.funcoes-vereador.mdx"),
+  route("educacao/funcoes-legislativo", "routes/educacao.funcoes-legislativo.mdx"),
+  // Slug antigo do mesmo texto, de quando ele falava de vereador. 301, não
+  // renomeio silencioso: a URL já está indexada. Ver o comentário na rota.
+  route("educacao/funcoes-vereador", "routes/educacao.funcoes-vereador.tsx"),
   route("educacao/espectro-politico", "routes/educacao.espectro-politico.mdx"),
   route("educacao/mito-voto-nulo", "routes/educacao.mito-voto-nulo.mdx"),
   route("educacao/centrao", "routes/educacao.centrao.mdx"),
@@ -34,12 +37,12 @@ export default [
   route("termos", "routes/termos.mdx"),
 
   // API
-  route("api/newsletter", "routes/api.newsletter.ts"),
   // Cron do Vercel (horário). Protegido por CRON_SECRET; ver vercel.json.
   route("api/cron/tse-status", "routes/api.cron.tse-status.ts"),
 
   // Admin
   route("admin/login", "routes/admin.login.tsx"),
+  route("admin/logout", "routes/admin.logout.tsx"),
   route("admin", "routes/admin._index.tsx"),
   route("admin/candidato/:id", "routes/admin.candidato.$id.tsx"),
   route("admin/votacao/:id", "routes/admin.votacao.$id.tsx"),

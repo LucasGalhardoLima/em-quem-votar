@@ -233,7 +233,7 @@ Allow users to mark which thematic axes matter most to them (5 axes with a "Muit
 
 **What to migrate as-is**:
 - All MDX content files (educacao, FAQ, sobre, etc.)
-- Newsletter system
+- Newsletter system — DROPPED 2026-08-28
 - OG image generation (adapt for candidates)
 - Sitemap generation
 - Rate limiting

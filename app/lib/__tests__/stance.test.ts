@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   AGREEMENT_CHIP_CLASS,
   CANDIDATE_STANCE_LABELS,
+  CLOSE_THRESHOLD,
   IMPORTANCE_LABELS,
   IMPORTANCE_LEVELS,
   IMPORTANCE_MULTIPLIERS,
@@ -114,6 +115,63 @@ describe("hasPosition", () => {
   });
 });
 
+/**
+ * REGRESSÃO — `hasPosition` é a fronteira entre o localStorage e o cálculo.
+ *
+ * As respostas do quiz são persistidas no navegador de quem responde
+ * (metodologia §5) e voltam como estiverem lá: versão antiga do store, edição
+ * manual, JSON truncado, extensão de navegador. O TypeScript garante o formato
+ * em tempo de compilação e nada em tempo de execução.
+ *
+ * A checagem `>= 1 && <= 5` é feita com operadores relacionais, que COAGEM o
+ * outro lado: `true >= 1` é verdadeiro, `"5" <= 5` é verdadeiro, `[3] >= 1`
+ * também. Um `true` guardado no lugar de uma resposta passava por "posição
+ * documentada", virava distância `Math.abs(5 - true)` = 4 e saía na tela como
+ * discordância máxima — uma afirmação sobre uma pessoa real tirada de lixo de
+ * serialização.
+ */
+describe("hasPosition — exige número de verdade, não coerção", () => {
+  it("rejeita booleanos, que coagem para 0 e 1", () => {
+    expect(hasPosition(true as never)).toBe(false);
+    expect(hasPosition(false as never)).toBe(false);
+  });
+
+  it('rejeita strings numéricas ("5", "3")', () => {
+    expect(hasPosition("5" as never)).toBe(false);
+    expect(hasPosition("3" as never)).toBe(false);
+  });
+
+  it("rejeita arrays de um elemento, que coagem pelo toString", () => {
+    expect(hasPosition([3] as never)).toBe(false);
+    expect(hasPosition([] as never)).toBe(false);
+  });
+
+  it("rejeita não-inteiros — a escala do banco é Int, não contínua", () => {
+    expect(hasPosition(3.5)).toBe(false);
+    expect(hasPosition(1.0000001)).toBe(false);
+  });
+
+  it("rejeita NaN e Infinity", () => {
+    expect(hasPosition(Number.NaN)).toBe(false);
+    expect(hasPosition(Number.POSITIVE_INFINITY)).toBe(false);
+    expect(hasPosition(Number.NEGATIVE_INFINITY)).toBe(false);
+  });
+
+  it("continua aceitando os cinco inteiros da escala, e só eles", () => {
+    // Contraprova: endurecer não pode ter fechado a porta para o dado bom.
+    for (let stance = STANCE_MIN; stance <= STANCE_MAX; stance += 1) {
+      expect(hasPosition(stance)).toBe(true);
+    }
+  });
+
+  it("0 continua sendo 'sem posição registrada', jamais neutro", () => {
+    // A semântica do 0 não muda com o endurecimento: ele é ausência de
+    // documento, não o ponto médio da escala.
+    expect(hasPosition(STANCE_UNKNOWN)).toBe(false);
+    expect(hasPosition(0)).toBe(false);
+  });
+});
+
 describe("agreementFor", () => {
   it("sem quiz respondido devolve 'no-quiz', mesmo com posição documentada", () => {
     // A plataforma não pode insinuar concordância antes de a pessoa
@@ -175,6 +233,24 @@ describe("agreementFor", () => {
     });
   });
 
+  it("a fronteira sai de CLOSE_THRESHOLD, não de um literal solto", () => {
+    // O mesmo limiar decide o chip que a pessoa vê aqui e o `agreeCount`
+    // ("concordância em X de Y temas") em `match.ts`. Enquanto ele era um `1`
+    // digitado nos dois lugares, mexer em um deixava a tela e a contagem
+    // discordando sobre o MESMO par de respostas. Este teste morre se
+    // `agreementFor` voltar a carregar o número por conta própria.
+    expect(Number.isInteger(CLOSE_THRESHOLD)).toBe(true);
+    expect(CLOSE_THRESHOLD).toBeGreaterThan(0);
+    for (let stance = STANCE_MIN; stance + CLOSE_THRESHOLD <= STANCE_MAX; stance += 1) {
+      expect(agreementFor(stance, stance + CLOSE_THRESHOLD).kind).toBe("close");
+    }
+    for (let stance = STANCE_MIN; stance + CLOSE_THRESHOLD + 1 <= STANCE_MAX; stance += 1) {
+      expect(agreementFor(stance, stance + CLOSE_THRESHOLD + 1).kind).toBe(
+        "distant",
+      );
+    }
+  });
+
   it("distância máxima (1 contra 5) é 4 e é 'distante'", () => {
     expect(agreementFor(1, 5)).toEqual({
       kind: "distant",
@@ -194,6 +270,52 @@ describe("agreementFor", () => {
       expect(AGREEMENT_CHIP_CLASS[kind]).toBeTruthy();
     }
   });
+
+  // O chip vivia em verde/vermelho: a cor afirmava, na ficha de uma pessoa
+  // real, que concordar com quem lê é bom e discordar é ruim. `indigo` entra
+  // na mesma lista por ser o acento de destaque do site. Um teste porque a
+  // regressão aqui é uma linha de Tailwind que passa por qualquer revisão.
+  it("nenhum chip codifica bom/ruim por matiz", () => {
+    for (const classes of Object.values(AGREEMENT_CHIP_CLASS)) {
+      expect(classes).not.toMatch(
+        /\b(?:border|bg|text|ring|outline)-(?:green|red|rose|orange|amber|yellow|emerald|lime|teal|indigo|violet|purple|fuchsia|pink)-/,
+      );
+    }
+  });
+
+  // Achatar os quatro no mesmo chip apagaria a diferença entre "próximo",
+  // "distante" e "fora da conta" — os dois de AUSÊNCIA são o mesmo estado e
+  // compartilham o chip de propósito.
+  it("comparável e ausente continuam distinguíveis sem matiz", () => {
+    expect(AGREEMENT_CHIP_CLASS.close).not.toBe(AGREEMENT_CHIP_CLASS.distant);
+    expect(AGREEMENT_CHIP_CLASS.close).not.toBe(
+      AGREEMENT_CHIP_CLASS["not-comparable"],
+    );
+    expect(AGREEMENT_CHIP_CLASS.distant).not.toBe(
+      AGREEMENT_CHIP_CLASS["not-comparable"],
+    );
+    expect(AGREEMENT_CHIP_CLASS["not-comparable"]).toBe(
+      AGREEMENT_CHIP_CLASS["no-quiz"],
+    );
+  });
+
+  // `close` e `distant` se separam só pelo preenchimento: borda ou texto
+  // diferente entre os dois colocaria um em posição de destaque sobre o outro,
+  // que é a mesma hierarquia entre concordar e discordar que saiu daqui.
+  it("próximo e distante só diferem no preenchimento", () => {
+    const token = (classes: string, prefix: string) =>
+      classes.split(" ").find((c) => c.startsWith(prefix));
+    expect(token(AGREEMENT_CHIP_CLASS.close, "text-")).toBe("text-slate-800");
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "text-")).toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "text-"),
+    );
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "border-")).toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "border-"),
+    );
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "bg-")).not.toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "bg-"),
+    );
+  });
 });
 
 describe("getMultiplier", () => {
@@ -212,6 +334,18 @@ describe("getMultiplier", () => {
   it("os pesos são estritamente crescentes de low para high", () => {
     expect(getMultiplier("low")).toBeLessThan(getMultiplier("medium"));
     expect(getMultiplier("medium")).toBeLessThan(getMultiplier("high"));
+  });
+
+  it("valor corrompido no localStorage cai em 'medium', nunca em undefined", () => {
+    // O peso vem do quizStore persistido; localStorage devolve o que
+    // escreveram nele. Estes valores atravessam o tipo em tempo de execução e
+    // antes saíam como undefined, contaminando a soma até virar "NaN%".
+    const corrompidos = ["HIGH", "Alta", "", "1.5", "null"];
+    for (const valor of corrompidos) {
+      const peso = getMultiplier(valor as never);
+      expect(Number.isFinite(peso)).toBe(true);
+      expect(peso).toBe(IMPORTANCE_MULTIPLIERS.medium);
+    }
   });
 });
 

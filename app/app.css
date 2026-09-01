@@ -7,17 +7,19 @@
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand Colors - Indigo/Slate Palette (Q1 2026 Redesign) */
-  --color-brand-primary: #4f46e5;
-  --color-brand-primary-hover: #4338ca;
-  --color-brand-primary-light: #eef2ff;
-  --color-brand-secondary: #F7996E;
-  --color-brand-tertiary: #334155;
-  --color-brand-text: #1e293b;
-  --color-brand-text-alt: #475569;
-  --color-brand-structure: #e2e8f0;
+  /* O que sobrou da paleta `brand-*`.
+     As telas de 2026 usam `slate` + `indigo-600` e nada mais (está no
+     CLAUDE.md); as outras nove variáveis daqui — primary, primary-hover,
+     primary-light, secondary, tertiary, text, text-alt, structure e alert —
+     não tinham UM uso no repositório inteiro (grep em `.ts/.tsx/.mdx/.css`,
+     fora de node_modules) e saíram: uma paleta declarada e não usada é um
+     convite a reintroduzi-la.
+     `brand-success` fica porque `app/components/ui/badge.tsx` referencia
+     `bg-brand-success/10` e `text-brand-success` na variante `success`. O
+     `Badge` não é importado por nenhuma tela hoje, mas o arquivo está no repo
+     e apagar a variável deixaria o primitivo quebrado em silêncio no dia em
+     que alguém o usasse. */
   --color-brand-success: #0d9488;
-  --color-brand-alert: #e11d48;
 
   /* Shadcn Border Radius */
   --radius-lg: var(--radius);
@@ -126,11 +128,61 @@
 }
 
 @layer base {
+  /*
+    `outline-ring/50` saiu daqui — era resíduo do preset do Shadcn e estava
+    ANULANDO o anel de foco de todos os cartões do site.
+
+    O seletor é `*`, portanto especificidade 0; a utilitária dos cartões
+    (`has-[a:focus-visible]:outline-indigo-600`) tem especificidade de classe e
+    deveria vencer. Não vencia: medido no Chrome com o link do cartão focado e
+    `:has(a:focus-visible)` satisfeito, o `outline-color` computado era
+    `oklab(0.587 0.026 -0.202 / 0.5)` — ou seja, `--ring` a 50% de opacidade, e
+    não indigo-600. Sobre o branco isso dá ≈1,96:1, abaixo dos 3:1 que o SC
+    1.4.11 exige de um indicador de foco. O commit ee3b4d2 acreditou ter
+    corrigido exatamente esse número.
+
+    Atingia os quatro lugares que usam esse padrão de cartão: CandidateCard,
+    home, votacoes._index e educacao._index. A correção é uma linha aqui em vez
+    de quatro remendos lá, porque o defeito é desta regra, não deles.
+
+    Nada perde indicador: quem quer anel usa `.focus-ring` (definido abaixo,
+    com contraste medido nas duas superfícies) ou a própria utilitária de cor.
+  */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* ----------------------------------------------------------------
+     Calha da barra de rolagem
+     ----------------------------------------------------------------
+     Sem isto, ir de uma página alta (`/metodologia`) para uma curta
+     (`/votacao/:id` inexistente, que renderiza o vazio de poucas linhas)
+     devolve ao layout os 15px da barra de rolagem, e a viewport fica mais
+     larga: como o `Container` é `mx-auto` com teto de 1168px, ele recentra e o
+     cabeçalho inteiro salta na horizontal no meio da navegação. Medido a
+     1440px no Chrome: a marca começa em x=192 na página curta e em x=184,5 na
+     alta — 7,5px de salto a cada ida e volta. Com `stable` as duas ficam em
+     184,5.
+
+     Fica no `html` porque é o elemento que rola. Em barras sobrepostas
+     (telefone, macOS no padrão) a calha tem largura zero e a declaração não
+     custa nada; ela aparece em Windows/Linux e em macOS configurado para
+     mostrar a barra sempre — exatamente onde o salto acontecia.
+
+     A partir de `sm` (640px), e não em toda largura: a calha COBRA os ~15px
+     dela da viewport de layout, e o cabeçalho é medido no limite em 320px
+     (ver o comentário do `SiteHeader`). Aplicada em toda largura, ela deixava
+     a viewport em 305px e o cabeçalho estourava 15px para fora — medido no
+     Chrome headless em /metodologia@320, e é reprovação direta do SC 1.4.10
+     (Reflow), justamente a largura de referência da regra. Abaixo de 640px o
+     salto também não existe para consertar: ali a barra é sobreposta. */
+  @media (min-width: 640px) {
+    html {
+      scrollbar-gutter: stable;
+    }
   }
 }
 
@@ -146,4 +198,116 @@
 
 .bento-card:hover {
   @apply border-slate-300 shadow-sm;
+}
+
+/* ------------------------------------------------------------------
+   Escala tipográfica
+   ------------------------------------------------------------------
+   A escala é a NOMEADA do Tailwind, e o motivo é acessibilidade antes de
+   consistência: `text-[13px]` é pixel fixo e ignora o tamanho de fonte que a
+   pessoa configurou no navegador; `text-sm` é `rem` e acompanha. Quem aumenta
+   a fonte do sistema para conseguir ler — o público que mais precisa de um
+   site sobre voto — não era atendido por nenhum dos 627 tamanhos fixos que
+   existiam aqui. É o SC 1.4.4 (Resize Text).
+
+   O mapa adotado, dos 18 tamanhos arbitrários para os 8 degraus:
+
+     12    12.5                 -> text-xs     0.75rem   (12px)
+     13    13.5   14            -> text-sm     0.875rem  (14px)
+     14.5  15     15.5          -> text-base   1rem      (16px)
+     17                         -> text-lg     1.125rem  (18px)
+     19    20                   -> text-xl     1.25rem   (20px)
+     22    24                   -> text-2xl    1.5rem    (24px)
+     26    28     30            -> text-3xl    1.875rem  (30px)
+     32    34                   -> text-4xl    2.25rem   (36px)
+
+   Oito tamanhos moravam numa faixa de 3,5px (12 a 15,5). Diferença que
+   ninguém lê como hierarquia, só como ruído — por isso a faixa colapsa em
+   três degraus, e não em oito.
+
+   Uma consequência que não é efeito colateral: as classes nomeadas também
+   fixam `line-height`, o que as arbitrárias não faziam (elas herdavam o 1.5
+   do preflight). O entrelinhamento passa a vir pareado com o tamanho, que é
+   o que uma escala significa. Onde um layout medido quebrar, corrija com
+   `leading-*` NOMEADO — nunca voltando ao tamanho fixo. */
+
+/* ------------------------------------------------------------------
+   Anel de foco
+   ------------------------------------------------------------------
+   Uma utilitária só, porque `focus-visible` estava declarado em exatamente
+   dois arquivos do app inteiro e a regra global de `@layer base` acima define
+   apenas a COR do outline, a 50% de alfa — largura e estilo ficavam no default
+   de cada navegador. Quem navega por teclado no quiz (roving tabindex) e nas
+   abas da ficha dependia disso.
+
+   `focus-visible` e não `focus`: o segundo acende também no clique de mouse.
+
+   O `outline-offset` não é folga estética. O anel em indigo-600 rende 6,3:1
+   contra o branco do cartão e ~6:1 contra o `slate-50` do corpo — mas só 2,3:1
+   contra os botões `bg-slate-800`, abaixo dos 3:1 que o SC 1.4.11 exige para
+   elemento não textual. Deslocado para fora, ele se apoia sempre no fundo da
+   página, nunca no preenchimento do alvo.
+
+   DOIS TONS, e é aqui que o offset sozinho não bastava: "o fundo da página"
+   deixou de ser sempre claro quando o rodapé passou a ser navegação de
+   verdade. Lá o fundo É `slate-800`, e indigo-600 sobre slate-800 rende 2,3:1
+   — o anel deslocado cai exatamente na cor contra a qual ele não contrasta,
+   reprovando o SC 1.4.11 e o SC 2.4.13 (Focus Appearance) na única superfície
+   escura do site. O `box-shadow` branco de 6px é o segundo tom: ele ocupa de
+   0 a 6px a partir da borda do alvo e o outline indigo pinta por cima, de 2 a
+   4px (o outline é desenhado depois da sombra externa). O resultado tem, em
+   qualquer fundo, um par com contraste suficiente: branco contra slate-800
+   (13,8:1) e indigo contra o branco (6,3:1). Sobre fundo claro o tom branco é
+   invisível e o anel continua sendo o de sempre — nada muda visualmente.
+
+   Custo conhecido: em foco, o `box-shadow` substitui a sombra do elemento.
+   Um único alvo no app combina `.focus-ring` com sombra (o CTA do herói da
+   home, `shadow-lg shadow-slate-800/10`), e a troca dura o tempo do foco. */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-indigo-600);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--color-white);
+}
+
+/* ------------------------------------------------------------------
+   Movimento reduzido
+   ------------------------------------------------------------------
+   Regra global, e não uma guarda por componente, de propósito: rotação
+   contínua provoca náusea e tontura de verdade em quem tem sensibilidade
+   vestibular, e o sistema operacional já expõe essa escolha. Uma guarda por
+   componente só protege o componente que alguém lembrou de guardar — esta
+   pega também `resultado.tsx`, os primitivos de `ui/` e todo código futuro.
+
+   `0.01ms` em vez de `none` porque animações com duração zero não disparam
+   `animationend`/`transitionend`, e código que espera esse evento trava. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Exceção: os indicadores de carregamento. Um spinner congelado vira um
+     ícone sem significado — a pessoa deixa de saber que algo está em curso.
+     Trocamos a rotação por um pulso de opacidade: opacidade não desloca nada
+     no campo visual, então não é o que dispara o enjoo. A especificidade de
+     classe vence a regra universal acima. */
+  .animate-spin,
+  .animate-pulse {
+    animation: reduced-motion-fade 1.6s ease-in-out infinite !important;
+    transform: none !important;
+  }
+
+  @keyframes reduced-motion-fade {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.45;
+    }
+  }
 }

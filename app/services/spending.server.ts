@@ -66,6 +66,36 @@ export const SpendingService = {
     });
   },
 
+  /**
+   * Bens declarados, item a item, do maior para o menor valor.
+   *
+   * Existe separado do agregado acima porque a `category` sozinha ("Apartamento",
+   * "Outros bens imóveis") não diz nada sobre o item: quem declara escreve
+   * "50% DO APARTAMENTO LOCALIZADO EM SÃO BERNARDO DO CAMPO", e é esse texto,
+   * literal do TSE, que a página mostra.
+   */
+  async getDeclaredAssets(candidateId: string) {
+    const records = await db.spendingRecord.findMany({
+      where: { candidateId, type: "DECLARED_ASSETS" },
+      orderBy: { amount: "desc" },
+      select: {
+        id: true,
+        amount: true,
+        category: true,
+        description: true,
+        periodEnd: true,
+      },
+    });
+
+    return records.map((r) => ({
+      id: r.id,
+      amount: Number(r.amount),
+      category: r.category,
+      description: r.description,
+      declaredAt: r.periodEnd.toISOString().slice(0, 10),
+    }));
+  },
+
   /** Placeholder: sync CEAP spending from Câmara API */
   async syncFromCamara(
     _candidateId: string,

@@ -1,0 +1,27 @@
+-- Remove a tabela de perfil de usuário, que ficou órfã.
+--
+-- "UserProfile" sobrou do rebuild da plataforma: nenhuma rota, service, seed
+-- ou script lê ou escreve nela (`grep -rn "UserProfile\|userProfile"` em
+-- `app/`, `scripts/` e `prisma/seed.ts` volta vazio — só o próprio schema e
+-- os documentos de planejamento em `specs/` a mencionam). O site não tem
+-- login nem conta de usuário; a tabela nunca teve como ser alimentada pela
+-- aplicação que existe hoje.
+--
+-- ATENÇÃO — ESTE DROP DESCARTA DADO, DIFERENTE DO `drop_subscriber`.
+-- A migration irmã (20260828140000) pôde afirmar que não perdia nada porque
+-- a contagem era 0. Aqui não: `SELECT count(*) FROM "UserProfile"` = **1**
+-- em 2026-08-28. A linha NÃO foi inspecionada — não se sabe se era um
+-- registro de teste ou de uma pessoa real. Foi descartada por decisão
+-- explícita do dono do projeto, ciente disso. Registrado aqui porque uma
+-- migration que apaga dado sem dizer que apagou é pior que o dado perdido.
+--
+-- Se algum dia isso precisar voltar, volta como tabela nova: não há
+-- inscrito a migrar, e a coluna `quizAnswers` não deve ser recriada sem
+-- rediscutir a promessa do /metodologia §5 — as respostas do quiz vivem no
+-- localStorage do navegador e não são enviadas ao servidor.
+--
+-- Aplicado em produção pelo `prisma migrate deploy` que roda antes do sync
+-- do TSE (`.github/workflows/sync-tse-2026.yml`), 4x/dia.
+
+-- DropTable
+DROP TABLE "UserProfile";

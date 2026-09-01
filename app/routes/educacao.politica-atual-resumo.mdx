@@ -1,75 +1,150 @@
 ---
-title: "Política Atual: Resumo do Cenário"
-excerpt: "Um mapa das forças políticas, as principais disputas no Congresso e como isso afeta seu dia a dia."
+title: "Política Brasileira: Quem Decide o Quê"
+excerpt: "Um mapa das competências: o que o presidente decide sozinho, o que depende do Congresso e onde entra o Judiciário. Sem placar, sem lado."
 image: ""
-date: "2026-01-02"
+date: "2026-08-28"
 category: "Análise"
 readTime: "6 min"
 ---
-import { Container } from "../components/layout";
 
-<main className="flex-1">
+import { pageMeta } from "../root";
+export const meta = () =>
+  // O frontmatter YAML vira `export const frontmatter`, que o React Router
+  // não lê: sem este `meta` a página sai sem <title> nenhum. Título e resumo
+  // saem do próprio frontmatter, para não existirem em dois lugares; o bloco
+  // Open Graph mora em pageMeta(), para não existir treze vezes.
+  pageMeta({ title: `${frontmatter.title} | Em Quem Votar?`, description: frontmatter.excerpt });
+
+import { ExternalLink } from "lucide-react";
+import { Container, MAIN_CONTENT_ID } from "../components/layout";
+
+<main id={MAIN_CONTENT_ID} className="flex-1">
   <Container className="py-10">
     <div className="grid max-w-[720px] gap-[26px]">
       <header className="grid gap-2">
-        <span className="text-[11px] font-bold tracking-[0.06em] text-indigo-600 uppercase">
+        <span className="text-xs font-bold tracking-[0.06em] text-indigo-600 uppercase">
           Análise
         </span>
-        <h1 className="font-heading text-[28px] font-bold tracking-[-0.02em] text-slate-800 sm:text-[32px]">
-          Política Atual: Resumo do Cenário
+        <h1 className="font-heading text-3xl font-bold tracking-[-0.02em] text-slate-800 sm:text-4xl">
+          Política Brasileira: Quem Decide o Quê
         </h1>
-        <p className="text-[14px] text-slate-500">
-          02 de Janeiro de 2026 · 6 min de leitura
+        <p className="text-sm text-slate-500">
+          28 de agosto de 2026 · 6 min de leitura
         </p>
-        <p className="mt-1 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          Para navegar na política brasileira, você precisa de um mapa. Quem detém o poder hoje? Quais são as forças em jogo?
+        <p className="mt-1 text-base leading-[1.7] text-pretty text-slate-600">
+          Um mapa das competências: o que o presidente decide sozinho, o que depende do Congresso e onde entra o Judiciário. Sem placar, sem lado.
         </p>
       </header>
+      <div className="rounded-2xl border border-indigo-600/[0.12] bg-indigo-600/[0.04] px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+        <p>
+          Este texto descreve regras, não desempenho. Tudo o que está aqui pode ser conferido na Constituição, artigo por artigo — e não muda conforme quem está no cargo.
+        </p>
+      </div>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">1.</span> O Executivo vs. Legislativo
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">1.</span> Os três poderes, em uma linha cada
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-3 grid gap-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Executivo</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Dirige a administração federal, nomeia e exonera ministros, sanciona ou veta leis e edita decretos para executá-las (art. 84). É o poder que gasta o dinheiro autorizado no Orçamento.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Legislativo</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              O Congresso Nacional — Câmara mais Senado (art. 44) — faz as leis, aprova o Orçamento e exerce o controle externo das contas da União (art. 70). É o poder que autoriza o gasto.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Judiciário</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              Ao STF cabe precipuamente a guarda da Constituição (art. 102), inclusive julgar se uma lei ou um ato dos outros dois poderes é constitucional. Não legisla nem governa: decide provocado, em processo.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">2.</span> Por que nenhum presidente governa sozinho
+        </h2>
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            O Brasil vive um momento de "presidencialismo de coalizão" levado ao extremo. O Executivo (Presidente) detém a caneta, mas o Legislativo (Congresso) detém o cofre através do controle inédito sobre o orçamento (emendas impositivas).
+            O presidente é eleito numa disputa nacional. O Congresso é eleito em 27 disputas estaduais, no mesmo dia e em urnas separadas. Nada garante que os dois resultados apontem para o mesmo lado — e a Constituição não presume que apontem.
+          </p>
+          <p>
+            Para a Câmara deliberar é preciso a presença da maioria absoluta dos membros, isto é, ao menos 257 dos 513 deputados, e decide a maioria dos presentes (art. 47). Emenda constitucional exige quórum bem mais alto. Daí o termo que você ouve no noticiário: <strong className="font-semibold text-slate-800">presidencialismo de coalizão</strong>, um sistema em que o Executivo precisa montar e manter uma base no Legislativo para aprovar o que quer que seja.
           </p>
         </div>
+        <div className="mt-3 rounded-2xl border border-slate-200 bg-white px-[18px] py-3.5 text-sm leading-relaxed text-slate-600">
+          <p>
+            Há ainda uma fatia do Orçamento que o Legislativo destina por conta própria: as emendas individuais têm execução obrigatória, dentro do limite fixado no art. 166, § 9º. É uma regra escrita na Constituição, não um arranjo informal.
+          </p>
+        </div>
+      </section>
+      <section>
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">3.</span> Os freios, e de quem é cada um
+        </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Governo</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Foca em pautas sociais e aumento da arrecadação.
+            <h3 className="text-base font-bold text-slate-800">Veto e derrubada</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              O presidente pode vetar um projeto por inteiro ou em parte (art. 84, V). O Congresso pode derrubar o veto.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
-            <h3 className="text-[15px] font-bold text-slate-800">Oposição</h3>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
-              Foca em pautas de costumes e fiscalização de gastos.
+            <h3 className="text-base font-bold text-slate-800">Sustação de atos</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              O Congresso pode sustar atos do Executivo que ultrapassem o poder de regulamentar ou os limites da delegação (art. 49, V).
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Impeachment</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              A Câmara autoriza a abertura do processo por dois terços dos seus membros (art. 51, I); quem julga o presidente por crime de responsabilidade é o Senado (art. 52, I).
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+            <h3 className="text-base font-bold text-slate-800">Controle de constitucionalidade</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
+              O STF julga ação direta de inconstitucionalidade contra lei ou ato normativo federal e estadual (art. 102, I, "a").
             </p>
           </div>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">2.</span> O Papel do Judiciário
+        <h2 className="text-lg font-bold text-slate-800">
+          <span className="text-indigo-600">4.</span> Onde o seu voto entra nisso
         </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
+        <div className="mt-2 grid gap-3 text-base leading-[1.7] text-pretty text-slate-600">
           <p>
-            O STF continua sendo um ator político central, arbitrando conflitos entre os outros poderes. Isso gera debates sobre "ativismo judicial", mas também serve como freio e contrapeso em momentos de crise institucional.
+            Em 4 de outubro você faz seis escolhas. Duas são para o Executivo: governador e presidente. As outras quatro montam o Legislativo com quem esses dois vão ter de negociar — deputado federal, deputado estadual ou distrital, e dois senadores.
+          </p>
+          <p>
+            A escolha para o Senado é a de prazo mais longo: são oito anos, o dobro dos demais cargos. Os senadores eleitos agora continuam no cargo depois da próxima eleição presidencial.
+          </p>
+          <p>
+            Por isso vale gastar tempo nos quatro primeiros votos, não só no último. Eles decidem se a lei aprovada, o veto derrubado e o Orçamento autorizado vão na direção que você espera.
           </p>
         </div>
       </section>
       <section>
-        <h2 className="text-[17px] font-bold text-slate-800">
-          <span className="text-indigo-600">3.</span> Como isso afeta você?
-        </h2>
-        <div className="mt-2 grid gap-3 text-[14.5px] leading-[1.7] text-pretty text-slate-600">
-          <p>
-            Essa disputa de poder atrasa reformas estruturais (como a tributária ou administrativa) e muitas vezes foca mais em sobrevivência política do que em eficiência.
-          </p>
-          <p>
-            Entender esse jogo é vital para cobrar seu deputado e senador. Eles não estão lá apenas para fazer leis, mas para fiscalizar e negociar em seu nome.
-          </p>
+        <h2 className="text-lg font-bold text-slate-800">Fontes</h2>
+        <div className="mt-3 flex flex-wrap gap-3">
+          <a href="https://www.planalto.gov.br/ccivil_03/constituicao/constituicao.htm" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            Constituição — arts. 44, 47, 49, 51, 52, 70, 84, 102 e 166
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            {/* Ver `SourceCite`: o ícone de nova aba só comunica a quem
+                enxerga. */}
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
+          <a href="https://www.tse.jus.br/eleicoes/eleicoes-2026" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition-colors hover:border-slate-300">
+            TSE — Eleições 2026
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+            <span className="sr-only">(abre em nova aba)</span>
+          </a>
         </div>
       </section>
     </div>

@@ -168,11 +168,15 @@ Routes defined in `app/routes.ts` using React Router config API:
 - Voting records: `/votacoes`, `/votacao/:id`
 - MDX routes: `educacao/*.mdx` for static articles, plus `/sobre`, `/faq`,
   `/privacidade`, `/termos`
-- Admin: `/admin/login`, `/admin`, `/admin/candidato/:id`,
-  `/admin/votacao/:id`
-- Resource routes (no UI): `api/newsletter`, `resources/og/:id`, `sitemap.xml`
+- Admin: `/admin/login`, `/admin/logout` (POST-only), `/admin`,
+  `/admin/candidato/:id`, `/admin/votacao/:id`
+- Resource routes (no UI): `api/cron/tse-status`, `resources/og/:id`,
+  `sitemap.xml`
 - Legacy 301 redirects kept for SEO: `/busca`, `/politico/:id`,
-  `/artigos/:slug`
+  `/artigos/:slug`, `/educacao/funcoes-vereador` (the article was rewritten
+  for the offices actually on the 2026 ballot and now lives at
+  `/educacao/funcoes-legislativo`; the old slug is already indexed, so it
+  redirects instead of being renamed silently)
 
 ### State Management
 Zustand stores in `app/stores/`, both persisted to localStorage with
@@ -210,9 +214,24 @@ there is no valid session. Configure `ADMIN_PASSWORD` (and optionally
 **closed** (503); in development it warns and allows.
 
 The session is a stateless HMAC token (8h, `HttpOnly`, `SameSite=Lax`,
-`Path=/admin`) signed with `ADMIN_PASSWORD` — so **changing the password
-revokes every open session**. `?next=` is validated by `safeNextPath()` to
-prevent an open redirect.
+`Path=/admin`) signed with a key **derived from `ADMIN_PASSWORD` via scrypt**
+(N=2^15, fixed application salt, cached per process) — so **changing the
+password still revokes every open session**. `?next=` is validated by
+`safeNextPath()` to prevent an open redirect.
+
+The derivation is not decoration. The token is `<expiry>.<HMAC(key, expiry)>`
+and the expiry travels in cleartext inside the cookie, so a leaked cookie is a
+(known plaintext, tag) pair. Signing with the raw password made that pair an
+offline oracle **for the password itself**: measured against the real module,
+493,813 guesses/s before, 22.2/s after — 8 alphanumeric characters go from
+0.18 years to 4,029 years on one core. Do not "simplify" this back to the raw
+password. `app/utils/__tests__/admin-auth.server.test.ts` has a regression test
+that fails if a token signed the old way is ever accepted again.
+
+Known gap, deliberate: the login lockout (5 failures → 15 min) lives in a
+process-local `Map`, so it resets on Vercel cold starts and is not shared
+across instances. It raises the cost of guessing; it does not stop it. A real
+lockout needs a `LoginAttempt` table or Redis.
 
 Do NOT switch this to HTTP Basic: React Router drops the headers of a
 `Response` thrown from a loader, so `WWW-Authenticate` never reaches the
