@@ -57,17 +57,27 @@ do admin e acessibilidade não existem para ninguém fora deste laptop.
 - [x] **1.5** **[PORTÃO]** push da branch + abrir PR para `main`.
       [PR #5](https://github.com/LucasGalhardoLima/em-quem-votar/pull/5), 33
       commits, preview da Vercel verde.
-- [ ] **1.6** **[PORTÃO]** merge + deploy. Conferir em produção: `/candidatos`,
-      uma ficha com aba de bens, `/quiz` → `/resultado`, e o 301 do slug antigo.
-      **Estado em 01/09:** nada bloqueia o merge — `main` não tem branch
-      protection nem ruleset, e o PR está `MERGEABLE`/`UNSTABLE`. O único check
-      vermelho é o GitGuardian: 3 incidentes, 7 ocorrências, todas fixtures de
-      teste (`s3nha-forte`, `senha-antiga`, `senha-nova`, `eleição-2026`) presas
-      no commit `1dd3d8c`. O commit `841d6eb` tirou os literais do formato
-      `ADMIN_PASSWORD = "..."` — o que limpa a `main` e os PRs futuros — mas o
-      scanner lê **todos** os commits do PR, então este aqui não fica verde sem
-      marcar os incidentes no dashboard (só o Lucas tem acesso) ou reescrever a
-      história do branch.
+- [x] **1.6** **[PORTÃO]** merge + deploy. Conferido em produção em 01/09, em
+      `https://em-quem-votar.vercel.app` (o domínio `emquemvotar.app` que a
+      cópia do site cita ainda não resolve — NXDOMAIN):
+      - `/candidatos`: 211 candidaturas, filtros somando 99 aguardando
+        julgamento + 3 sub judice + 107 deferido + 2 renúncia, agrupadas por
+        cargo, peso visual igual.
+      - Ficha com aba de bens: CABO DACIOLO (Governador — Amazonas) com
+        R$ 190.750 detalhados nos itens; canonical próprio; as 5 abas na
+        ordem fixa.
+      - `/quiz` → `/resultado`: percentual calculado no navegador, LULA 90% em
+        8 de 8 temas comparáveis, "baseado em 20 de 24 perguntas", e as demais
+        candidaturas como **"Sem dados"** — não 0%. É a prova em produção do
+        que os commits `6249dc8` e `9b457b6` prometeram.
+      - `/educacao/funcoes-vereador` → **301** para `funcoes-legislativo`.
+      - `/`, `/votacoes`, `/metodologia`, `/candidatos?uf=SP`: 200, canonical
+        presente, contador em "Faltam 33 dias".
+
+      O check do GitGuardian entrou vermelho no merge, como previsto: os 3
+      incidentes de fixture seguem presos ao commit `1dd3d8c` do histórico do
+      PR. A `main` está limpa desde `841d6eb`. Fechar os incidentes no
+      dashboard continua pendente e só o Lucas tem acesso.
 
 ## Bloco 2 — Fase B: posições com fonte (SC-102 e SC-103)
 
