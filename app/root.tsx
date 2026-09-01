@@ -7,6 +7,8 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
+  useRouteLoaderData,
 } from "react-router";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -21,13 +23,29 @@ import {
   SiteFooter,
   SiteHeader,
 } from "~/components/layout";
+import { countdownCopy } from "~/lib/election";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const ip = request.headers.get("x-forwarded-for") || "local";
   if (!checkRateLimit(ip)) {
     throw new Response("Too Many Requests", { status: 429 });
   }
-  return null;
+  return {
+    /**
+     * Contagem regressiva calculada no SERVIDOR, uma vez por request, para o
+     * rodapé — mesma razão descrita no `CountdownBanner`: a data de referência
+     * é Brasília, e computá-la no cliente divergiria da marcação do SSR.
+     */
+    countdown: countdownCopy(),
+    /**
+     * Origem absoluta do request, para a `<link rel="canonical">` do `Layout`.
+     * Mesma leitura que `sitemap.xml` e o `og:url` da ficha de candidato já
+     * fazem (`new URL(request.url).origin`) — não existe `SITE_URL` neste
+     * projeto e introduzir uma segunda forma de descobrir o host criaria duas
+     * respostas possíveis para "qual é a URL canônica desta página".
+     */
+    origin: new URL(request.url).origin,
+  };
 }
 
 const SITE_NAME = "Em Quem Votar?";
@@ -106,6 +124,36 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+/**
+ * `<link rel="canonical">` de todas as páginas.
+ *
+ * Mora AQUI, no `Layout`, e não no `pageMeta()` acima, pela mesma propriedade
+ * que aquele comentário descreve: `<Meta>` não mescla a cadeia de rotas — a
+ * rota que exporta `meta` próprio SUBSTITUI o do ancestral por inteiro. Uma
+ * canonical declarada no `meta` da raiz sumiria justamente nas rotas que têm
+ * identidade própria, e qualquer rota criada amanhã nasceria sem ela. O
+ * `Layout`, ao contrário, renderiza em toda rota por construção; nenhuma pode
+ * escapar.
+ *
+ * A canonical é `origin + pathname`, sem query string, e isso é deliberado:
+ * `/candidatos` sorteia a ordem a cada request (`shuffleSeed`) e aceita
+ * filtros e busca na URL, então a mesma página existe sob dezenas de query
+ * strings. Todas apontam para a URL sem parâmetros — a mesma que o
+ * `sitemap.xml` declara. Somado aos 301 legados (`/busca`, `/politico/:id`,
+ * `/artigos/:slug`, `/educacao/funcoes-vereador`), é o que faz sitemap,
+ * redirects e páginas dizerem a mesma coisa.
+ *
+ * Sem `origin` não sai canonical: isso acontece quando o loader da raiz não
+ * chegou a rodar, que é o caso de uma URL sem rota — e uma página 404 não deve
+ * mesmo se declarar canônica de nada.
+ */
+function CanonicalLink() {
+  const { pathname } = useLocation();
+  const origin = useRouteLoaderData<typeof loader>("root")?.origin;
+  if (!origin) return null;
+  return <link rel="canonical" href={`${origin}${pathname}`} />;
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
@@ -114,6 +162,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#f8fafc" />
         <Meta />
+        <CanonicalLink />
         <Links />
       </head>
       <body className="bg-slate-50 text-slate-800 antialiased">
@@ -182,13 +231,13 @@ function ContentArrivalAnnouncer() {
   );
 }
 
-export default function App() {
+export default function App({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
       <SiteHeader />
       <Outlet />
       <ContentArrivalAnnouncer />
-      <SiteFooter />
+      <SiteFooter countdown={loaderData.countdown} />
     </div>
   );
 }
@@ -231,7 +280,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
           <h1 className="font-heading text-4xl font-bold tracking-[-0.02em] text-slate-800">
             {title}
           </h1>
-          <p className="max-w-lg text-[15px] leading-relaxed text-slate-600">
+          <p className="max-w-lg text-base leading-relaxed text-slate-600">
             {details}
           </p>
           <div className="flex flex-wrap justify-center gap-3">
