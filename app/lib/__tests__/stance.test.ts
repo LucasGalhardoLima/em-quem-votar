@@ -270,6 +270,52 @@ describe("agreementFor", () => {
       expect(AGREEMENT_CHIP_CLASS[kind]).toBeTruthy();
     }
   });
+
+  // O chip vivia em verde/vermelho: a cor afirmava, na ficha de uma pessoa
+  // real, que concordar com quem lê é bom e discordar é ruim. `indigo` entra
+  // na mesma lista por ser o acento de destaque do site. Um teste porque a
+  // regressão aqui é uma linha de Tailwind que passa por qualquer revisão.
+  it("nenhum chip codifica bom/ruim por matiz", () => {
+    for (const classes of Object.values(AGREEMENT_CHIP_CLASS)) {
+      expect(classes).not.toMatch(
+        /\b(?:border|bg|text|ring|outline)-(?:green|red|rose|orange|amber|yellow|emerald|lime|teal|indigo|violet|purple|fuchsia|pink)-/,
+      );
+    }
+  });
+
+  // Achatar os quatro no mesmo chip apagaria a diferença entre "próximo",
+  // "distante" e "fora da conta" — os dois de AUSÊNCIA são o mesmo estado e
+  // compartilham o chip de propósito.
+  it("comparável e ausente continuam distinguíveis sem matiz", () => {
+    expect(AGREEMENT_CHIP_CLASS.close).not.toBe(AGREEMENT_CHIP_CLASS.distant);
+    expect(AGREEMENT_CHIP_CLASS.close).not.toBe(
+      AGREEMENT_CHIP_CLASS["not-comparable"],
+    );
+    expect(AGREEMENT_CHIP_CLASS.distant).not.toBe(
+      AGREEMENT_CHIP_CLASS["not-comparable"],
+    );
+    expect(AGREEMENT_CHIP_CLASS["not-comparable"]).toBe(
+      AGREEMENT_CHIP_CLASS["no-quiz"],
+    );
+  });
+
+  // `close` e `distant` se separam só pelo preenchimento: borda ou texto
+  // diferente entre os dois colocaria um em posição de destaque sobre o outro,
+  // que é a mesma hierarquia entre concordar e discordar que saiu daqui.
+  it("próximo e distante só diferem no preenchimento", () => {
+    const token = (classes: string, prefix: string) =>
+      classes.split(" ").find((c) => c.startsWith(prefix));
+    expect(token(AGREEMENT_CHIP_CLASS.close, "text-")).toBe("text-slate-800");
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "text-")).toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "text-"),
+    );
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "border-")).toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "border-"),
+    );
+    expect(token(AGREEMENT_CHIP_CLASS.distant, "bg-")).not.toBe(
+      token(AGREEMENT_CHIP_CLASS.close, "bg-"),
+    );
+  });
 });
 
 describe("getMultiplier", () => {

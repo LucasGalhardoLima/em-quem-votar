@@ -120,10 +120,35 @@ export function agreementFor(
     : { kind: "distant", distance, label: "distante" };
 }
 
-/** Classes Tailwind do chip de concordância, por tipo. */
+/**
+ * Classes Tailwind do chip de concordância, por tipo.
+ *
+ * Nenhum matiz de valência, e isso é regra de produto e não gosto. O par
+ * verde/vermelho que morava aqui dizia, na ficha de uma pessoa real, que
+ * concordar com quem lê é bom e discordar é ruim — o mesmo julgamento que a
+ * neutralidade já proíbe nos chips de `Sim`/`Não` de votação, só que aplicado
+ * à pessoa em vez de ao voto. E o canal de cor nem entregava o que
+ * justificaria a quebra: verde contra vermelho é exatamente o par que
+ * deuteranopia e protanopia colapsam, então quem mais dependeria da cor lia
+ * dois chips iguais. O `indigo-600` está fora pelo mesmo motivo por outro
+ * caminho: é o acento de destaque do site (o `isTop` do resultado), logo lê
+ * como "melhor".
+ *
+ * A distinção sai do matiz e vai para o preenchimento. `close` e `distant`
+ * têm a MESMA borda e o MESMO texto `slate-800` — mesmo quadro, mesma ênfase
+ * tipográfica, nenhum dos dois em posição de destaque — e se separam só por o
+ * chip ser tingido ou vazado sobre o cartão branco. Diferença de ênfase existe
+ * apenas contra o terceiro degrau, o da ausência, e essa é legítima: fala de
+ * dado que não temos, não de mérito de quem está na ficha. O significado
+ * continua escrito no rótulo; o visual só não o contradiz.
+ *
+ * Contraste medido sobre o fundo real de cada chip: slate-800 sobre slate-200
+ * dá 11,9:1, slate-800 sobre branco dá 14,6:1 e slate-500 sobre slate-50 dá
+ * 4,55:1 — os três passam o AA de 4,5:1.
+ */
 export const AGREEMENT_CHIP_CLASS: Record<AgreementKind, string> = {
-  close: "border-green-600/25 bg-green-600/[0.07] text-green-700",
-  distant: "border-red-600/20 bg-red-600/[0.06] text-red-700",
+  close: "border-slate-400 bg-slate-200 text-slate-800",
+  distant: "border-slate-400 bg-white text-slate-800",
   // `slate-500` e não `slate-400`: sobre `slate-50` o 400 dá 2,51:1 e reprova
   // o AA. São os dois chips de AUSÊNCIA, e eles aparecem 16 vezes na ficha de
   // uma candidatura pouco documentada — a maior concentração de texto ilegível
