@@ -115,8 +115,33 @@ os 206 PDFs já estão no Blob — o que falta é a leitura.
       inventada. Três falsos alarmes foram corrigidos no próprio script e estão
       documentados nele: `-layout` embaralhando PDF de duas colunas, o número
       do fólio despejado no meio da frase, e o `[sic]` do transcritor.
-- [ ] **2.4** **[PORTÃO HUMANO]** aprovar em `/admin/candidato/:id`. Publicar uma
-      afirmação sobre uma pessoa real é ato deliberado de quem edita, por design.
+      Depois do 2.4, `--all` cobriu as **122** — inclusive as 8 do LULA, que
+      estavam no ar desde 27/08 sem nunca terem sido conferidas: **117
+      conferem, as mesmas 5 parciais, 0 ausentes**. Não há citação sem lastro
+      no banco.
+- [x] **2.4** **[PORTÃO HUMANO]** aprovar. Publicar uma afirmação sobre uma
+      pessoa real é ato deliberado de quem edita — e foi: a revisão leu as 114
+      uma a uma contra o eixo de cada tema, o Lucas mandou publicar as 106
+      limpas em 01/09, e `scripts/approve-positions.ts --confirmar` gravou
+      **106 de 106**. O banco fica em **114 aprovadas, 8 pendentes**, e o quiz
+      passa de **1 para 13 candidaturas comparáveis**.
+      As **8 retidas** estão no próprio script, com o motivo de cada uma: a
+      incoerência `regulacao-midia-ia` entre CURY (4) e CAIADO (3) com a mesma
+      prova, quatro citações que não tratam diretamente da afirmação
+      (EDMILSON e SAMARA em `bolsa-familia`, RENAN em `politica-agricola`,
+      ZEMA em `armamento-civil`) e duas que carregam erro do documento
+      protocolado (CURY `bolsa-familia`, SAMARA `educacao-de-genero`).
+      O script **não escolhe**: a lista é o complemento das 8, e ele se recusa
+      a rodar se o conjunto pendente não for o que foi revisado — posição que
+      entrar depois não foi revisada. Quem aprova é `PositionService.approve()`,
+      o mesmo caminho do /admin, que relê documento e página no banco.
+      As 5 "parciais" da auditoria estão dentro das 106 e foram abertas no PDF
+      antes: quatro emendam o título da seção no parágrafo e inserem um ponto
+      final que o documento não tem; a do MARÇAL era ordem de leitura do
+      extrator numa página em colunas — `-layout` mostra o item exatamente onde
+      a citação diz. Nenhuma citação inventada.
+      Conferido em produção: ficha do MARÇAL com "Proposta de governo — TSE ·
+      p. 25" e o trecho do sistema prisional; ficha da CLARIANA com p. 10.
 - [ ] **2.5** Nanicos: fallback partidário com disclosure explícito, ou assumir a
       ausência. Ausência declarada é resposta legítima (metodologia §2).
 - [ ] **2.6** Verificar `/quiz` → `/resultado` com dados reais: pódio coerente,
